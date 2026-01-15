@@ -13,14 +13,15 @@ const projects = [
 
 <Carousel
   items={projects.length}
-  itemsPerSlide={2}
-  scrollSnap={true}
+  itemsPerSlide={1}        <!-- one slide per viewport -->
+  scrollSnap={true}        <!-- snap to slides -->
+  pagination={{ type: 'dots' }} <!-- show dots -->
   className="w-full h-screen"
-  wrapperClassName="h-full flex items-center gap-[2vw]"
+  wrapperClassName="flex items-center justify-center gap-[2vw]"
 >
-  {projects.map((src) => (
-    <li class="flex-shrink-0 w-[70vw] h-[70vh] rounded-lg overflow-hidden">
-      <img src={src} alt={src} class="w-full h-full object-cover" />
+  {projects.map((src, index) => (
+    <li data-active={index === 0 ? "true" : undefined} class="flex-shrink-0 w-[80vw] h-[80vh] rounded-lg overflow-hidden">
+      <img src={src} alt={`Project ${index + 1}`} class="w-full h-full object-cover" />
     </li>
   ))}
 </Carousel>
@@ -32,7 +33,6 @@ const projects = [
     overflow-y: hidden !important;
   }
 
-  /* Thin scrollbar */
   [data-id="w-carousel"]::-webkit-scrollbar {
     height: 5px;
   }
@@ -48,16 +48,9 @@ const projects = [
 <script type="module">
   const carousel = document.querySelector('[data-id="w-carousel"]');
 
-  // Map vertical scroll to horizontal
+  // Map vertical mouse wheel to horizontal scroll
   carousel.addEventListener("wheel", (e) => {
     e.preventDefault();
     carousel.scrollLeft += e.deltaY;
   });
-
-  // Center first project on load
-  const firstSlide = carousel.querySelector("li");
-  if (firstSlide) {
-    const slideWidth = firstSlide.offsetWidth + parseInt(getComputedStyle(firstSlide).marginRight);
-    carousel.scrollLeft = slideWidth;
-  }
 </script>
