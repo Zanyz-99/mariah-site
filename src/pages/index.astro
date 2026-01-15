@@ -1,9 +1,7 @@
-
-
 <Layout title="Projects — Mariah Ippolito" description="Portfolio Projects">
   <section class="projects-wrap">
     <div class="projects-container">
-      <!-- Duplicate last and first projects for seamless looping -->
+      <!-- Duplicate last and first projects for seamless loop -->
       <img src="/projects/project-6.png" alt="Project 6" class="project" />
       <img src="/projects/project-1.png" alt="Project 1" class="project" />
       <img src="/projects/project-2.png" alt="Project 2" class="project" />
@@ -21,34 +19,34 @@
       padding: 0;
       height: 100%;
       width: 100%;
+      background: #000;
       overflow: hidden;
-      background: #000; /* optional background for contrast */
     }
 
     .projects-wrap {
       width: 100vw;
       height: 100vh;
-      overflow-x: auto;
+      overflow-x: scroll;
       overflow-y: hidden;
-      scroll-behavior: smooth;
-      scroll-snap-type: x mandatory;
       display: flex;
       align-items: center;
+      scroll-behavior: smooth;
     }
 
     .projects-container {
       display: flex;
       gap: 2vw;
-      padding-inline: 10vw; /* Center first project */
+      padding-left: 15vw;  /* centers Project 1 initially */
+      padding-right: 15vw; /* shows half of last project */
     }
 
     .project {
-      flex: 0 0 80vw;   /* 80% width of viewport */
-      height: 80vh;     /* 80% height of viewport */
+      flex: 0 0 70vw;   /* 70% viewport width */
+      height: 70vh;     /* 70% viewport height */
       object-fit: cover;
-      scroll-snap-align: center;
       border-radius: 10px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      scroll-snap-align: center;
       cursor: grab;
       transition: transform 0.3s;
     }
@@ -57,9 +55,9 @@
       transform: scale(1.02);
     }
 
-    /* Thin, sleek scrollbar */
+    /* Thin scrollbar */
     .projects-wrap::-webkit-scrollbar {
-      height: 4px;
+      height: 5px;
     }
     .projects-wrap::-webkit-scrollbar-track {
       background: rgba(255,255,255,0.1);
@@ -68,7 +66,6 @@
       background: rgba(255,255,255,0.6);
       border-radius: 2px;
     }
-
     .projects-wrap {
       scrollbar-width: thin;
       scrollbar-color: rgba(255,255,255,0.6) rgba(255,255,255,0.1);
@@ -79,7 +76,10 @@
     const container = document.querySelector(".projects-wrap");
     const projects = document.querySelectorAll(".project");
     const projectCount = 6;
-    const projectWidth = window.innerWidth * 0.8 + (window.innerWidth * 0.02); // 80% + gap
+    const gap = window.innerWidth * 0.02; // 2vw gap
+
+    // Calculate 70vw width + gap
+    const projectWidth = window.innerWidth * 0.7 + gap;
 
     // Start centered on Project 1
     container.scrollLeft = projectWidth;
@@ -105,7 +105,7 @@
 
     // Resize handler
     window.addEventListener("resize", () => {
-      const newProjectWidth = window.innerWidth * 0.8 + (window.innerWidth * 0.02);
+      const newProjectWidth = window.innerWidth * 0.7 + window.innerWidth * 0.02;
       container.scrollLeft = newProjectWidth; // recenter
     });
   </script>
