@@ -2,7 +2,7 @@
 import Navbar from "../components/Navbar.astro";
 import "../styles/global.css";
 interface Props { title?: string; description?: string; }
-const { title = "ZachScholz.com", description = "" } = Astro.props;
+const { title = "MariahIppolito.com", description = "" } = Astro.props;
 ---
 <!doctype html>
 <html lang="en" data-theme="light">
@@ -167,6 +167,6 @@ const { title = "ZachScholz.com", description = "" } = Astro.props;
   <body>
     <Navbar />
     <main><slot /></main>
-    <footer><div class="foot-wrap">© {new Date().getFullYear()} Zach Scholz • Hosted on Cloudflare Pages</div></footer>
+    <footer><div class="foot-wrap">© {new Date().getFullYear()} Mariah Ippolito • Hosted on Cloudflare Pages</div></footer>
   </body>
 </html>
