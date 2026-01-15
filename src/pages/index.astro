@@ -1,4 +1,6 @@
 ---
+import Carousel from "@/components/carousel.astro";
+
 const projects = [
   "/projects/01 Project One.png",
   "/projects/02 Project Two.png",
@@ -9,86 +11,53 @@ const projects = [
 ];
 ---
 
-<section class="projects-wrap">
-  <div class="projects-container" id="projects-carousel">
-    {projects.map((src) => (
-      <div class="project">
-        <img src={src} alt={src} />
-      </div>
-    ))}
-  </div>
-</section>
+<Carousel
+  items={projects.length}
+  itemsPerSlide={2}
+  scrollSnap={true}
+  className="w-full h-screen"
+  wrapperClassName="h-full flex items-center gap-[2vw]"
+>
+  {projects.map((src) => (
+    <li class="flex-shrink-0 w-[70vw] h-[70vh] rounded-lg overflow-hidden">
+      <img src={src} alt={src} class="w-full h-full object-cover" />
+    </li>
+  ))}
+</Carousel>
 
 <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background: #000;
+  /* Make mouse wheel scroll horizontally */
+  [data-id="w-carousel"] {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
   }
 
-  .projects-wrap {
-    width: 100vw;
-    height: 100vh;
-    overflow-x: auto;
-    overflow-y: hidden;
-    display: flex;
-    align-items: center;
-    scroll-behavior: smooth;
-  }
-
-  /* Thin horizontal scrollbar */
-  .projects-wrap::-webkit-scrollbar {
+  /* Thin scrollbar */
+  [data-id="w-carousel"]::-webkit-scrollbar {
     height: 5px;
   }
-  .projects-wrap::-webkit-scrollbar-track {
+  [data-id="w-carousel"]::-webkit-scrollbar-track {
     background: rgba(255,255,255,0.1);
   }
-  .projects-wrap::-webkit-scrollbar-thumb {
+  [data-id="w-carousel"]::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.6);
     border-radius: 2px;
-  }
-  .projects-wrap {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,0.6) rgba(255,255,255,0.1);
-  }
-
-  .projects-container {
-    display: flex;
-    gap: 2vw;
-    padding-left: 15vw;  /* center first project */
-    padding-right: 15vw; /* show partial last project */
-  }
-
-  .project {
-    flex: 0 0 70vw;  /* 70% of viewport width */
-    height: 70vh;     /* 70% of viewport height */
-    border-radius: 10px;
-    overflow: hidden;
-  }
-
-  .project img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
   }
 </style>
 
 <script type="module">
-  const container = document.getElementById("projects-carousel");
+  const carousel = document.querySelector('[data-id="w-carousel"]');
 
-  // Mouse wheel → horizontal scroll
-  container.addEventListener("wheel", (evt) => {
-    evt.preventDefault();
-    container.scrollLeft += evt.deltaY;
+  // Map vertical scroll to horizontal
+  carousel.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    carousel.scrollLeft += e.deltaY;
   });
 
   // Center first project on load
-  const firstProject = container.querySelector(".project");
-  if (firstProject) {
-    const width = firstProject.offsetWidth + parseInt(getComputedStyle(firstProject).marginRight);
-    container.scrollLeft = width;
+  const firstSlide = carousel.querySelector("li");
+  if (firstSlide) {
+    const slideWidth = firstSlide.offsetWidth + parseInt(getComputedStyle(firstSlide).marginRight);
+    carousel.scrollLeft = slideWidth;
   }
 </script>
