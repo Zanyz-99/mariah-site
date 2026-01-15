@@ -2,7 +2,6 @@
 import Carousel from "@/components/carousel.astro";
 
 const projects = [
-  "/projects/01 Project One.png",
   "/projects/02 Project Two.png",
   "/projects/03 Project Three.png",
   "/projects/04 Project Four.png",
@@ -25,32 +24,3 @@ const projects = [
     </li>
   ))}
 </Carousel>
-
-<style>
-  /* Make mouse wheel scroll horizontally */
-  [data-id="w-carousel"] {
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-  }
-
-  [data-id="w-carousel"]::-webkit-scrollbar {
-    height: 5px;
-  }
-  [data-id="w-carousel"]::-webkit-scrollbar-track {
-    background: rgba(255,255,255,0.1);
-  }
-  [data-id="w-carousel"]::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.6);
-    border-radius: 2px;
-  }
-</style>
-
-<script type="module">
-  const carousel = document.querySelector('[data-id="w-carousel"]');
-
-  // Map vertical mouse wheel to horizontal scroll
-  carousel.addEventListener("wheel", (e) => {
-    e.preventDefault();
-    carousel.scrollLeft += e.deltaY;
-  });
-</script>
