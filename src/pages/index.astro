@@ -1,112 +1,64 @@
-<Layout title="Projects — Mariah Ippolito" description="Portfolio Projects">
-  <section class="projects-wrap">
-    <div class="projects-container">
-      <!-- Duplicate last and first projects for seamless loop -->
-      <img src="/projects/project-6.png" alt="Project 6" class="project" />
-      <img src="/projects/project-1.png" alt="Project 1" class="project" />
-      <img src="/projects/project-2.png" alt="Project 2" class="project" />
-      <img src="/projects/project-3.png" alt="Project 3" class="project" />
-      <img src="/projects/project-4.png" alt="Project 4" class="project" />
-      <img src="/projects/project-5.png" alt="Project 5" class="project" />
-      <img src="/projects/project-6.png" alt="Project 6" class="project" />
-      <img src="/projects/project-1.png" alt="Project 1" class="project" />
-    </div>
-  </section>
+---
+import Carousel from "@/components/carousel.astro";
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      background: #000;
-      overflow: hidden;
-    }
+const projects = [
+  "/projects/01 Project One.png",
+  "/projects/02 Project Two.png",
+  "/projects/03 Project Three.png",
+  "/projects/04 Project Four.png",
+  "/projects/05 Project Five.png",
+  "/projects/06 Project Six.png",
+];
+---
 
-    .projects-wrap {
-      width: 100vw;
-      height: 100vh;
-      overflow-x: scroll;
-      overflow-y: hidden;
-      display: flex;
-      align-items: center;
-      scroll-behavior: smooth;
-    }
+<Carousel
+  items={projects.length}
+  itemsPerSlide={1}
+  scrollSnap={true}
+  className="w-full h-screen"
+  wrapperClassName="h-full flex items-center"
+  effect="slide"
+>
+  {projects.map((src, i) => (
+    <li class="flex-shrink-0 w-[70vw] h-[70vh] mx-[1vw] rounded-lg overflow-hidden shadow-lg">
+      <img src={src} alt={`Project ${i + 1}`} class="w-full h-full object-cover" />
+    </li>
+  ))}
+</Carousel>
 
-    .projects-container {
-      display: flex;
-      gap: 2vw;
-      padding-left: 15vw;  /* centers Project 1 initially */
-      padding-right: 15vw; /* shows half of last project */
-    }
+<style>
+  /* Make container scrollable with horizontal mouse wheel */
+  [data-id="w-carousel"] {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
 
-    .project {
-      flex: 0 0 70vw;   /* 70% viewport width */
-      height: 70vh;     /* 70% viewport height */
-      object-fit: cover;
-      border-radius: 10px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      scroll-snap-align: center;
-      cursor: grab;
-      transition: transform 0.3s;
-    }
+  /* Thin custom scrollbar */
+  [data-id="w-carousel"]::-webkit-scrollbar {
+    height: 5px;
+  }
+  [data-id="w-carousel"]::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.1);
+  }
+  [data-id="w-carousel"]::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.6);
+    border-radius: 2px;
+  }
+</style>
 
-    .project:hover {
-      transform: scale(1.02);
-    }
+<script type="module">
+  const carousel = document.querySelector('[data-id="w-carousel"]');
 
-    /* Thin scrollbar */
-    .projects-wrap::-webkit-scrollbar {
-      height: 5px;
-    }
-    .projects-wrap::-webkit-scrollbar-track {
-      background: rgba(255,255,255,0.1);
-    }
-    .projects-wrap::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,0.6);
-      border-radius: 2px;
-    }
-    .projects-wrap {
-      scrollbar-width: thin;
-      scrollbar-color: rgba(255,255,255,0.6) rgba(255,255,255,0.1);
-    }
-  </style>
+  // Mouse wheel mapped to horizontal scroll
+  carousel.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    carousel.scrollLeft += e.deltaY;
+  });
 
-  <script>
-    const container = document.querySelector(".projects-wrap");
-    const projects = document.querySelectorAll(".project");
-    const projectCount = 6;
-    const gap = window.innerWidth * 0.02; // 2vw gap
-
-    // Calculate 70vw width + gap
-    const projectWidth = window.innerWidth * 0.7 + gap;
-
-    // Start centered on Project 1
-    container.scrollLeft = projectWidth;
-
-    // Vertical scroll mapped to horizontal
-    container.addEventListener("wheel", (evt) => {
-      evt.preventDefault();
-      container.scrollLeft += evt.deltaY;
-    });
-
-    // Infinite loop logic
-    container.addEventListener("scroll", () => {
-      const scrollPos = container.scrollLeft;
-
-      if (scrollPos <= 0) {
-        // Jump to real Project 6
-        container.scrollLeft = projectWidth * projectCount;
-      } else if (scrollPos >= projectWidth * (projectCount + 1)) {
-        // Jump to real Project 1
-        container.scrollLeft = projectWidth;
-      }
-    });
-
-    // Resize handler
-    window.addEventListener("resize", () => {
-      const newProjectWidth = window.innerWidth * 0.7 + window.innerWidth * 0.02;
-      container.scrollLeft = newProjectWidth; // recenter
-    });
-  </script>
-</Layout>
+  // Center first project on load
+  const firstSlide = carousel.querySelector("li");
+  if (firstSlide) {
+    const slideWidth = firstSlide.offsetWidth + parseInt(getComputedStyle(firstSlide).marginRight);
+    carousel.scrollLeft = slideWidth;
+  }
+</script>
