@@ -22,9 +22,6 @@ const pageTitle = titleMap[pathname] ?? '';
       <img class="logo" src="/icons/logo dark.png" alt="Logo" />
     </a>
 
-    <!-- Center: Page title (mobile only) -->
-    <div class="page-title" aria-hidden="true">{pageTitle}</div>
-
     <!-- Center: Desktop menu -->
     <ul class="menu" role="menubar" aria-label="Main">
       <li role="none"><a role="menuitem" class={`link ${active('/about')}`} href="/about">About</a></li>
