@@ -1,0 +1,416 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const ATHLETE_ID = Number(import.meta.env.STRAVA_ATHLETE_ID) || 35369206;
+const STRAVA_PROFILE = `https://www.strava.com/athletes/${ATHLETE_ID}`;
+const dataUrl = new URL('/data/strava-latest.json', Astro.url).pathname;
+---
+<Layout title="About | Zach Scholz" description="Background, focus areas, and interests.">
+  <Fragment slot="head">
+    <!-- Preload above-the-fold or “first-open” images -->
+    <link rel="preload" as="image" href="/photos/about-1.webp" imagesrcset="/photos/about-1.jpg 1x, /photos/about-1.webp 1x" fetchpriority="high">
+    <link rel="preload" as="image" href="/photos/about-2.webp" imagesrcset="/photos/about-2.jpg 1x, /photos/about-2.webp 1x">
+    <link rel="preload" as="image" href="/photos/about-3.webp" imagesrcset="/photos/about-3.jpg 1x, /photos/about-3.webp 1x">
+
+    <!-- DNS/TLS warm-up for Strava images (dynamic) -->
+    <link rel="preconnect" href="https://images.strava.com" crossorigin>
+    <link rel="dns-prefetch" href="//images.strava.com">
+  </Fragment>
+
+  <!-- Use shared width/alignment via .content -->
+  <section class="content about-wrap">
+    <div class="spacer-md" aria-hidden="true"></div>
+
+    <!-- Accordion -->
+    <section class="accordion" aria-label="About sections">
+      <!-- ABOUT ME -->
+      <div class="acc" id="acc-about">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-about" id="btn-about">
+          <span class="acc-toggle" aria-hidden="true"></span>
+          <span class="acc-title">About Me</span>
+        </button>
+        <div class="acc-panel" id="panel-about" role="region" aria-labelledby="btn-about">
+          <div class="block">
+            <p>
+              Hi there! I’m Zach, a U.S. Navy veteran currently enjoying a break before joining the civilian workforce in March, 2026.<br><br>
+              I grew up in New England, where my family’s submarine service inspired my path 
+              to the Navy and instilled a passion for taking on complex and challenging problems.<br><br>
+              I studied nuclear and mechanical engineering at the U.S. Naval Academy and later
+              Operations Research at the Naval Postgraduate School, where I developed a strong foundation 
+              in quantitative analysis, optimization, and data-driven problem solving.<br><br>
+              Alongside my Navy career, I’ve continued to expand my technical background. I've built and 
+              published mobile apps and used coding and modeling to optimize networks, resources, and 
+              operations.<br><br>
+              Outside of my professional life, I’m passionate about spearfishing, mountaineering, motorcycles,
+              and tackling new challenges.
+            </p>
+          </div>
+
+          <!-- Photos 2×2 -->
+          <div class="photos4" id="about-photos">
+            <figure class="ph"><img src="/photos/about-1.jpg" alt="Trail photo 1" loading="lazy" /></figure>
+            <figure class="ph"><img src="/photos/about-2.jpg" alt="Trail photo 2" loading="lazy" /></figure>
+            <figure class="ph"><img src="/photos/about-3.jpg" alt="Build / ship / iterate" loading="lazy" /></figure>
+
+            <!-- Dynamic Strava tile -->
+            <a class="ph strava" id="strava-card" href={STRAVA_PROFILE} target="_blank" rel="noopener" aria-label="Latest Strava activity">
+              <img id="strava-img" src="/icons/strava.png" alt="Latest Strava activity" loading="lazy" />
+              <span class="strava-cta">View on Strava ↗</span>
+              <div class="stats" id="strava-stats" hidden></div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONNECT -->
+      <div class="acc" id="acc-connect">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-connect" id="btn-connect">
+          <span class="acc-toggle" aria-hidden="true"></span>
+          <span class="acc-title">Connect</span>
+        </button>
+        <div class="acc-panel" id="panel-connect" role="region" aria-labelledby="btn-connect">
+          <ul class="stack gray-hover" aria-label="Connect links">
+            <li class="stack-item hoverable"><a href="https://www.linkedin.com/in/zachary-scholz/" target="_blank" rel="noopener">LinkedIn</a></li>
+            <li class="stack-item hoverable"><a href="mailto:ztscholz86@gmail.com">Email</a></li>
+            <li class="stack-item hoverable"><a href={STRAVA_PROFILE} target="_blank" rel="noopener">Strava</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- WORK -->
+      <div class="acc" id="acc-work">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-work" id="btn-work">
+          <span class="acc-toggle" aria-hidden="true"></span>
+          <span class="acc-title">Work</span>
+        </button>
+        <div class="acc-panel" id="panel-work" role="region" aria-labelledby="btn-work">
+          <div class="list dim-others" aria-label="Work history">
+            <div class="row hoverable">
+              <div class="row-line no-logo">
+                <div class="meta">
+                  <div class="title">Foreign Affairs Officer</div>
+                  <div class="sub">U.S. Naval Forces Europe · U.S. Navy</div>
+                  <div class="sub">Naples, IT · 2023 – Present</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row hoverable">
+              <div class="row-line no-logo">
+                <div class="meta">
+                  <div class="title">Inactivation Coordinator</div>
+                  <div class="sub">USS Chicago (SSN-721) · U.S. Navy</div>
+                  <div class="sub">Bremerton, WA · 2023</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row hoverable">
+              <div class="row-line no-logo">
+                <div class="meta">
+                  <div class="title">Assistant Operations Officer</div>
+                  <div class="sub">USS Chicago (SSN-721) · U.S. Navy</div>
+                  <div class="sub">Pearl Harbor, HI · 2022</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row hoverable">
+              <div class="row-line no-logo">
+                <div class="meta">
+                  <div class="title">Reactor Control Assistant</div>
+                  <div class="sub">USS Chicago (SSN-721) · U.S. Navy</div>
+                  <div class="sub">Pearl Harbor, HI · 2021</div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="row hoverable">
+              <div class="row-line no-logo">
+                <div class="meta">
+                  <div class="title">Graduate Student</div>
+                  <div class="sub">Naval Postgraduate School · U.S. Navy</div>
+                  <div class="sub">Monterey, CA · 2018 – 2019</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </section>
+
+  <!-- Accordion logic: one-open + animated panels (no auto-scroll) -->
+  <script type="module">
+    const accRoot = document.querySelector('.accordion');
+    if (!accRoot) throw new Error('Accordion root not found');
+
+    const items   = Array.from(accRoot.querySelectorAll('.acc'));
+    const buttons = items.map(i => i.querySelector('.acc-summary'));
+    const panels  = items.map(i => i.querySelector('.acc-panel'));
+
+    function pinAccordionTop(){}
+
+    function openPanel(panel) {
+      panel.hidden = false;
+      panel.style.display = 'block';
+      const startHeight = panel.offsetHeight;
+      const target = panel.scrollHeight;
+      panel.style.height = startHeight + 'px';
+      panel.getBoundingClientRect();
+      panel.style.height = target + 'px';
+      panel.classList.add('animating');
+      panel.addEventListener('transitionend', function done(ev){
+        if (ev.propertyName !== 'height') return;
+        panel.removeEventListener('transitionend', done);
+        panel.classList.remove('animating');
+        panel.style.height = 'auto';
+      });
+    }
+
+    function closePanel(panel) {
+      const current = panel.offsetHeight;
+      panel.style.height = current + 'px';
+      panel.getBoundingClientRect();
+      panel.style.height = '0px';
+      panel.classList.add('animating');
+      panel.addEventListener('transitionend', function done(ev){
+        if (ev.propertyName !== 'height') return;
+        panel.removeEventListener('transitionend', done);
+        panel.classList.remove('animating');
+        panel.style.display = 'none';
+        panel.hidden = true;
+      });
+    }
+
+    let openIndex = -1;
+
+    function setOpen(idx) {
+      items.forEach((_, i) => {
+        const shouldOpen = i === idx;
+        buttons[i].setAttribute('aria-expanded', String(shouldOpen));
+        const p = panels[i];
+        if (shouldOpen) {
+          if (p.hidden || p.style.display === 'none' || p.style.height === '0px') openPanel(p);
+        } else {
+          if (!p.hidden && p.style.display !== 'none' && p.style.height !== '0px') closePanel(p);
+        }
+      });
+      openIndex = idx;
+    }
+
+    function activate(i, evt) {
+      if (evt) evt.preventDefault();
+      const next = (openIndex === i) ? -1 : i; // toggle to close if clicking the same
+      setOpen(next);
+      pinAccordionTop();
+    }
+
+    buttons.forEach((btn, i) => {
+      btn.addEventListener('click', (e) => activate(i, e));
+      btn.addEventListener('keydown', (e) => {
+        if (e.key === ' ' || e.key === 'Enter') activate(i, e);
+      });
+    });
+
+    // Initialize collapsed
+    panels.forEach(p => { p.style.display = 'none'; p.hidden = true; p.style.height = '0px'; });
+    openIndex = -1;
+
+    // Strava hover -> gray out other photos
+    const photosWrap = document.getElementById('about-photos');
+    const stravaCard = document.getElementById('strava-card');
+    if (photosWrap && stravaCard) {
+      stravaCard.addEventListener('mouseenter', () => photosWrap.classList.add('grey-others'));
+      stravaCard.addEventListener('mouseleave', () => photosWrap.classList.remove('grey-others'));
+      stravaCard.addEventListener('touchstart', () => photosWrap.classList.add('grey-others'), { passive:true });
+      stravaCard.addEventListener('touchend',   () => photosWrap.classList.remove('grey-others'));
+    }
+  </script>
+
+  <script type="module" define:vars={{ dataUrl }}>
+    (async () => {
+      const sameOrigin = dataUrl;
+      const pagesOrigin = 'https://zanyz-99.github.io/my-site/data/strava-latest.json';
+      const load = async (url) => {
+        const r = await fetch(`${url}?ts=${Date.now()}`, { cache: 'no-store' });
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      };
+
+      let data;
+      try { data = await load(sameOrigin); }
+      catch { try { data = await load(pagesOrigin); } catch {} }
+      if (!data) return;
+
+      const img = document.getElementById('strava-img');
+      const statsEl = document.getElementById('strava-stats');
+      const link = document.getElementById('strava-card');
+
+      if (data.photoUrl && img) img.src = data.photoUrl;
+      if (data.activityUrl && link) link.href = data.activityUrl;
+
+      const s = data.stats;
+      if (statsEl && s) {
+        if (s.isRun && s.distance && s.pace && s.duration) {
+          statsEl.innerHTML = `
+            <span class="metric">${s.distance}</span>
+            <span class="dot">•</span>
+            <span class="metric">${s.pace}</span>
+            <span class="dot">•</span>
+            <span class="metric">${s.duration}</span>`;
+        } else if (s.duration) {
+          statsEl.textContent = s.duration;
+        }
+        statsEl.hidden = false;
+      }
+    })();
+  </script>
+
+  <style>
+    /* Wrapper */
+    .about-wrap{display:grid;gap:12px;justify-items:start;align-items:start;margin-inline:auto}
+
+    .spacer-md{ height: clamp(24px, 6vh, 64px); width: 100%; }
+    .muted{color:var(--muted)}
+
+    .accordion{
+      display:grid; gap:12px; justify-items:start;
+      width:100%; margin:0;
+    }
+    .acc{ width:100%; background:transparent; }
+
+    /* Header: grid so '+' and title align */
+    .acc-summary {
+      width: 100%;
+      display: flex;                /* simpler: flex handles centering */
+      align-items: center;          /* vertical centering */
+      gap: 0.6rem;
+      padding: 6px 0;
+      cursor: pointer;
+      user-select: none;
+      color: var(--muted);
+      background: none;
+      border: 0;
+    }
+
+    /* Toggle: same font as title but adjusted size/line-height */
+    .acc-toggle {
+      display: flex;                /* center the glyph inside */
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;               /* fixed column width */
+      font-size: calc(var(--h1-size) * 0.8); /* a bit smaller so it optically matches */
+      font-weight: 1000;
+      line-height: 1;               /* prevents extra vertical offset */
+      color: var(--text);
+      text-align: center;
+    }
+
+    .acc-toggle::before { content: '+'; }
+    .acc-summary[aria-expanded="true"] .acc-toggle::before { content: '–'; }
+
+    /* Title uses your h1 look */
+    .acc-title {
+      margin: 0;
+      font-size: var(--h1-size);
+      font-weight: 1000;
+      letter-spacing: -0.01em;
+      line-height: calc(var(--line) - .15);
+      color: var(--text);
+    }
+
+    /* Panel */
+    .acc-panel{
+      padding-left: calc(1.25rem + 0.6rem);
+      margin:0;
+      display:block;
+      height:0;
+      overflow:hidden;
+      overflow-anchor:none;
+      transition: height 220ms ease;
+      font-size:var(--body-size);
+      line-height:1.45;
+      color:var(--text);
+    }
+
+    /* Lists and rows */
+    .block, .stack, .list, .photos4{ width:100%; margin:6px 0 0; }
+    .stack{list-style:none;padding:0}
+    .stack-item{padding:8px 0}
+    .gray-hover:hover .hoverable { filter: grayscale(1) brightness(.8); opacity:.6; transition: filter 160ms ease, opacity 160ms ease; }
+    .gray-hover .hoverable:hover { filter:none; opacity:1; }
+
+    .list{display:grid;gap:10px}
+    .row{text-decoration:none;color:inherit}
+    .row-line{display:flex;align-items:center;gap:.85rem}
+    .row-line.no-logo{ gap: 0; }
+    .meta{display:grid;gap:.15rem}
+    .title{line-height:1.15}
+    .sub{color:inherit;font-size:clamp(15px, 2.5vw, 18px)}
+
+    /* Photos 2×2 */
+    .photos4{
+      display:grid;
+      grid-template-columns:repeat(2,1fr);
+      grid-template-rows:repeat(2,1fr);
+      gap:16px;
+    }
+    .photos4 .ph{ margin:0; padding:0; display:block; position:relative; }
+    .photos4 img{
+      width:100%;
+      aspect-ratio:1/1;
+      object-fit:cover;
+      border-radius:0 0 25% 0;
+      display:block;
+      box-shadow:0 8px 24px rgba(0,0,0,.18);
+      filter:grayscale(1);
+      transition:filter 200ms ease;
+    }
+    .photos4 img:hover{ filter:grayscale(0); }
+
+    /* Strava overlays */
+    .strava{position:relative;text-decoration:none;color:inherit}
+    .strava-cta{
+      position:absolute;left:10px;bottom:10px;
+      color:#fff;font-weight:700;
+      background:rgba(0,0,0,.35);padding:.25rem .5rem;border-radius:8px;
+    }
+    .stats{
+      position:absolute;right:10px;top:10px;
+      display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;
+      background:rgba(0,0,0,.55);color:#fff;font-weight:600;
+      padding:.4rem .6rem;border-radius:10px;backdrop-filter:blur(2px);
+      font-size:14px; line-height:1;
+    }
+    .stats .dot{opacity:.6}
+    .stats .metric{white-space:nowrap}
+
+    /* Work meta hierarchy */
+    .meta .title {             /* Job title */
+      font-weight: 600;
+      font-size: clamp(16px, 1.6vw, 18px);
+      letter-spacing: 0.005em;
+      color: var(--text);
+    }
+    
+    .meta .sub:first-of-type { /* Organization / unit */
+      font-weight: 500;
+      font-size: clamp(15px, 1.4vw, 17px);
+      color: var(--text);
+    }
+    
+    .meta .sub:last-of-type {  /* Location / dates */
+      font-weight: 500;
+      font-size: clamp(15px, 1.4vw, 17px);
+      color: var(--text);
+    }
+
+
+    @media (max-width: 640px){
+      .strava-cta, .stats{ display:none !important; }
+    }
+    .photos4.grey-others .ph:not(.strava) img{ filter: grayscale(1) brightness(.75); }
+  </style>
+</Layout>
