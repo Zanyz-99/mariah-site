@@ -1,86 +1,63 @@
 ---
 import Layout from "../layouts/Layout.astro";
 ---
-<Layout title="Home — Mariah Ippolito" description="American">
-  <section class="content home-wrap">
-    <div class="spacer-md" aria-hidden="true"></div>
 
-    <!-- Header row identical to About (toggle column preserved, glyph hidden) -->
-    <button
-      class="acc-summary acc-summary--home"
-      type="button"
-      disabled
-      aria-hidden="true"
-      tabindex="-1"
-    >
-      <span class="acc-toggle" aria-hidden="true"></span>
-      <span class="acc-title">Mariah Ippolito</span>
-    </button>
-
-    <!-- Subtitle MUST carry the indent class -->
-    <p class="home-sub indent-acc">Aspiring Architect</p>
+<Layout title="Home — Mariah Ippolito" description="Portfolio Projects">
+  <section class="projects-wrap">
+    <div class="projects-container">
+      <img src="/projects/project-1.png" alt="Project 1" class="project" />
+      <img src="/projects/project-2.png" alt="Project 2" class="project" />
+      <img src="/projects/project-3.png" alt="Project 3" class="project" />
+      <img src="/projects/project-4.png" alt="Project 4" class="project" />
+      <img src="/projects/project-5.png" alt="Project 5" class="project" />
+      <img src="/projects/project-6.png" alt="Project 6" class="project" />
+    </div>
   </section>
 
   <style>
-    :root{
-      /* Keep in sync with About */
-      --acc-toggle-w: 1.25rem;   /* toggle column width */
-      --acc-gap: 0.6rem;         /* gap between toggle and title */
-      /* Fallback single var to mirror About's panel padding-left (1.25rem + 0.6rem) */
-      --acc-indent: calc(var(--acc-toggle-w) + var(--acc-gap));
+    .projects-wrap {
+      width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-behavior: smooth;
+      padding: 2rem 0;
     }
 
-    /* Match About’s container behavior */
-    .home-wrap{
-      display:grid;
-      gap:12px;
-      justify-items:start;
-      align-items:start;
-      margin-inline:auto;
-      width:100%;
+    .projects-container {
+      display: flex;
+      gap: 1rem;
+      padding-inline: 50vw; /* half viewport padding for centering project 1 */
+      transform: translateX(-50%); /* center first project */
     }
 
-    .spacer-md{ height: clamp(24px, 6vh, 64px); width:100%; }
-
-    .acc-summary{
-      appearance:none; -webkit-appearance:none; box-sizing:border-box;
-      width:100%;
-      display:flex; align-items:center; gap:var(--acc-gap);
-      padding:6px 0; user-select:none; color:var(--text);
-      background:none; border:0; margin:0; cursor:pointer;
-    }
-    .acc-summary--home{ pointer-events:none; cursor:default; }
-
-    .acc-toggle{
-      display:flex; align-items:center; justify-content:center;
-      width:var(--acc-toggle-w);
-      font-size:calc(var(--h1-size) * 0.8);
-      font-weight:1000; line-height:1;
-      color:var(--text); text-align:center;
-    }
-    .acc-summary--home .acc-toggle::before{ content:''; }
-
-    .acc-title{
-      margin:0;
-      font-size:var(--h1-size);
-      font-weight:1000;
-      letter-spacing:-0.01em;
-      line-height:calc(var(--line) - .15);
-      color:var(--text);
+    .project {
+      flex: 0 0 auto;
+      width: clamp(300px, 30vw, 500px);
+      height: auto;
+      border-radius: 8px;
+      scroll-snap-align: center;
+      object-fit: cover;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      cursor: grab;
+      transition: transform 0.2s;
     }
 
-    .home-sub{
-      margin:.25rem 0 0;
-      color:var(--text);
-      font-size:clamp(16px, 2.2vw, 18px);
-      /* defensively reset any left margin from globals */
-      margin-left: 0;
-      padding-left: 0;
+    .project:hover {
+      transform: scale(1.02);
     }
 
-    /* 🔒 High-specificity indent: aligns subtitle's left edge with title text start */
-    .home-wrap .home-sub.indent-acc{
-      margin-left: var(--acc-indent);
+    /* Enable snapping */
+    .projects-wrap {
+      scroll-snap-type: x mandatory;
     }
   </style>
+
+  <script>
+    // Map vertical scroll to horizontal
+    const container = document.querySelector(".projects-wrap");
+    container.addEventListener("wheel", (evt) => {
+      evt.preventDefault();
+      container.scrollLeft += evt.deltaY;
+    });
+  </script>
 </Layout>
