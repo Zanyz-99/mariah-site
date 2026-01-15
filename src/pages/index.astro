@@ -15,8 +15,6 @@ const projects = [
   itemsPerSlide={1}        <!-- one slide per viewport -->
   scrollSnap={true}        <!-- snap to slides -->
   pagination={{ type: 'dots' }} <!-- show dots -->
-  className="w-full h-screen"
-  wrapperClassName="flex items-center justify-center gap-[2vw]"
 >
   {projects.map((src, index) => (
     <li data-active={index === 0 ? "true" : undefined} class="flex-shrink-0 w-[80vw] h-[80vh] rounded-lg overflow-hidden">
