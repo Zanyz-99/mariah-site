@@ -1,4 +1,5 @@
 ---
+import Layout from "../layouts/Layout.astro";
 import Carousel from "../components/Carousel.astro";
 
 const projects = [
@@ -10,124 +11,224 @@ const projects = [
 ];
 ---
 
-<main>
-  <Carousel width="wide" class="home-carousel">
-    <h1 class="title">Projects</h1>
+<Layout title="Home — Zach Scholz" description="Navy Veteran">
+  <section class="content home-wrap">
+    <div class="spacer-md" aria-hidden="true"></div>
 
-    <div class="carousel" id="projects-carousel">
-      <ul class="track">
-        {projects.map((src, i) => (
-          <li class="slide">
-            <img src={src} alt={`Project ${i + 2}`} loading={i === 0 ? "eager" : "lazy"} />
-          </li>
-        ))}
-      </ul>
+    <!-- Header row identical to About (toggle column preserved, glyph hidden) -->
+    <button
+      class="acc-summary acc-summary--home"
+      type="button"
+      disabled
+      aria-hidden="true"
+      tabindex="-1"
+    >
+      <span class="acc-toggle" aria-hidden="true"></span>
+      <span class="acc-title">Zach Scholz</span>
+    </button>
 
-      <div class="dots">
-        {projects.map((_, i) => (
-          <button
-            class="dot"
-            data-index={i}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
+    <!-- Subtitle MUST carry the indent class -->
+    <p class="home-sub indent-acc">U.S. Navy Veteran</p>
+
+    <!-- Projects Carousel -->
+    <div class="spacer-sm" aria-hidden="true"></div>
+
+    <Carousel width="wide" class="projects-wrap">
+      <div class="carousel" id="projects-carousel" aria-label="Projects carousel">
+        <ul class="track">
+          {projects.map((src, i) => (
+            <li class="slide">
+              <img
+                src={src}
+                alt={`Project ${i + 1}`}
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+              />
+            </li>
+          ))}
+        </ul>
+
+        <div class="dots" role="tablist" aria-label="Project slide navigation">
+          {projects.map((_, i) => (
+            <button
+              class="dot"
+              type="button"
+              data-index={i}
+              aria-label={`Go to slide ${i + 1}`}
+              aria-controls="projects-carousel"
+            />
+          ))}
+        </div>
       </div>
-    </div>
-  </Carousel>
-</main>
+    </Carousel>
+  </section>
 
-<script>
-  const carousel = document.getElementById("projects-carousel");
-  const track = carousel.querySelector(".track");
-  const dots = carousel.querySelectorAll(".dot");
+  <script>
+    const carousel = document.getElementById("projects-carousel");
+    const track = carousel.querySelector(".track");
+    const dots = carousel.querySelectorAll(".dot");
 
-  const updateDots = () => {
-    const index = Math.round(track.scrollLeft / track.clientWidth);
-    dots.forEach((dot, i) =>
-      dot.toggleAttribute("data-active", i === index)
-    );
-  };
+    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
-  dots.forEach((dot, i) => {
-    dot.addEventListener("click", () => {
-      track.scrollTo({
-        left: i * track.clientWidth,
-        behavior: "smooth",
+    const setActive = (idx) => {
+      dots.forEach((d, i) => {
+        if (i === idx) d.setAttribute("data-active", "true");
+        else d.removeAttribute("data-active");
+        d.setAttribute("aria-selected", i === idx ? "true" : "false");
+      });
+    };
+
+    const updateFromScroll = () => {
+      const w = track.clientWidth || 1;
+      const idx = clamp(Math.round(track.scrollLeft / w), 0, dots.length - 1);
+      setActive(idx);
+    };
+
+    dots.forEach((dot, i) => {
+      dot.addEventListener("click", () => {
+        track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
+        setActive(i);
       });
     });
-  });
 
-  track.addEventListener("scroll", () => {
-    window.requestAnimationFrame(updateDots);
-  });
+    track.addEventListener("scroll", () => {
+      window.requestAnimationFrame(updateFromScroll);
+    });
 
-  updateDots();
-</script>
+    // Set initial active dot
+    setActive(0);
+  </script>
 
-<style>
-  .home-carousel {
-    padding-top: 2rem;
-    padding-bottom: 3rem;
-  }
+  <style>
+    :root{
+      /* Keep in sync with About */
+      --acc-toggle-w: 1.25rem;   /* toggle column width */
+      --acc-gap: 0.6rem;         /* gap between toggle and title */
+      /* Fallback single var to mirror About's panel padding-left (1.25rem + 0.6rem) */
+      --acc-indent: calc(var(--acc-toggle-w) + var(--acc-gap));
+    }
 
-  .title {
-    margin-bottom: 1rem;
-    font-size: 2rem;
-  }
+    /* Match About’s container behavior */
+    .home-wrap{
+      display:grid;
+      gap:12px;
+      justify-items:start;
+      align-items:start;
+      margin-inline:auto;
+      width:100%;
+    }
 
-  /* --- Carousel --- */
-  .carousel {
-    position: relative;
-  }
+    .spacer-md{ height: clamp(24px, 6vh, 64px); width:100%; }
+    .spacer-sm{ height: clamp(12px, 3vh, 28px); width:100%; }
 
-  .track {
-    display: flex;
-    gap: 1rem;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-  }
+    .acc-summary{
+      appearance:none; -webkit-appearance:none; box-sizing:border-box;
+      width:100%;
+      display:flex; align-items:center; gap:var(--acc-gap);
+      padding:6px 0; user-select:none; color:var(--text);
+      background:none; border:0; margin:0; cursor:pointer;
+    }
+    .acc-summary--home{ pointer-events:none; cursor:default; }
 
-  .track::-webkit-scrollbar {
-    display: none;
-  }
+    .acc-toggle{
+      display:flex; align-items:center; justify-content:center;
+      width:var(--acc-toggle-w);
+      font-size:calc(var(--h1-size) * 0.8);
+      font-weight:1000; line-height:1;
+      color:var(--text); text-align:center;
+    }
+    .acc-summary--home .acc-toggle::before{ content:''; }
 
-  .slide {
-    flex: 0 0 100%;
-    scroll-snap-align: center;
-    border-radius: 16px;
-    overflow: hidden;
-  }
+    .acc-title{
+      margin:0;
+      font-size:var(--h1-size);
+      font-weight:1000;
+      letter-spacing:-0.01em;
+      line-height:calc(var(--line) - .15);
+      color:var(--text);
+    }
 
-  .slide img {
-    width: 100%;
-    height: auto;
-    display: block;
-    object-fit: cover;
-  }
+    .home-sub{
+      margin:.25rem 0 0;
+      color:var(--text);
+      font-size:clamp(16px, 2.2vw, 18px);
+      /* defensively reset any left margin from globals */
+      margin-left: 0;
+      padding-left: 0;
+    }
 
-  /* --- Custom dots --- */
-  .dots {
-    margin-top: 0.9rem;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-  }
+    /* 🔒 High-specificity indent: aligns subtitle's left edge with title text start */
+    .home-wrap .home-sub.indent-acc{
+      margin-left: var(--acc-indent);
+    }
 
-  .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 999px;
-    border: none;
-    background: currentColor;
-    opacity: 0.35;
-    cursor: pointer;
-    transition: transform 160ms ease, opacity 160ms ease;
-  }
+    /* --- Projects carousel --- */
+    .projects-wrap{
+      width: 100%;
+    }
 
-  .dot[data-active] {
-    opacity: 1;
-    transform: scale(1.35);
-  }
-</style>
+    .carousel{
+      width: 100%;
+    }
+
+    .track{
+      display:flex;
+      gap: 1rem;
+      overflow-x:auto;
+      scroll-snap-type:x mandatory;
+      scroll-behavior:smooth;
+      -webkit-overflow-scrolling:touch;
+      padding-bottom: 2px; /* helps avoid scrollbar overlay glitches */
+    }
+    .track::-webkit-scrollbar{ display:none; }
+
+    .slide{
+      flex: 0 0 100%;
+      width: 100%;
+      scroll-snap-align:center;
+      border-radius: 16px;
+      overflow:hidden;
+    }
+
+    .slide img{
+      width:100%;
+      height:auto;
+      display:block;
+      object-fit:cover;
+    }
+
+    /* --- Custom pagination dots --- */
+    .dots{
+      margin-top: 0.9rem;
+      display:flex;
+      justify-content:center;
+      gap: 10px;
+    }
+
+    .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 0;
+      background: currentColor;
+      opacity: 0.35;
+      cursor: pointer;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+
+    .dot[data-active="true"]{
+      opacity: 1;
+      transform: scale(1.35);
+    }
+
+    /* Optional: make dots easier to tap without changing visible size */
+    .dot{
+      position: relative;
+    }
+    .dot::before{
+      content:"";
+      position:absolute;
+      inset:-10px;
+    }
+  </style>
+</Layout>
