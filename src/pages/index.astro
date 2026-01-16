@@ -11,16 +11,11 @@ const slides = [
 ---
 
 <Layout title="Home" description="">
-  <section class="content home-wrap">
-    <div class="projects" id="projects">
-      <div
-        class="viewport"
-        id="viewport"
-        aria-label="Projects carousel"
-        tabindex="0"
-      >
+  <section class="home">
+    <div class="carousel" id="projects">
+      <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
         <ul class="track" id="track" aria-live="polite">
-          <!-- prev | current | next (3 panes only) -->
+          <!-- 3 panes only: prev | current | next -->
           <li class="pane"><img id="img-prev" alt="Previous project" decoding="async" /></li>
           <li class="pane"><img id="img-cur"  alt="Current project" decoding="async" /></li>
           <li class="pane"><img id="img-next" alt="Next project" decoding="async" /></li>
@@ -40,6 +35,7 @@ const slides = [
     </div>
   </section>
 
+  <!-- IMPORTANT: this is what makes `slides` exist in the browser -->
   <script define:vars={{ slides }}>
     const viewport = document.getElementById("viewport");
     const track = document.getElementById("track");
@@ -52,16 +48,8 @@ const slides = [
     const n = slides.length;
     const mod = (x) => (x % n + n) % n;
 
-    let index = 0;        // logical current index
+    let index = 0;
     let animating = false;
-
-    // Ensure the track starts centered on the middle pane
-    const setTrackCenter = () => {
-      track.style.transition = "none";
-      track.style.transform = "translateX(-100%)";
-      // force reflow so transition-less transform is applied
-      track.offsetHeight;
-    };
 
     const setDots = () => {
       dots.forEach((d, i) => {
@@ -79,13 +67,18 @@ const slides = [
       imgCur.src  = slides[index];
       imgNext.src = slides[next];
 
-      // Make the current one eager-ish (helps perceived performance)
       imgCur.loading = "eager";
       imgPrev.loading = "lazy";
       imgNext.loading = "lazy";
     };
 
-    // Move one step: dir = +1 (next) or -1 (prev)
+    const snapCenter = () => {
+      track.style.transition = "none";
+      track.style.transform = "translateX(-100%)";
+      // force reflow so snap applies immediately
+      track.offsetHeight;
+    };
+
     const step = (dir) => {
       if (animating) return;
       animating = true;
@@ -99,9 +92,7 @@ const slides = [
         index = mod(index + dir);
         setPaneImages();
         setDots();
-
-        // snap back to center pane without animation
-        setTrackCenter();
+        snapCenter();
 
         animating = false;
       };
@@ -113,17 +104,17 @@ const slides = [
       target = mod(target);
       if (target === index || animating) return;
 
-      // If it's adjacent, animate. If not, jump (no weird multi-step delay).
       const forward = mod(target - index);
       const backward = mod(index - target);
 
+      // adjacent? animate; otherwise jump cleanly
       if (forward === 1) return step(1);
       if (backward === 1) return step(-1);
 
       index = target;
       setPaneImages();
       setDots();
-      setTrackCenter();
+      snapCenter();
     };
 
     // Dots
@@ -134,32 +125,22 @@ const slides = [
       });
     });
 
-    // Mouse wheel / trackpad paging
+    // Wheel (mouse + trackpad)
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
       (e) => {
-        // hijack wheel only inside the viewport
         e.preventDefault();
         if (wheelLock || animating) return;
         wheelLock = true;
 
-        // Use whichever axis is dominant (trackpads can be deltaX-heavy)
         const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-        if (dominant > 0) step(1);
-        else step(-1);
+        step(dominant > 0 ? 1 : -1);
 
         setTimeout(() => (wheelLock = false), 340);
       },
       { passive: false }
     );
-
-    // Keyboard
-    viewport.addEventListener("keydown", (e) => {
-      if (animating) return;
-      if (e.key === "ArrowRight") step(1);
-      if (e.key === "ArrowLeft") step(-1);
-    });
 
     // Drag / swipe (snap on release)
     let startX = 0;
@@ -187,27 +168,31 @@ const slides = [
       dragging = false;
     });
 
+    // Arrow keys (when viewport focused)
+    viewport.addEventListener("keydown", (e) => {
+      if (animating) return;
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
+    });
+
     // Init
     setPaneImages();
     setDots();
-    setTrackCenter();
+    snapCenter();
   </script>
 
   <style>
-    .home-wrap{
+    .home{
       display: grid;
       gap: 16px;
-      justify-items: start;
-      align-items: start;
-      margin-inline: auto;
       width: 100%;
-      padding-top: clamp(16px, 4vh, 48px);
-      padding-bottom: clamp(24px, 6vh, 64px);
+      padding-top: clamp(12px, 3vh, 28px);
+      padding-bottom: clamp(18px, 4vh, 44px);
     }
 
-    .projects{
+    /* This will naturally fit inside Layout's <main> width */
+    .carousel{
       width: 100%;
-      max-width: 980px;
     }
 
     .viewport{
@@ -215,15 +200,14 @@ const slides = [
       overflow: hidden;
       border-radius: 16px;
 
-      /* keeps it from being gigantic */
-      height: clamp(220px, 45vh, 520px);
+      /* prevents it from being huge */
+      height: clamp(200px, 40vh, 460px);
 
       outline: none;
-      /* allow pointer events; wheel is handled explicitly */
       touch-action: pan-y;
     }
 
-    /* 3 panes, each 100% width */
+    /* 3 panes each 100% width */
     .track{
       display: flex;
       width: 300%;
@@ -247,7 +231,6 @@ const slides = [
       -webkit-user-drag: none;
     }
 
-    /* dots */
     .dots{
       margin-top: 0.9rem;
       display: flex;
