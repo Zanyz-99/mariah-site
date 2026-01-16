@@ -1,6 +1,5 @@
 ---
-import Carousel from "@/components/carousel.astro";
-
+// You can keep your imports and data as they are
 const projects = [
   "/projects/02 Project Two.png",
   "/projects/03 Project Three.png",
@@ -10,15 +9,71 @@ const projects = [
 ];
 ---
 
-<Carousel
-  items={projects.length}
-  itemsPerSlide={1}        <!-- one slide per viewport -->
-  scrollSnap={true}        <!-- snap to slides -->
-  pagination={{ type: 'dots' }} <!-- show dots -->
->
-  {projects.map((src, index) => (
-    <li data-active={index === 0 ? "true" : undefined} class="flex-shrink-0 w-[80vw] h-[80vh] rounded-lg overflow-hidden">
-      <img src={src} alt={`Project ${index + 1}`} class="w-full h-full object-cover" />
-    </li>
-  ))}
-</Carousel>
+<section class="carousel-container relative w-full max-w-5xl mx-auto overflow-hidden">
+  <ul class="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4 pb-8" id="carousel">
+    {projects.map((src, index) => (
+      <li class="flex-shrink-0 w-full snap-center flex justify-center">
+        <div class="w-[80vw] h-[80vh] rounded-lg overflow-hidden shadow-xl">
+          <img src={src} alt={`Project ${index + 1}`} class="w-full h-full object-cover" />
+        </div>
+      </li>
+    ))}
+  </ul>
+
+  <div class="flex justify-center gap-2 mt-4" id="pagination">
+    {projects.map((_, index) => (
+      <button 
+        class={`w-3 h-3 rounded-full transition-colors ${index === 0 ? 'bg-blue-600' : 'bg-gray-300'}`}
+        aria-label={`Go to slide ${index + 1}`}
+        data-index={index}
+      ></button>
+    ))}
+  </div>
+</section>
+
+<style>
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>
+
+<script>
+  const carousel = document.getElementById('carousel');
+  const dots = document.querySelectorAll('#pagination button');
+
+  const updateDots = (activeIndex) => {
+    dots.forEach((dot, i) => {
+      if (i === activeIndex) {
+        dot.classList.add('bg-blue-600');
+        dot.classList.remove('bg-gray-300');
+      } else {
+        dot.classList.remove('bg-blue-600');
+        dot.classList.add('bg-gray-300');
+      }
+    });
+  };
+
+  // Update dots on scroll
+  carousel?.addEventListener('scroll', () => {
+    const scrollLeft = carousel.scrollLeft;
+    const width = carousel.offsetWidth;
+    const activeIndex = Math.round(scrollLeft / width);
+    updateDots(activeIndex);
+  });
+
+  // Click dots to scroll
+  dots.forEach((dot, i) => {
+    dot.addEventListener('click', () => {
+      carousel?.scrollTo({
+        left: i * carousel.offsetWidth,
+        behavior: 'smooth'
+      });
+    });
+  });
+</script>
