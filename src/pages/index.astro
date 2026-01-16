@@ -1,4 +1,4 @@
-import Container from "../components/container.astro";
+import Carousel from "@/components/carousel.astro";
 
 const images = [
   "/projects/02 Project Two.png",
@@ -9,7 +9,7 @@ const images = [
 ];
 ---
 
-<Container width="wide" pad={false}>
+<Carousel width="wide" pad={false}>
   <section class="carousel">
     <div class="track">
       {images.map((src, i) => (
@@ -29,7 +29,7 @@ const images = [
       ))}
     </div>
   </section>
-</Container>
+</Carousel>
 
 <style>
 .carousel {
