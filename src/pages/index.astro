@@ -13,22 +13,23 @@ const slides = [
 <Layout title="Home" description="">
   <section class="home">
     <div class="carousel" id="projects">
-      <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
+      <div
+        class="viewport"
+        id="viewport"
+        tabindex="0"
+        aria-label="Projects carousel"
+        style="--carousel-h: 420px;"
+      >
         <ul class="track" id="track" aria-live="polite">
           <li class="pane"><img id="img-prev" alt="Previous project" decoding="async" /></li>
-          <li class="pane"><img id="img-cur"  alt="Current project" decoding="async" /></li>
+          <li class="pane"><img id="img-cur" alt="Current project" decoding="async" /></li>
           <li class="pane"><img id="img-next" alt="Next project" decoding="async" /></li>
         </ul>
       </div>
 
       <div class="dots" id="dots" role="tablist" aria-label="Project slide navigation">
         {slides.map((_, i) => (
-          <button
-            class="dot"
-            type="button"
-            data-index={i}
-            aria-label={`Go to slide ${i + 1}`}
-          />
+          <button class="dot" type="button" data-index={i} aria-label={`Go to slide ${i + 1}`} />
         ))}
       </div>
     </div>
@@ -57,6 +58,38 @@ const slides = [
       });
     };
 
+    const snapCenter = () => {
+      track.style.transition = "none";
+      track.style.transform = "translateX(-100%)";
+      track.offsetHeight; // reflow
+    };
+
+    // ✅ Dynamically size the viewport to the current image aspect ratio (no cropping)
+    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+
+    const updateViewportHeightFromCurrent = async () => {
+      try {
+        // Ensure metadata is available
+        if (!imgCur.complete) await new Promise((r) => imgCur.addEventListener("load", r, { once: true }));
+        // decode helps prevent measuring before render on some browsers
+        if (imgCur.decode) await imgCur.decode();
+
+        const w = imgCur.naturalWidth || 1;
+        const h = imgCur.naturalHeight || 1;
+        const ratio = h / w;
+
+        const viewportW = viewport.clientWidth || 1;
+        const desiredH = viewportW * ratio;
+
+        // clamp so it stays nice on page
+        const finalH = clamp(desiredH, 260, Math.min(720, window.innerHeight * 0.8));
+
+        viewport.style.setProperty("--carousel-h", `${Math.round(finalH)}px`);
+      } catch {
+        // fallback: keep whatever height we had
+      }
+    };
+
     const setPaneImages = () => {
       const prev = mod(index - 1);
       const next = mod(index + 1);
@@ -70,12 +103,6 @@ const slides = [
       imgNext.loading = "lazy";
     };
 
-    const snapCenter = () => {
-      track.style.transition = "none";
-      track.style.transform = "translateX(-100%)";
-      track.offsetHeight; // force reflow
-    };
-
     const step = (dir) => {
       if (animating) return;
       animating = true;
@@ -83,7 +110,7 @@ const slides = [
       track.style.transition = "transform 320ms ease";
       track.style.transform = dir === 1 ? "translateX(-200%)" : "translateX(0%)";
 
-      const onDone = () => {
+      const onDone = async () => {
         track.removeEventListener("transitionend", onDone);
 
         index = mod(index + dir);
@@ -91,13 +118,14 @@ const slides = [
         setDots();
         snapCenter();
 
+        await updateViewportHeightFromCurrent();
         animating = false;
       };
 
       track.addEventListener("transitionend", onDone);
     };
 
-    const goTo = (target) => {
+    const goTo = async (target) => {
       target = mod(target);
       if (target === index || animating) return;
 
@@ -111,6 +139,7 @@ const slides = [
       setPaneImages();
       setDots();
       snapCenter();
+      await updateViewportHeightFromCurrent();
     };
 
     dots.forEach((dot) => {
@@ -120,6 +149,7 @@ const slides = [
       });
     });
 
+    // Mouse wheel / trackpad paging
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -136,6 +166,7 @@ const slides = [
       { passive: false }
     );
 
+    // Drag / swipe (snap on release)
     let startX = 0;
     let dragging = false;
 
@@ -167,9 +198,14 @@ const slides = [
       if (e.key === "ArrowLeft") step(-1);
     });
 
+    // Resize: recompute height for current image
+    window.addEventListener("resize", () => updateViewportHeightFromCurrent());
+
+    // Init
     setPaneImages();
     setDots();
     snapCenter();
+    updateViewportHeightFromCurrent();
   </script>
 
   <style>
@@ -190,14 +226,11 @@ const slides = [
       overflow: hidden;
       border-radius: 16px;
 
-      /* ✅ Taller so "contain" isn’t cramped */
-      height: clamp(260px, 55vh, 680px);
+      /* ✅ height is driven by current image aspect ratio */
+      height: var(--carousel-h);
 
       outline: none;
       touch-action: pan-y;
-
-      /* optional: if your PNG transparent areas look odd */
-      background: transparent;
     }
 
     .track{
@@ -212,19 +245,21 @@ const slides = [
       height: 100%;
       overflow: hidden;
 
-      /* centers the image nicely */
       display: grid;
       place-items: center;
     }
 
+    /* ✅ Key change: height/width rules that prevent “cropping” */
     .pane img{
-      /* ✅ Show the whole image, no crop */
-      width: 100%;
-      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: auto;
+
+      display: block;
       object-fit: contain;
       object-position: center;
 
-      display: block;
       user-select: none;
       -webkit-user-drag: none;
     }
