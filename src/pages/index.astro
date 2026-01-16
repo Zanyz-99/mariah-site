@@ -8,150 +8,190 @@ const slides = [
   "/projects/05 Project Five.png",
   "/projects/06 Project Six.png",
 ];
-
-// We’ll render 3 copies for the “infinite” illusion
-const copies = 3;
-const total = slides.length * copies;
-const middleStartIndex = slides.length; // start at the first slide of the middle copy
 ---
 
 <Layout title="Home" description="">
   <section class="content home-wrap">
-    <div class="projects">
-      <div class="carousel" id="projects-carousel" aria-label="Projects carousel">
-        <ul class="track" id="projects-track">
-          {Array.from({ length: total }).map((_, i) => {
-            const src = slides[i % slides.length];
-            const logicalIndex = i % slides.length;
-            return (
-              <li class="slide" data-logical={logicalIndex}>
-                <img
-                  src={src}
-                  alt={`Project ${logicalIndex + 1}`}
-                  loading={i === middleStartIndex ? "eager" : "lazy"}
-                  decoding="async"
-                />
-              </li>
-            );
-          })}
-        </ul>
-
-        <div class="dots" role="tablist" aria-label="Project slide navigation">
-          {slides.map((_, i) => (
-            <button
-              class="dot"
-              type="button"
-              data-index={i}
-              aria-label={`Go to slide ${i + 1}`}
-            />
+    <div class="projects" id="projects">
+      <div class="viewport" aria-label="Projects carousel">
+        <ul class="track" id="track">
+          {slides.map((src, i) => (
+            <li class="slide" data-i={i}>
+              <img
+                src={src}
+                alt={`Project ${i + 1}`}
+                loading={i === 0 ? "eager" : "lazy"}
+                decoding="async"
+              />
+            </li>
           ))}
-        </div>
+        </ul>
+      </div>
+
+      <div class="dots" id="dots" role="tablist" aria-label="Project slide navigation">
+        {slides.map((_, i) => (
+          <button class="dot" type="button" data-index={i} aria-label={`Go to slide ${i + 1}`} />
+        ))}
       </div>
     </div>
   </section>
 
   <script>
-    const carousel = document.getElementById("projects-carousel");
-    const track = document.getElementById("projects-track");
-    const dots = carousel.querySelectorAll(".dot");
-    const slideCount = dots.length;
+    const root = document.getElementById("projects");
+    const viewport = root.querySelector(".viewport");
+    const track = document.getElementById("track");
+    const dots = document.querySelectorAll("#dots .dot");
 
-    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+    // State
+    let index = 0;           // logical index 0..n-1
+    let animating = false;
 
-    let isAnimating = false;
-
-    const slideWidth = () => track.clientWidth || 1;
-
-    const setActiveDot = (logicalIdx) => {
+    // --- Setup: make it circular by moving last slide to front initially
+    const normalize = (i, n) => (i % n + n) % n;
+    const setActiveDot = () => {
       dots.forEach((d, i) => {
-        if (i === logicalIdx) d.setAttribute("data-active", "true");
+        if (i === index) d.setAttribute("data-active", "true");
         else d.removeAttribute("data-active");
-        d.setAttribute("aria-selected", i === logicalIdx ? "true" : "false");
       });
     };
 
-    const scrollToPhysicalIndex = (physicalIdx, behavior = "smooth") => {
-      isAnimating = true;
-      track.scrollTo({ left: physicalIdx * slideWidth(), behavior });
-      // release after a moment (covers smooth scroll)
-      window.setTimeout(() => (isAnimating = false), behavior === "smooth" ? 280 : 0);
+    // We keep the "current" slide always visually centered by:
+    // 1) placing the current slide in the middle position
+    // 2) animating translateX for the slide change
+    // 3) when animation ends, we rotate DOM nodes (NO scroll jump; no visible teleport)
+    //
+    // This is a standard seamless looping trick.
+    const rotateToIndex = (nextIndex, dir) => {
+      if (animating) return;
+      animating = true;
+
+      const n = track.children.length;
+      index = normalize(nextIndex, n);
+      setActiveDot();
+
+      // Animate: shift track left/right by 100% of viewport
+      // dir = +1 means move to next (track slides left)
+      // dir = -1 means move to prev (track slides right)
+      track.style.transition = "transform 320ms ease";
+      track.style.transform = `translateX(${dir * -100}%)`;
+
+      const onDone = () => {
+        track.removeEventListener("transitionend", onDone);
+
+        // After movement, rotate DOM children so the "current" slide is back at center.
+        // Reset transform instantly (no transition), then re-enable transitions.
+        track.style.transition = "none";
+        track.style.transform = "translateX(-100%)";
+
+        if (dir === 1) {
+          // moved next: first visible was center->left, so move first child to end
+          track.appendChild(track.firstElementChild);
+        } else {
+          // moved prev: last child becomes first
+          track.insertBefore(track.lastElementChild, track.firstElementChild);
+        }
+
+        // force reflow so the browser applies the no-transition state
+        track.offsetHeight; // eslint-disable-line no-unused-expressions
+
+        track.style.transition = "";
+        animating = false;
+      };
+
+      track.addEventListener("transitionend", onDone);
     };
 
-    // --- Infinite illusion ---
-    // Start in the middle copy so you can scroll both directions.
-    const middleStart = slideCount; // first slide of middle copy
-    const jumpIfNearEnds = () => {
-      const w = slideWidth();
-      const physical = Math.round(track.scrollLeft / w);
-
-      // If we drift into the first copy, jump forward one copy
-      if (physical < slideCount * 0.5) {
-        const newPhysical = physical + slideCount;
-        track.scrollLeft = newPhysical * w;
-        return;
+    // Place track so that "current" is the middle slide at translateX(-100%)
+    // We need 3 slides visible in the DOM order: prev, current, next.
+    // So: move last slide to front, and set initial transform to -100%.
+    const init = () => {
+      if (track.children.length >= 2) {
+        track.insertBefore(track.lastElementChild, track.firstElementChild);
       }
-
-      // If we drift into the last copy, jump back one copy
-      if (physical > slideCount * 2.5) {
-        const newPhysical = physical - slideCount;
-        track.scrollLeft = newPhysical * w;
-        return;
-      }
+      track.style.transform = "translateX(-100%)";
+      setActiveDot();
     };
 
-    const updateFromScroll = () => {
-      const w = slideWidth();
-      const physical = clamp(Math.round(track.scrollLeft / w), 0, Number.MAX_SAFE_INTEGER);
-      const logical = ((physical % slideCount) + slideCount) % slideCount;
-      setActiveDot(logical);
-    };
+    const next = () => rotateToIndex(index + 1, 1);
+    const prev = () => rotateToIndex(index - 1, -1);
 
-    // Dots jump to the same logical slide within the middle copy
-    dots.forEach((dot, logicalIdx) => {
+    // Dots: jump by choosing shortest direction (optional nice touch)
+    dots.forEach((dot, i) => {
       dot.addEventListener("click", () => {
-        const physicalIdx = middleStart + logicalIdx;
-        scrollToPhysicalIndex(physicalIdx, "smooth");
-        setActiveDot(logicalIdx);
+        if (i === index) return;
+        const n = dots.length;
+        const forward = normalize(i - index, n);
+        const backward = normalize(index - i, n);
+        // move one step at a time to keep the infinite animation consistent
+        const steps = forward <= backward ? forward : backward;
+        const dir = forward <= backward ? 1 : -1;
+
+        let k = 0;
+        const step = () => {
+          if (k >= steps) return;
+          rotateToIndex(index + dir, dir);
+          k++;
+          // wait for transition
+          setTimeout(step, 340);
+        };
+        step();
       });
     });
 
-    // Mouse wheel: vertical scroll -> horizontal slide snapping
-    // We move one full slide per wheel gesture (feels like “paging”).
+    // Mouse wheel: one slide per wheel gesture
     let wheelLock = false;
-    carousel.addEventListener(
+    viewport.addEventListener(
       "wheel",
       (e) => {
-        // only when cursor is over carousel
-        if (!carousel.matches(":hover")) return;
-
-        // Prevent page from scrolling while interacting with carousel
         e.preventDefault();
-
-        if (wheelLock || isAnimating) return;
+        if (wheelLock || animating) return;
         wheelLock = true;
-
-        const w = slideWidth();
-        const physical = Math.round(track.scrollLeft / w);
-        const dir = e.deltaY > 0 ? 1 : -1;
-
-        scrollToPhysicalIndex(physical + dir, "smooth");
-
-        window.setTimeout(() => (wheelLock = false), 320);
+        if (e.deltaY > 0) next();
+        else prev();
+        setTimeout(() => (wheelLock = false), 360);
       },
       { passive: false }
     );
 
-    // Keep dots in sync + do infinite jumps
-    track.addEventListener("scroll", () => {
-      window.requestAnimationFrame(() => {
-        jumpIfNearEnds();
-        updateFromScroll();
-      });
+    // Drag / swipe
+    let startX = 0;
+    let dragging = false;
+
+    const onDown = (clientX) => {
+      if (animating) return;
+      dragging = true;
+      startX = clientX;
+      viewport.setPointerCapture?.(event.pointerId);
+    };
+
+    const onMove = (clientX) => {
+      if (!dragging || animating) return;
+      const dx = clientX - startX;
+      // You can add live dragging if you want; keeping it “snap on release” for cleanliness.
+      // (No mid-drag transform = fewer weird edge cases.)
+    };
+
+    const onUp = (clientX) => {
+      if (!dragging || animating) return;
+      dragging = false;
+      const dx = clientX - startX;
+      const threshold = Math.min(80, viewport.clientWidth * 0.18);
+      if (dx < -threshold) next();
+      else if (dx > threshold) prev();
+    };
+
+    viewport.addEventListener("pointerdown", (e) => onDown(e.clientX));
+    viewport.addEventListener("pointermove", (e) => onMove(e.clientX));
+    viewport.addEventListener("pointerup", (e) => onUp(e.clientX));
+    viewport.addEventListener("pointercancel", (e) => onUp(e.clientX));
+
+    // Keyboard (optional but nice)
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
     });
 
-    // Init: jump to middle copy instantly
-    track.scrollLeft = middleStart * slideWidth();
-    setActiveDot(0);
+    init();
   </script>
 
   <style>
@@ -166,28 +206,27 @@ const middleStartIndex = slides.length; // start at the first slide of the middl
       padding-bottom: clamp(24px, 6vh, 64px);
     }
 
-    /* simple width cap without Carousel.astro */
     .projects{
       width: min(1200px, 100%);
     }
 
-    .carousel{ width: 100%; }
+    .viewport{
+      width: 100%;
+      overflow: hidden;
+      border-radius: 16px;
+      touch-action: pan-y; /* allow vertical page scroll outside wheel handler */
+    }
 
+    /* Track shows 3 "panes": prev | current | next. Each pane is 100% width. */
     .track{
       display:flex;
-      gap: 1rem;
-      overflow-x:auto;
-      scroll-snap-type:x mandatory;
-      scroll-behavior:smooth;
-      -webkit-overflow-scrolling:touch;
+      width: 300%;
+      transform: translateX(-100%); /* current is centered */
     }
-    .track::-webkit-scrollbar{ display:none; }
 
     .slide{
-      flex: 0 0 100%;
       width: 100%;
-      scroll-snap-align:center;
-      border-radius: 16px;
+      flex: 0 0 100%;
       overflow:hidden;
     }
 
