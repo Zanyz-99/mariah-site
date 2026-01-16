@@ -1,6 +1,7 @@
-import Carousel from "@/components/carousel.astro";
+---
+import Carousel from "../components/Carousel.astro";
 
-const images = [
+const projects = [
   "/projects/02 Project Two.png",
   "/projects/03 Project Three.png",
   "/projects/04 Project Four.png",
@@ -9,110 +10,124 @@ const images = [
 ];
 ---
 
-<Carousel width="wide" pad={false}>
-  <section class="carousel">
-    <div class="track">
-      {images.map((src, i) => (
-        <div class="slide" data-index={i}>
-          <img src={src} alt={`Project ${i + 1}`} />
-        </div>
-      ))}
+<main>
+  <Carousel width="wide" class="home-carousel">
+    <h1 class="title">Projects</h1>
+
+    <div class="carousel" id="projects-carousel">
+      <ul class="track">
+        {projects.map((src, i) => (
+          <li class="slide">
+            <img src={src} alt={`Project ${i + 2}`} loading={i === 0 ? "eager" : "lazy"} />
+          </li>
+        ))}
+      </ul>
+
+      <div class="dots">
+        {projects.map((_, i) => (
+          <button
+            class="dot"
+            data-index={i}
+            aria-label={`Go to slide ${i + 1}`}
+          />
+        ))}
+      </div>
     </div>
-
-    <div class="dots">
-      {images.map((_, i) => (
-        <button
-          class="dot"
-          data-index={i}
-          aria-label={`Go to slide ${i + 1}`}
-        />
-      ))}
-    </div>
-  </section>
-</Carousel>
-
-<style>
-.carousel {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-}
-
-/* slide track */
-.track {
-  display: flex;
-  transition: transform 0.5s ease;
-}
-
-/* each slide */
-.slide {
-  min-width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* image sizing */
-.slide img {
-  width: 100%;
-  height: auto;
-  max-height: 70vh;
-  object-fit: contain;
-}
-
-/* pagination dots */
-.dots {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ccc;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
-
-.dot.active {
-  background: #000;
-}
-
-/* mobile tweak */
-@media (max-width: 600px) {
-  .slide img {
-    max-height: 50vh;
-  }
-}
-</style>
+  </Carousel>
+</main>
 
 <script>
-  const track = document.querySelector(".track");
-  const dots = document.querySelectorAll(".dot");
+  const carousel = document.getElementById("projects-carousel");
+  const track = carousel.querySelector(".track");
+  const dots = carousel.querySelectorAll(".dot");
 
-  let currentIndex = 0;
+  const updateDots = () => {
+    const index = Math.round(track.scrollLeft / track.clientWidth);
+    dots.forEach((dot, i) =>
+      dot.toggleAttribute("data-active", i === index)
+    );
+  };
 
-  function goToSlide(index) {
-    currentIndex = index;
-    track.style.transform = `translateX(-${index * 100}%)`;
+  dots.forEach((dot, i) => {
+    dot.addEventListener("click", () => {
+      track.scrollTo({
+        left: i * track.clientWidth,
+        behavior: "smooth",
+      });
+    });
+  });
 
-    dots.forEach(dot => dot.classList.remove("active"));
-    dots[index].classList.add("active");
+  track.addEventListener("scroll", () => {
+    window.requestAnimationFrame(updateDots);
+  });
+
+  updateDots();
+</script>
+
+<style>
+  .home-carousel {
+    padding-top: 2rem;
+    padding-bottom: 3rem;
   }
 
-  dots.forEach(dot => {
-    dot.addEventListener("click", () => {
-      goToSlide(Number(dot.dataset.index));
-    });
-  });
+  .title {
+    margin-bottom: 1rem;
+    font-size: 2rem;
+  }
 
-  goToSlide(0);
-</script>
+  /* --- Carousel --- */
+  .carousel {
+    position: relative;
+  }
 
-    });
-  });
-</script>
+  .track {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .slide {
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .slide img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+  }
+
+  /* --- Custom dots --- */
+  .dots {
+    margin-top: 0.9rem;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: none;
+    background: currentColor;
+    opacity: 0.35;
+    cursor: pointer;
+    transition: transform 160ms ease, opacity 160ms ease;
+  }
+
+  .dot[data-active] {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+</style>
