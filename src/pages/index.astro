@@ -1,46 +1,43 @@
 ---
 import Layout from "../layouts/Layout.astro";
 
-const projects = [
+const slides = [
   "/projects/02 Project Two.png",
   "/projects/03 Project Three.png",
   "/projects/04 Project Four.png",
   "/projects/05 Project Five.png",
   "/projects/06 Project Six.png",
 ];
+
+// We’ll render 3 copies for the “infinite” illusion
+const copies = 3;
+const total = slides.length * copies;
+const middleStartIndex = slides.length; // start at the first slide of the middle copy
 ---
 
-<Layout title="Home — Zach Scholz" description="Navy Veteran">
+<Layout title="Home" description="">
   <section class="content home-wrap">
-    <div class="spacer-md" aria-hidden="true"></div>
-
-    <button class="acc-summary acc-summary--home" type="button" disabled aria-hidden="true" tabindex="-1">
-      <span class="acc-toggle" aria-hidden="true"></span>
-      <span class="acc-title">Zach Scholz</span>
-    </button>
-
-    <p class="home-sub indent-acc">U.S. Navy Veteran</p>
-
-    <div class="spacer-sm" aria-hidden="true"></div>
-
-    <!-- ✅ Carousel (no Carousel.astro used) -->
     <div class="projects">
       <div class="carousel" id="projects-carousel" aria-label="Projects carousel">
-        <ul class="track">
-          {projects.map((src, i) => (
-            <li class="slide">
-              <img
-                src={src}
-                alt={`Project ${i + 1}`}
-                loading={i === 0 ? "eager" : "lazy"}
-                decoding="async"
-              />
-            </li>
-          ))}
+        <ul class="track" id="projects-track">
+          {Array.from({ length: total }).map((_, i) => {
+            const src = slides[i % slides.length];
+            const logicalIndex = i % slides.length;
+            return (
+              <li class="slide" data-logical={logicalIndex}>
+                <img
+                  src={src}
+                  alt={`Project ${logicalIndex + 1}`}
+                  loading={i === middleStartIndex ? "eager" : "lazy"}
+                  decoding="async"
+                />
+              </li>
+            );
+          })}
         </ul>
 
         <div class="dots" role="tablist" aria-label="Project slide navigation">
-          {projects.map((_, i) => (
+          {slides.map((_, i) => (
             <button
               class="dot"
               type="button"
@@ -55,99 +52,127 @@ const projects = [
 
   <script>
     const carousel = document.getElementById("projects-carousel");
-    const track = carousel.querySelector(".track");
+    const track = document.getElementById("projects-track");
     const dots = carousel.querySelectorAll(".dot");
+    const slideCount = dots.length;
 
     const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
-    const setActive = (idx) => {
+    let isAnimating = false;
+
+    const slideWidth = () => track.clientWidth || 1;
+
+    const setActiveDot = (logicalIdx) => {
       dots.forEach((d, i) => {
-        if (i === idx) d.setAttribute("data-active", "true");
+        if (i === logicalIdx) d.setAttribute("data-active", "true");
         else d.removeAttribute("data-active");
+        d.setAttribute("aria-selected", i === logicalIdx ? "true" : "false");
       });
+    };
+
+    const scrollToPhysicalIndex = (physicalIdx, behavior = "smooth") => {
+      isAnimating = true;
+      track.scrollTo({ left: physicalIdx * slideWidth(), behavior });
+      // release after a moment (covers smooth scroll)
+      window.setTimeout(() => (isAnimating = false), behavior === "smooth" ? 280 : 0);
+    };
+
+    // --- Infinite illusion ---
+    // Start in the middle copy so you can scroll both directions.
+    const middleStart = slideCount; // first slide of middle copy
+    const jumpIfNearEnds = () => {
+      const w = slideWidth();
+      const physical = Math.round(track.scrollLeft / w);
+
+      // If we drift into the first copy, jump forward one copy
+      if (physical < slideCount * 0.5) {
+        const newPhysical = physical + slideCount;
+        track.scrollLeft = newPhysical * w;
+        return;
+      }
+
+      // If we drift into the last copy, jump back one copy
+      if (physical > slideCount * 2.5) {
+        const newPhysical = physical - slideCount;
+        track.scrollLeft = newPhysical * w;
+        return;
+      }
     };
 
     const updateFromScroll = () => {
-      const w = track.clientWidth || 1;
-      const idx = clamp(Math.round(track.scrollLeft / w), 0, dots.length - 1);
-      setActive(idx);
+      const w = slideWidth();
+      const physical = clamp(Math.round(track.scrollLeft / w), 0, Number.MAX_SAFE_INTEGER);
+      const logical = ((physical % slideCount) + slideCount) % slideCount;
+      setActiveDot(logical);
     };
 
-    dots.forEach((dot, i) => {
+    // Dots jump to the same logical slide within the middle copy
+    dots.forEach((dot, logicalIdx) => {
       dot.addEventListener("click", () => {
-        track.scrollTo({ left: i * track.clientWidth, behavior: "smooth" });
-        setActive(i);
+        const physicalIdx = middleStart + logicalIdx;
+        scrollToPhysicalIndex(physicalIdx, "smooth");
+        setActiveDot(logicalIdx);
       });
     });
 
+    // Mouse wheel: vertical scroll -> horizontal slide snapping
+    // We move one full slide per wheel gesture (feels like “paging”).
+    let wheelLock = false;
+    carousel.addEventListener(
+      "wheel",
+      (e) => {
+        // only when cursor is over carousel
+        if (!carousel.matches(":hover")) return;
+
+        // Prevent page from scrolling while interacting with carousel
+        e.preventDefault();
+
+        if (wheelLock || isAnimating) return;
+        wheelLock = true;
+
+        const w = slideWidth();
+        const physical = Math.round(track.scrollLeft / w);
+        const dir = e.deltaY > 0 ? 1 : -1;
+
+        scrollToPhysicalIndex(physical + dir, "smooth");
+
+        window.setTimeout(() => (wheelLock = false), 320);
+      },
+      { passive: false }
+    );
+
+    // Keep dots in sync + do infinite jumps
     track.addEventListener("scroll", () => {
-      window.requestAnimationFrame(updateFromScroll);
+      window.requestAnimationFrame(() => {
+        jumpIfNearEnds();
+        updateFromScroll();
+      });
     });
 
-    setActive(0);
+    // Init: jump to middle copy instantly
+    track.scrollLeft = middleStart * slideWidth();
+    setActiveDot(0);
   </script>
 
   <style>
-    :root{
-      --acc-toggle-w: 1.25rem;
-      --acc-gap: 0.6rem;
-      --acc-indent: calc(var(--acc-toggle-w) + var(--acc-gap));
-    }
-
     .home-wrap{
       display:grid;
-      gap:12px;
+      gap: 16px;
       justify-items:start;
       align-items:start;
       margin-inline:auto;
       width:100%;
+      padding-top: clamp(16px, 4vh, 48px);
+      padding-bottom: clamp(24px, 6vh, 64px);
     }
 
-    .spacer-md{ height: clamp(24px, 6vh, 64px); width:100%; }
-    .spacer-sm{ height: clamp(12px, 3vh, 28px); width:100%; }
-
-    .acc-summary{
-      appearance:none; -webkit-appearance:none; box-sizing:border-box;
-      width:100%;
-      display:flex; align-items:center; gap:var(--acc-gap);
-      padding:6px 0; user-select:none; color:var(--text);
-      background:none; border:0; margin:0; cursor:pointer;
-    }
-    .acc-summary--home{ pointer-events:none; cursor:default; }
-
-    .acc-toggle{
-      display:flex; align-items:center; justify-content:center;
-      width:var(--acc-toggle-w);
-      font-size:calc(var(--h1-size) * 0.8);
-      font-weight:1000; line-height:1;
-      color:var(--text); text-align:center;
-    }
-    .acc-summary--home .acc-toggle::before{ content:''; }
-
-    .acc-title{
-      margin:0;
-      font-size:var(--h1-size);
-      font-weight:1000;
-      letter-spacing:-0.01em;
-      line-height:calc(var(--line) - .15);
-      color:var(--text);
-    }
-
-    .home-sub{
-      margin:.25rem 0 0;
-      color:var(--text);
-      font-size:clamp(16px, 2.2vw, 18px);
-      margin-left: 0;
-      padding-left: 0;
-    }
-    .home-wrap .home-sub.indent-acc{ margin-left: var(--acc-indent); }
-
-    /* --- Projects block width (acts like a simple wrapper) --- */
+    /* simple width cap without Carousel.astro */
     .projects{
       width: min(1200px, 100%);
     }
 
-    /* --- Carousel --- */
+    .carousel{ width: 100%; }
+
     .track{
       display:flex;
       gap: 1rem;
@@ -173,7 +198,6 @@ const projects = [
       object-fit:cover;
     }
 
-    /* --- Dots --- */
     .dots{
       margin-top: 0.9rem;
       display:flex;
