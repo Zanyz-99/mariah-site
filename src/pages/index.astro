@@ -15,7 +15,6 @@ const slides = [
     <div class="carousel" id="projects">
       <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
         <ul class="track" id="track" aria-live="polite">
-          <!-- 3 panes only: prev | current | next -->
           <li class="pane"><img id="img-prev" alt="Previous project" decoding="async" /></li>
           <li class="pane"><img id="img-cur"  alt="Current project" decoding="async" /></li>
           <li class="pane"><img id="img-next" alt="Next project" decoding="async" /></li>
@@ -35,7 +34,6 @@ const slides = [
     </div>
   </section>
 
-  <!-- IMPORTANT: this is what makes `slides` exist in the browser -->
   <script define:vars={{ slides }}>
     const viewport = document.getElementById("viewport");
     const track = document.getElementById("track");
@@ -75,8 +73,7 @@ const slides = [
     const snapCenter = () => {
       track.style.transition = "none";
       track.style.transform = "translateX(-100%)";
-      // force reflow so snap applies immediately
-      track.offsetHeight;
+      track.offsetHeight; // force reflow
     };
 
     const step = (dir) => {
@@ -107,7 +104,6 @@ const slides = [
       const forward = mod(target - index);
       const backward = mod(index - target);
 
-      // adjacent? animate; otherwise jump cleanly
       if (forward === 1) return step(1);
       if (backward === 1) return step(-1);
 
@@ -117,7 +113,6 @@ const slides = [
       snapCenter();
     };
 
-    // Dots
     dots.forEach((dot) => {
       dot.addEventListener("click", () => {
         const t = Number(dot.getAttribute("data-index"));
@@ -125,7 +120,6 @@ const slides = [
       });
     });
 
-    // Wheel (mouse + trackpad)
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -142,7 +136,6 @@ const slides = [
       { passive: false }
     );
 
-    // Drag / swipe (snap on release)
     let startX = 0;
     let dragging = false;
 
@@ -168,14 +161,12 @@ const slides = [
       dragging = false;
     });
 
-    // Arrow keys (when viewport focused)
     viewport.addEventListener("keydown", (e) => {
       if (animating) return;
       if (e.key === "ArrowRight") step(1);
       if (e.key === "ArrowLeft") step(-1);
     });
 
-    // Init
     setPaneImages();
     setDots();
     snapCenter();
@@ -190,7 +181,6 @@ const slides = [
       padding-bottom: clamp(18px, 4vh, 44px);
     }
 
-    /* This will naturally fit inside Layout's <main> width */
     .carousel{
       width: 100%;
     }
@@ -200,14 +190,16 @@ const slides = [
       overflow: hidden;
       border-radius: 16px;
 
-      /* prevents it from being huge */
-      height: clamp(200px, 40vh, 460px);
+      /* ✅ Taller so "contain" isn’t cramped */
+      height: clamp(260px, 55vh, 680px);
 
       outline: none;
       touch-action: pan-y;
+
+      /* optional: if your PNG transparent areas look odd */
+      background: transparent;
     }
 
-    /* 3 panes each 100% width */
     .track{
       display: flex;
       width: 300%;
@@ -219,14 +211,20 @@ const slides = [
       width: 100%;
       height: 100%;
       overflow: hidden;
+
+      /* centers the image nicely */
+      display: grid;
+      place-items: center;
     }
 
     .pane img{
+      /* ✅ Show the whole image, no crop */
       width: 100%;
       height: 100%;
-      display: block;
-      object-fit: cover;
+      object-fit: contain;
       object-position: center;
+
+      display: block;
       user-select: none;
       -webkit-user-drag: none;
     }
