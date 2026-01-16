@@ -13,7 +13,12 @@ const slides = [
 <Layout title="Home" description="">
   <section class="content home-wrap">
     <div class="projects" id="projects">
-      <div class="viewport" aria-label="Projects carousel">
+      <div
+        class="viewport"
+        id="viewport"
+        aria-label="Projects carousel"
+        tabindex="0"
+      >
         <ul class="track" id="track">
           {slides.map((src, i) => (
             <li class="slide" data-i={i}>
@@ -30,24 +35,27 @@ const slides = [
 
       <div class="dots" id="dots" role="tablist" aria-label="Project slide navigation">
         {slides.map((_, i) => (
-          <button class="dot" type="button" data-index={i} aria-label={`Go to slide ${i + 1}`} />
+          <button
+            class="dot"
+            type="button"
+            data-index={i}
+            aria-label={`Go to slide ${i + 1}`}
+          />
         ))}
       </div>
     </div>
   </section>
 
   <script>
-    const root = document.getElementById("projects");
-    const viewport = root.querySelector(".viewport");
+    const viewport = document.getElementById("viewport");
     const track = document.getElementById("track");
     const dots = document.querySelectorAll("#dots .dot");
 
-    // State
-    let index = 0;           // logical index 0..n-1
+    let index = 0;
     let animating = false;
 
-    // --- Setup: make it circular by moving last slide to front initially
     const normalize = (i, n) => (i % n + n) % n;
+
     const setActiveDot = () => {
       dots.forEach((d, i) => {
         if (i === index) d.setAttribute("data-active", "true");
@@ -55,90 +63,65 @@ const slides = [
       });
     };
 
-    // We keep the "current" slide always visually centered by:
-    // 1) placing the current slide in the middle position
-    // 2) animating translateX for the slide change
-    // 3) when animation ends, we rotate DOM nodes (NO scroll jump; no visible teleport)
-    //
-    // This is a standard seamless looping trick.
-    const rotateToIndex = (nextIndex, dir) => {
+    const shift = (dir) => {
       if (animating) return;
       animating = true;
 
-      const n = track.children.length;
-      index = normalize(nextIndex, n);
+      const n = dots.length;
+      index = normalize(index + dir, n);
       setActiveDot();
 
-      // Animate: shift track left/right by 100% of viewport
-      // dir = +1 means move to next (track slides left)
-      // dir = -1 means move to prev (track slides right)
       track.style.transition = "transform 320ms ease";
       track.style.transform = `translateX(${dir * -100}%)`;
 
       const onDone = () => {
         track.removeEventListener("transitionend", onDone);
 
-        // After movement, rotate DOM children so the "current" slide is back at center.
-        // Reset transform instantly (no transition), then re-enable transitions.
         track.style.transition = "none";
         track.style.transform = "translateX(-100%)";
 
-        if (dir === 1) {
-          // moved next: first visible was center->left, so move first child to end
-          track.appendChild(track.firstElementChild);
-        } else {
-          // moved prev: last child becomes first
-          track.insertBefore(track.lastElementChild, track.firstElementChild);
-        }
+        if (dir === 1) track.appendChild(track.firstElementChild);
+        else track.insertBefore(track.lastElementChild, track.firstElementChild);
 
-        // force reflow so the browser applies the no-transition state
-        track.offsetHeight; // eslint-disable-line no-unused-expressions
+        // force reflow so the no-transition transform applies
+        track.offsetHeight;
 
-        track.style.transition = "";
         animating = false;
       };
 
       track.addEventListener("transitionend", onDone);
     };
 
-    // Place track so that "current" is the middle slide at translateX(-100%)
-    // We need 3 slides visible in the DOM order: prev, current, next.
-    // So: move last slide to front, and set initial transform to -100%.
     const init = () => {
-      if (track.children.length >= 2) {
-        track.insertBefore(track.lastElementChild, track.firstElementChild);
-      }
+      // Put last slide first so "current" is visually centered at -100%
+      track.insertBefore(track.lastElementChild, track.firstElementChild);
       track.style.transform = "translateX(-100%)";
       setActiveDot();
     };
 
-    const next = () => rotateToIndex(index + 1, 1);
-    const prev = () => rotateToIndex(index - 1, -1);
-
-    // Dots: jump by choosing shortest direction (optional nice touch)
-    dots.forEach((dot, i) => {
+    // Dot navigation (moves step-by-step in shortest direction)
+    dots.forEach((dot, target) => {
       dot.addEventListener("click", () => {
-        if (i === index) return;
+        if (target === index || animating) return;
+
         const n = dots.length;
-        const forward = normalize(i - index, n);
-        const backward = normalize(index - i, n);
-        // move one step at a time to keep the infinite animation consistent
-        const steps = forward <= backward ? forward : backward;
+        const forward = normalize(target - index, n);
+        const backward = normalize(index - target, n);
         const dir = forward <= backward ? 1 : -1;
+        const steps = Math.min(forward, backward);
 
         let k = 0;
         const step = () => {
           if (k >= steps) return;
-          rotateToIndex(index + dir, dir);
+          shift(dir);
           k++;
-          // wait for transition
           setTimeout(step, 340);
         };
         step();
       });
     });
 
-    // Mouse wheel: one slide per wheel gesture
+    // Mouse wheel / trackpad paging
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -146,49 +129,47 @@ const slides = [
         e.preventDefault();
         if (wheelLock || animating) return;
         wheelLock = true;
-        if (e.deltaY > 0) next();
-        else prev();
+
+        // Use whichever axis is dominant
+        const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        shift(dominant > 0 ? 1 : -1);
+
         setTimeout(() => (wheelLock = false), 360);
       },
       { passive: false }
     );
 
-    // Drag / swipe
+    // Basic swipe/drag (snap on release)
     let startX = 0;
     let dragging = false;
 
-    const onDown = (clientX) => {
+    viewport.addEventListener("pointerdown", (e) => {
       if (animating) return;
       dragging = true;
-      startX = clientX;
-      viewport.setPointerCapture?.(event.pointerId);
-    };
+      startX = e.clientX;
+      viewport.setPointerCapture?.(e.pointerId);
+    });
 
-    const onMove = (clientX) => {
-      if (!dragging || animating) return;
-      const dx = clientX - startX;
-      // You can add live dragging if you want; keeping it “snap on release” for cleanliness.
-      // (No mid-drag transform = fewer weird edge cases.)
-    };
-
-    const onUp = (clientX) => {
+    viewport.addEventListener("pointerup", (e) => {
       if (!dragging || animating) return;
       dragging = false;
-      const dx = clientX - startX;
-      const threshold = Math.min(80, viewport.clientWidth * 0.18);
-      if (dx < -threshold) next();
-      else if (dx > threshold) prev();
-    };
 
-    viewport.addEventListener("pointerdown", (e) => onDown(e.clientX));
-    viewport.addEventListener("pointermove", (e) => onMove(e.clientX));
-    viewport.addEventListener("pointerup", (e) => onUp(e.clientX));
-    viewport.addEventListener("pointercancel", (e) => onUp(e.clientX));
+      const dx = e.clientX - startX;
+      const threshold = Math.min(90, viewport.clientWidth * 0.18);
 
-    // Keyboard (optional but nice)
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowRight") next();
-      if (e.key === "ArrowLeft") prev();
+      if (dx < -threshold) shift(1);
+      else if (dx > threshold) shift(-1);
+    });
+
+    viewport.addEventListener("pointercancel", (e) => {
+      dragging = false;
+    });
+
+    // Optional keyboard controls when focused
+    viewport.addEventListener("keydown", (e) => {
+      if (animating) return;
+      if (e.key === "ArrowRight") shift(1);
+      if (e.key === "ArrowLeft") shift(-1);
     });
 
     init();
@@ -196,53 +177,65 @@ const slides = [
 
   <style>
     .home-wrap{
-      display:grid;
+      display: grid;
       gap: 16px;
-      justify-items:start;
-      align-items:start;
-      margin-inline:auto;
-      width:100%;
+      justify-items: start;
+      align-items: start;
+      margin-inline: auto;
+      width: 100%;
       padding-top: clamp(16px, 4vh, 48px);
       padding-bottom: clamp(24px, 6vh, 64px);
     }
 
+    /* Width cap without Carousel.astro */
     .projects{
-      width: min(1200px, 100%);
+      width: 100%;
+      max-width: 980px;
     }
 
     .viewport{
       width: 100%;
       overflow: hidden;
       border-radius: 16px;
-      touch-action: pan-y; /* allow vertical page scroll outside wheel handler */
+
+      /* Keeps it from getting huge */
+      height: clamp(220px, 45vh, 520px);
+
+      /* lets it receive keyboard focus styles from your theme */
+      outline: none;
     }
 
-    /* Track shows 3 "panes": prev | current | next. Each pane is 100% width. */
+    /* 3-pane track: prev | current | next */
     .track{
-      display:flex;
+      display: flex;
       width: 300%;
-      transform: translateX(-100%); /* current is centered */
+      transform: translateX(-100%);
     }
 
     .slide{
       width: 100%;
       flex: 0 0 100%;
-      overflow:hidden;
+      height: 100%;
+      overflow: hidden;
     }
 
     .slide img{
-      width:100%;
-      height:auto;
-      display:block;
-      object-fit:cover;
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center;
     }
 
+    /* Dots */
     .dots{
       margin-top: 0.9rem;
-      display:flex;
-      justify-content:center;
+      display: flex;
+      justify-content: center;
       gap: 10px;
+      width: 100%;
     }
+
     .dot{
       width: 10px;
       height: 10px;
@@ -254,14 +247,17 @@ const slides = [
       transition: transform 160ms ease, opacity 160ms ease;
       position: relative;
     }
+
     .dot[data-active="true"]{
       opacity: 1;
       transform: scale(1.35);
     }
+
+    /* Bigger hit target */
     .dot::before{
-      content:"";
-      position:absolute;
-      inset:-10px;
+      content: "";
+      position: absolute;
+      inset: -10px;
     }
   </style>
 </Layout>
