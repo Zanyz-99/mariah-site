@@ -19,17 +19,11 @@ const slides = [
         aria-label="Projects carousel"
         tabindex="0"
       >
-        <ul class="track" id="track">
-          {slides.map((src, i) => (
-            <li class="slide" data-i={i}>
-              <img
-                src={src}
-                alt={`Project ${i + 1}`}
-                loading={i === 0 ? "eager" : "lazy"}
-                decoding="async"
-              />
-            </li>
-          ))}
+        <ul class="track" id="track" aria-live="polite">
+          <!-- prev | current | next (3 panes only) -->
+          <li class="pane"><img id="img-prev" alt="Previous project" decoding="async" /></li>
+          <li class="pane"><img id="img-cur"  alt="Current project" decoding="async" /></li>
+          <li class="pane"><img id="img-next" alt="Next project" decoding="async" /></li>
         </ul>
       </div>
 
@@ -46,45 +40,68 @@ const slides = [
     </div>
   </section>
 
-  <script>
+  <script define:vars={{ slides }}>
     const viewport = document.getElementById("viewport");
     const track = document.getElementById("track");
     const dots = document.querySelectorAll("#dots .dot");
 
-    let index = 0;
+    const imgPrev = document.getElementById("img-prev");
+    const imgCur  = document.getElementById("img-cur");
+    const imgNext = document.getElementById("img-next");
+
+    const n = slides.length;
+    const mod = (x) => (x % n + n) % n;
+
+    let index = 0;        // logical current index
     let animating = false;
 
-    const normalize = (i, n) => (i % n + n) % n;
+    // Ensure the track starts centered on the middle pane
+    const setTrackCenter = () => {
+      track.style.transition = "none";
+      track.style.transform = "translateX(-100%)";
+      // force reflow so transition-less transform is applied
+      track.offsetHeight;
+    };
 
-    const setActiveDot = () => {
+    const setDots = () => {
       dots.forEach((d, i) => {
         if (i === index) d.setAttribute("data-active", "true");
         else d.removeAttribute("data-active");
+        d.setAttribute("aria-selected", i === index ? "true" : "false");
       });
     };
 
-    const shift = (dir) => {
+    const setPaneImages = () => {
+      const prev = mod(index - 1);
+      const next = mod(index + 1);
+
+      imgPrev.src = slides[prev];
+      imgCur.src  = slides[index];
+      imgNext.src = slides[next];
+
+      // Make the current one eager-ish (helps perceived performance)
+      imgCur.loading = "eager";
+      imgPrev.loading = "lazy";
+      imgNext.loading = "lazy";
+    };
+
+    // Move one step: dir = +1 (next) or -1 (prev)
+    const step = (dir) => {
       if (animating) return;
       animating = true;
 
-      const n = dots.length;
-      index = normalize(index + dir, n);
-      setActiveDot();
-
       track.style.transition = "transform 320ms ease";
-      track.style.transform = `translateX(${dir * -100}%)`;
+      track.style.transform = dir === 1 ? "translateX(-200%)" : "translateX(0%)";
 
       const onDone = () => {
         track.removeEventListener("transitionend", onDone);
 
-        track.style.transition = "none";
-        track.style.transform = "translateX(-100%)";
+        index = mod(index + dir);
+        setPaneImages();
+        setDots();
 
-        if (dir === 1) track.appendChild(track.firstElementChild);
-        else track.insertBefore(track.lastElementChild, track.firstElementChild);
-
-        // force reflow so the no-transition transform applies
-        track.offsetHeight;
+        // snap back to center pane without animation
+        setTrackCenter();
 
         animating = false;
       };
@@ -92,32 +109,28 @@ const slides = [
       track.addEventListener("transitionend", onDone);
     };
 
-    const init = () => {
-      // Put last slide first so "current" is visually centered at -100%
-      track.insertBefore(track.lastElementChild, track.firstElementChild);
-      track.style.transform = "translateX(-100%)";
-      setActiveDot();
+    const goTo = (target) => {
+      target = mod(target);
+      if (target === index || animating) return;
+
+      // If it's adjacent, animate. If not, jump (no weird multi-step delay).
+      const forward = mod(target - index);
+      const backward = mod(index - target);
+
+      if (forward === 1) return step(1);
+      if (backward === 1) return step(-1);
+
+      index = target;
+      setPaneImages();
+      setDots();
+      setTrackCenter();
     };
 
-    // Dot navigation (moves step-by-step in shortest direction)
-    dots.forEach((dot, target) => {
+    // Dots
+    dots.forEach((dot) => {
       dot.addEventListener("click", () => {
-        if (target === index || animating) return;
-
-        const n = dots.length;
-        const forward = normalize(target - index, n);
-        const backward = normalize(index - target, n);
-        const dir = forward <= backward ? 1 : -1;
-        const steps = Math.min(forward, backward);
-
-        let k = 0;
-        const step = () => {
-          if (k >= steps) return;
-          shift(dir);
-          k++;
-          setTimeout(step, 340);
-        };
-        step();
+        const t = Number(dot.getAttribute("data-index"));
+        goTo(t);
       });
     });
 
@@ -126,20 +139,29 @@ const slides = [
     viewport.addEventListener(
       "wheel",
       (e) => {
+        // hijack wheel only inside the viewport
         e.preventDefault();
         if (wheelLock || animating) return;
         wheelLock = true;
 
-        // Use whichever axis is dominant
+        // Use whichever axis is dominant (trackpads can be deltaX-heavy)
         const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-        shift(dominant > 0 ? 1 : -1);
+        if (dominant > 0) step(1);
+        else step(-1);
 
-        setTimeout(() => (wheelLock = false), 360);
+        setTimeout(() => (wheelLock = false), 340);
       },
       { passive: false }
     );
 
-    // Basic swipe/drag (snap on release)
+    // Keyboard
+    viewport.addEventListener("keydown", (e) => {
+      if (animating) return;
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
+    });
+
+    // Drag / swipe (snap on release)
     let startX = 0;
     let dragging = false;
 
@@ -157,22 +179,18 @@ const slides = [
       const dx = e.clientX - startX;
       const threshold = Math.min(90, viewport.clientWidth * 0.18);
 
-      if (dx < -threshold) shift(1);
-      else if (dx > threshold) shift(-1);
+      if (dx < -threshold) step(1);
+      else if (dx > threshold) step(-1);
     });
 
-    viewport.addEventListener("pointercancel", (e) => {
+    viewport.addEventListener("pointercancel", () => {
       dragging = false;
     });
 
-    // Optional keyboard controls when focused
-    viewport.addEventListener("keydown", (e) => {
-      if (animating) return;
-      if (e.key === "ArrowRight") shift(1);
-      if (e.key === "ArrowLeft") shift(-1);
-    });
-
-    init();
+    // Init
+    setPaneImages();
+    setDots();
+    setTrackCenter();
   </script>
 
   <style>
@@ -187,7 +205,6 @@ const slides = [
       padding-bottom: clamp(24px, 6vh, 64px);
     }
 
-    /* Width cap without Carousel.astro */
     .projects{
       width: 100%;
       max-width: 980px;
@@ -198,36 +215,39 @@ const slides = [
       overflow: hidden;
       border-radius: 16px;
 
-      /* Keeps it from getting huge */
+      /* keeps it from being gigantic */
       height: clamp(220px, 45vh, 520px);
 
-      /* lets it receive keyboard focus styles from your theme */
       outline: none;
+      /* allow pointer events; wheel is handled explicitly */
+      touch-action: pan-y;
     }
 
-    /* 3-pane track: prev | current | next */
+    /* 3 panes, each 100% width */
     .track{
       display: flex;
       width: 300%;
       transform: translateX(-100%);
     }
 
-    .slide{
-      width: 100%;
+    .pane{
       flex: 0 0 100%;
+      width: 100%;
       height: 100%;
       overflow: hidden;
     }
 
-    .slide img{
+    .pane img{
       width: 100%;
       height: 100%;
       display: block;
       object-fit: cover;
       object-position: center;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
-    /* Dots */
+    /* dots */
     .dots{
       margin-top: 0.9rem;
       display: flex;
@@ -253,7 +273,6 @@ const slides = [
       transform: scale(1.35);
     }
 
-    /* Bigger hit target */
     .dot::before{
       content: "";
       position: absolute;
