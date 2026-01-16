@@ -1,6 +1,5 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Carousel from "../components/Carousel.astro";
 
 const projects = [
   "/projects/02 Project Two.png",
@@ -15,25 +14,17 @@ const projects = [
   <section class="content home-wrap">
     <div class="spacer-md" aria-hidden="true"></div>
 
-    <!-- Header row identical to About (toggle column preserved, glyph hidden) -->
-    <button
-      class="acc-summary acc-summary--home"
-      type="button"
-      disabled
-      aria-hidden="true"
-      tabindex="-1"
-    >
+    <button class="acc-summary acc-summary--home" type="button" disabled aria-hidden="true" tabindex="-1">
       <span class="acc-toggle" aria-hidden="true"></span>
       <span class="acc-title">Zach Scholz</span>
     </button>
 
-    <!-- Subtitle MUST carry the indent class -->
     <p class="home-sub indent-acc">U.S. Navy Veteran</p>
 
-    <!-- Projects Carousel -->
     <div class="spacer-sm" aria-hidden="true"></div>
 
-    <Carousel width="wide" class="projects-wrap">
+    <!-- ✅ Carousel (no Carousel.astro used) -->
+    <div class="projects">
       <div class="carousel" id="projects-carousel" aria-label="Projects carousel">
         <ul class="track">
           {projects.map((src, i) => (
@@ -55,12 +46,11 @@ const projects = [
               type="button"
               data-index={i}
               aria-label={`Go to slide ${i + 1}`}
-              aria-controls="projects-carousel"
             />
           ))}
         </div>
       </div>
-    </Carousel>
+    </div>
   </section>
 
   <script>
@@ -74,7 +64,6 @@ const projects = [
       dots.forEach((d, i) => {
         if (i === idx) d.setAttribute("data-active", "true");
         else d.removeAttribute("data-active");
-        d.setAttribute("aria-selected", i === idx ? "true" : "false");
       });
     };
 
@@ -95,20 +84,16 @@ const projects = [
       window.requestAnimationFrame(updateFromScroll);
     });
 
-    // Set initial active dot
     setActive(0);
   </script>
 
   <style>
     :root{
-      /* Keep in sync with About */
-      --acc-toggle-w: 1.25rem;   /* toggle column width */
-      --acc-gap: 0.6rem;         /* gap between toggle and title */
-      /* Fallback single var to mirror About's panel padding-left (1.25rem + 0.6rem) */
+      --acc-toggle-w: 1.25rem;
+      --acc-gap: 0.6rem;
       --acc-indent: calc(var(--acc-toggle-w) + var(--acc-gap));
     }
 
-    /* Match About’s container behavior */
     .home-wrap{
       display:grid;
       gap:12px;
@@ -152,25 +137,17 @@ const projects = [
       margin:.25rem 0 0;
       color:var(--text);
       font-size:clamp(16px, 2.2vw, 18px);
-      /* defensively reset any left margin from globals */
       margin-left: 0;
       padding-left: 0;
     }
+    .home-wrap .home-sub.indent-acc{ margin-left: var(--acc-indent); }
 
-    /* 🔒 High-specificity indent: aligns subtitle's left edge with title text start */
-    .home-wrap .home-sub.indent-acc{
-      margin-left: var(--acc-indent);
+    /* --- Projects block width (acts like a simple wrapper) --- */
+    .projects{
+      width: min(1200px, 100%);
     }
 
-    /* --- Projects carousel --- */
-    .projects-wrap{
-      width: 100%;
-    }
-
-    .carousel{
-      width: 100%;
-    }
-
+    /* --- Carousel --- */
     .track{
       display:flex;
       gap: 1rem;
@@ -178,7 +155,6 @@ const projects = [
       scroll-snap-type:x mandatory;
       scroll-behavior:smooth;
       -webkit-overflow-scrolling:touch;
-      padding-bottom: 2px; /* helps avoid scrollbar overlay glitches */
     }
     .track::-webkit-scrollbar{ display:none; }
 
@@ -197,14 +173,13 @@ const projects = [
       object-fit:cover;
     }
 
-    /* --- Custom pagination dots --- */
+    /* --- Dots --- */
     .dots{
       margin-top: 0.9rem;
       display:flex;
       justify-content:center;
       gap: 10px;
     }
-
     .dot{
       width: 10px;
       height: 10px;
@@ -214,16 +189,11 @@ const projects = [
       opacity: 0.35;
       cursor: pointer;
       transition: transform 160ms ease, opacity 160ms ease;
+      position: relative;
     }
-
     .dot[data-active="true"]{
       opacity: 1;
       transform: scale(1.35);
-    }
-
-    /* Optional: make dots easier to tap without changing visible size */
-    .dot{
-      position: relative;
     }
     .dot::before{
       content:"";
