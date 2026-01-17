@@ -30,15 +30,14 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         --bar-bg: color-mix(in oklab, var(--bg) 92%, #000 8%);
         --hover: rgba(0,0,0,.06);
 
-        /* Content width (✅ removed 60% restriction) */
-        --content-cap: 1100px;
-        --content-mob: 95%;
+        /* ✅ Full-width layout (no caps) */
+        --page-pad: clamp(12px, 2vw, 24px);
 
         /* Typography */
-        --h1-size: clamp(28px, 5vw, 28px);
-        --h2-size: clamp(22px, 4vw, 28px);
+        --h1-size: clamp(28px, 5vw, 36px);
+        --h2-size: clamp(22px, 4vw, 30px);
         --h3-size: clamp(18px, 3.5vw, 22px);
-        --body-size: clamp(16px, 3vw, 20px);
+        --body-size: clamp(16px, 2.2vw, 20px);
         --line: 1.5;
 
         --font-title: 'Montserrat', system-ui, sans-serif;
@@ -61,7 +60,7 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        overflow-x: hidden; /* ✅ prevents 100vw bleed causing sideways offset */
+        overflow-x: hidden;
       }
 
       h1, h2, h3, .acc-title, .title {
@@ -99,26 +98,26 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
       a:visited{ color:inherit; }
       a:hover{ text-decoration:underline; text-decoration-thickness:from-font; }
 
-      /* ✅ Main content now uses full available width up to cap (no 60%) */
+      /* ✅ MAIN IS 100% WIDTH */
       main{
-        margin:0 auto;
-        padding:2rem 1rem calc(var(--footer-h) + env(safe-area-inset-bottom));
-        min-height:0;
-        width: min(var(--content-mob), var(--content-cap));
+        margin:0;
+        padding: 2rem var(--page-pad) calc(var(--footer-h) + env(safe-area-inset-bottom));
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
       }
 
-      /* ✅ Full-bleed that DOESN'T create a left "dead margin" */
+      /* Full-bleed now just means "use the whole main width" */
       .full-bleed{
         width: 100%;
-        margin-left: calc(50% - 50vw);
-        margin-right: calc(50% - 50vw);
       }
 
-      /* Inner wrapper matches main width */
+      /* Optional inner: slightly padded but still full width */
       .full-bleed > .inner{
-        margin: 0 auto;
-        padding: 0 1rem;
-        width: min(var(--content-mob), var(--content-cap));
+        width: 100%;
+        padding-inline: var(--page-pad);
+        box-sizing: border-box;
+        margin: 0;
       }
 
       footer{
@@ -132,9 +131,11 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
       }
 
       .foot-wrap{
-        max-width:1200px;
-        margin:0 auto;
-        padding:1rem clamp(12px, 2vw, 16px) calc(1rem + env(safe-area-inset-bottom));
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 1rem var(--page-pad) calc(1rem + env(safe-area-inset-bottom));
+        box-sizing: border-box;
       }
     </style>
 
