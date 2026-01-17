@@ -2,7 +2,6 @@
 import Layout from "../layouts/Layout.astro";
 
 const slides = [
-  "/projects/01 Project One.png",
   "/projects/02 Project Two.png",
   "/projects/03 Project Three.png",
   "/projects/04 Project Four.png",
@@ -16,15 +15,12 @@ const slides = [
     <div class="full-bleed">
       <div class="carousel" id="projects">
         <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
-          <!-- Row centers the middle card perfectly (padding is applied here, not on viewport) -->
-          <div class="row">
-            <ul class="track" id="track" aria-live="polite">
-              <!-- 3 cards: prev | current | next (both sides peek) -->
-              <li class="card"><img id="img-prev" alt="Previous project" decoding="async" /></li>
-              <li class="card is-active"><img id="img-cur" alt="Current project" decoding="async" /></li>
-              <li class="card"><img id="img-next" alt="Next project" decoding="async" /></li>
-            </ul>
-          </div>
+          <ul class="track" id="track" aria-live="polite">
+            <!-- prev | current | next -->
+            <li class="card"><img id="img-prev" alt="Previous project" decoding="async" /></li>
+            <li class="card is-active"><img id="img-cur" alt="Current project" decoding="async" /></li>
+            <li class="card"><img id="img-next" alt="Next project" decoding="async" /></li>
+          </ul>
         </div>
 
         <div class="inner">
@@ -53,6 +49,18 @@ const slides = [
     let index = 0;
     let animating = false;
 
+    const gapPx = () => {
+      const cs = getComputedStyle(track);
+      return parseFloat(cs.columnGap || cs.gap || "0") || 0;
+    };
+
+    const cardWidth = () => {
+      const curCard = track.querySelectorAll(".card")[1];
+      return curCard ? curCard.getBoundingClientRect().width : 0;
+    };
+
+    const step = () => cardWidth() + gapPx(); // STEP distance in px
+
     const setDots = () => {
       dots.forEach((d, i) => {
         if (i === index) d.setAttribute("data-active", "true");
@@ -70,61 +78,71 @@ const slides = [
       imgNext.loading = "lazy";
     };
 
-    const gapPx = () => {
-      const cs = getComputedStyle(track);
-      return parseFloat(cs.columnGap || cs.gap || "0") || 0;
-    };
-
-    const cardWidth = () => {
-      const curCard = track.querySelectorAll(".card")[1];
-      return curCard ? curCard.getBoundingClientRect().width : 0;
-    };
-
-    const stepDistance = () => cardWidth() + gapPx();
-
-    const snap = () => {
+    // ✅ Snap so the *middle card* is the centered "main" card
+    // Track layout: [prev][gap][cur][gap][next]
+    // Putting track at -STEP aligns the "cur" card into the viewport's central view.
+    const snapCenter = () => {
+      const s = step();
       track.style.transition = "none";
-      track.style.transform = "translateX(0px)";
-      track.offsetHeight;
+      track.style.transform = `translateX(${-s}px)`;
+      track.offsetHeight; // reflow
     };
 
-    const step = (dir) => {
+    const animateTo = (xPx, onDone) => {
+      track.style.transition = "transform 320ms ease";
+      track.style.transform = `translateX(${xPx}px)`;
+      const handler = () => {
+        track.removeEventListener("transitionend", handler);
+        onDone();
+      };
+      track.addEventListener("transitionend", handler);
+    };
+
+    const next = () => {
       if (animating) return;
       animating = true;
 
-      const dist = stepDistance();
-      track.style.transition = "transform 320ms ease";
-      track.style.transform = `translateX(${dir === 1 ? -dist : dist}px)`;
-
-      const onDone = () => {
-        track.removeEventListener("transitionend", onDone);
-
-        index = mod(index + dir);
+      const s = step();
+      // from -STEP -> -2*STEP (current slides left, next becomes centered)
+      animateTo(-2 * s, () => {
+        index = mod(index + 1);
         setImages();
         setDots();
-        snap();
-
+        snapCenter();
         animating = false;
-      };
+      });
+    };
 
-      track.addEventListener("transitionend", onDone);
+    const prev = () => {
+      if (animating) return;
+      animating = true;
+
+      const s = step();
+      // from -STEP -> 0 (current slides right, prev becomes centered)
+      animateTo(0, () => {
+        index = mod(index - 1);
+        setImages();
+        setDots();
+        snapCenter();
+        animating = false;
+      });
     };
 
     const goTo = (t) => {
       t = mod(t);
       if (t === index || animating) return;
 
-      // adjacent? animate; otherwise jump
+      // If adjacent, animate in correct direction; else jump.
       const forward = mod(t - index);
       const backward = mod(index - t);
 
-      if (forward === 1) return step(1);
-      if (backward === 1) return step(-1);
+      if (forward === 1) return next();
+      if (backward === 1) return prev();
 
       index = t;
       setImages();
       setDots();
-      snap();
+      snapCenter();
     };
 
     dots.forEach((dot) => {
@@ -134,7 +152,7 @@ const slides = [
       });
     });
 
-    // Wheel/trackpad paging (directional)
+    // Wheel paging (both directions)
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -144,14 +162,15 @@ const slides = [
         wheelLock = true;
 
         const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-        step(dominant > 0 ? 1 : -1);
+        if (dominant > 0) next();
+        else prev();
 
         setTimeout(() => (wheelLock = false), 340);
       },
       { passive: false }
     );
 
-    // Drag / swipe (both directions)
+    // Drag / swipe
     let startX = 0;
     let dragging = false;
 
@@ -169,8 +188,8 @@ const slides = [
       const dx = e.clientX - startX;
       const threshold = Math.min(90, viewport.clientWidth * 0.14);
 
-      if (dx < -threshold) step(1);
-      else if (dx > threshold) step(-1);
+      if (dx < -threshold) next();
+      else if (dx > threshold) prev();
     });
 
     viewport.addEventListener("pointercancel", () => {
@@ -180,16 +199,17 @@ const slides = [
     // Keyboard
     viewport.addEventListener("keydown", (e) => {
       if (animating) return;
-      if (e.key === "ArrowRight") step(1);
-      if (e.key === "ArrowLeft") step(-1);
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
     });
 
-    window.addEventListener("resize", () => snap());
+    // Resize: recompute STEP and re-center
+    window.addEventListener("resize", () => snapCenter());
 
     // Init
     setImages();
     setDots();
-    snap();
+    snapCenter();
   </script>
 
   <style>
@@ -209,16 +229,9 @@ const slides = [
       outline: none;
       touch-action: pan-y;
       box-sizing: border-box;
-    }
 
-    /* ✅ Centering happens here, so padding doesn't skew centering */
-    .row{
-      --edge-pad: clamp(10px, 2vw, 18px);
-      display: grid;
-      justify-content: center;
-      width: 100%;
-      padding-inline: var(--edge-pad);
-      box-sizing: border-box;
+      /* breathing room from the edges */
+      padding-inline: clamp(10px, 2vw, 18px);
     }
 
     .track{
@@ -232,7 +245,7 @@ const slides = [
     .card{
       flex: 0 0 auto;
 
-      /* Controls peek amount */
+      /* Controls how much prev/next you see */
       width: clamp(300px, 68vw, 900px);
 
       border-radius: 16px;
