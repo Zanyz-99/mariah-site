@@ -80,11 +80,11 @@ const slides = [
 
     const stepDistance = () => cardWidth() + gapPx();
 
-    // ✅ start with the CURRENT card aligned at the window's left edge:
-    // track order is [prev, cur, next], so we translate left by one card to show cur
+    // Track order is [prev, cur, next]; show "cur" by shifting left one card.
     const snap = () => {
+      const dist = stepDistance();
       track.style.transition = "none";
-      track.style.transform = `translateX(${-stepDistance()}px)`;
+      track.style.transform = `translateX(${-dist}px)`;
       track.offsetHeight;
     };
 
@@ -127,7 +127,7 @@ const slides = [
       });
     });
 
-    // ✅ Wheel direction: down/right = next, up/left = prev
+    // Wheel direction: down/right = next, up/left = prev
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -144,7 +144,7 @@ const slides = [
       { passive: false }
     );
 
-    // Drag / swipe (both directions)
+    // Drag / swipe
     let startX = 0;
     let dragging = false;
 
@@ -198,19 +198,22 @@ const slides = [
 
     .carousel{ width: 100%; }
 
+    /* ✅ Make the viewport a true centering container (no padding) */
     .viewport{
       width: 100%;
       overflow: hidden;
       outline: none;
       touch-action: pan-y;
-      padding-inline: clamp(10px, 2vw, 18px);
       box-sizing: border-box;
+
+      display: flex;
+      justify-content: center; /* true center of available width */
+      align-items: center;
     }
 
     /* centered "window" equals one card width */
     .window{
       width: clamp(320px, 78vw, 980px);
-      margin-inline: auto;
       overflow: visible; /* allow right peek */
     }
 
