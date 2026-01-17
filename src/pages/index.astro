@@ -12,18 +12,17 @@ const slides = [
 
 <Layout title="Home" description="">
   <section class="home">
-    <!-- Full-bleed row -->
     <div class="full-bleed">
       <div class="carousel" id="projects">
         <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
-          <ul class="track" id="track" aria-live="polite">
-            <!-- Only 2 cards: current + next -->
-            <li class="card is-active"><img id="img-cur" alt="Current project" decoding="async" /></li>
-            <li class="card"><img id="img-next" alt="Next project" decoding="async" /></li>
-          </ul>
+          <div class="row">
+            <ul class="track" id="track" aria-live="polite">
+              <li class="card is-active"><img id="img-cur" alt="Current project" decoding="async" /></li>
+              <li class="card"><img id="img-next" alt="Next project" decoding="async" /></li>
+            </ul>
+          </div>
         </div>
 
-        <!-- dots pinned to normal content width -->
         <div class="inner">
           <div class="dots" id="dots" role="tablist" aria-label="Project slide navigation">
             {slides.map((_, i) => (
@@ -40,10 +39,8 @@ const slides = [
     const track = document.getElementById("track");
     const dots = document.querySelectorAll("#dots .dot");
 
-    const imgCur  = document.getElementById("img-cur");
+    const imgCur = document.getElementById("img-cur");
     const imgNext = document.getElementById("img-next");
-
-    const cards = Array.from(track.querySelectorAll(".card"));
 
     const n = slides.length;
     const mod = (x) => (x % n + n) % n;
@@ -66,32 +63,22 @@ const slides = [
       imgNext.loading = "lazy";
     };
 
-    const getGap = () => {
+    const gapPx = () => {
       const cs = getComputedStyle(track);
       return parseFloat(cs.columnGap || cs.gap || "0") || 0;
     };
 
-    const cardWidth = () => cards[0].getBoundingClientRect().width;
-
-    // ✅ Center the CURRENT card within the viewport
-    const centerOffset = () => {
-      const pL = parseFloat(getComputedStyle(viewport).paddingLeft || "0") || 0;
-      const pR = parseFloat(getComputedStyle(viewport).paddingRight || "0") || 0;
-      const innerW = (viewport.clientWidth - pL - pR) || 1;
-
-      const w = cardWidth();
-      const innerCenter = innerW / 2;
-
-      const curCenterInTrack = w / 2; // current starts at x=0 in track
-      return (pL + innerCenter) - curCenterInTrack;
+    const cardWidth = () => {
+      const card = track.querySelector(".card");
+      return card ? card.getBoundingClientRect().width : 0;
     };
 
-    // One step moves left by (current width + gap) so "next" becomes current
-    const stepSize = () => cardWidth() + getGap();
+    // Move exactly one card to the left so "next" slides into the centered position.
+    const stepDistance = () => cardWidth() + gapPx();
 
-    const snapCenter = () => {
+    const snap = () => {
       track.style.transition = "none";
-      track.style.transform = `translateX(${centerOffset()}px)`;
+      track.style.transform = "translateX(0px)";
       track.offsetHeight;
     };
 
@@ -99,11 +86,9 @@ const slides = [
       if (animating) return;
       animating = true;
 
-      const base = centerOffset();
-      const dist = stepSize();
-
+      const dist = stepDistance();
       track.style.transition = "transform 320ms ease";
-      track.style.transform = `translateX(${base - dist}px)`;
+      track.style.transform = `translateX(${-dist}px)`;
 
       const onDone = () => {
         track.removeEventListener("transitionend", onDone);
@@ -111,7 +96,7 @@ const slides = [
         index = mod(index + 1);
         setImages();
         setDots();
-        snapCenter();
+        snap();
 
         animating = false;
       };
@@ -119,15 +104,13 @@ const slides = [
       track.addEventListener("transitionend", onDone);
     };
 
-    const goTo = (target) => {
-      target = mod(target);
-      if (target === index || animating) return;
-
-      // for non-adjacent, just jump (clean + simple)
-      index = target;
+    const goTo = (t) => {
+      t = mod(t);
+      if (t === index || animating) return;
+      index = t;
       setImages();
       setDots();
-      snapCenter();
+      snap();
     };
 
     dots.forEach((dot) => {
@@ -137,7 +120,7 @@ const slides = [
       });
     });
 
-    // Wheel/trackpad -> next only (as requested)
+    // Wheel/trackpad advances
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -153,7 +136,7 @@ const slides = [
       { passive: false }
     );
 
-    // Drag / swipe: only left swipe advances
+    // Drag: left swipe advances
     let startX = 0;
     let dragging = false;
 
@@ -170,7 +153,6 @@ const slides = [
 
       const dx = e.clientX - startX;
       const threshold = Math.min(90, viewport.clientWidth * 0.14);
-
       if (dx < -threshold) stepNext();
     });
 
@@ -178,18 +160,18 @@ const slides = [
       dragging = false;
     });
 
-    // Keyboard: right arrow advances
+    // Keyboard
     viewport.addEventListener("keydown", (e) => {
       if (animating) return;
       if (e.key === "ArrowRight") stepNext();
     });
 
-    window.addEventListener("resize", () => snapCenter());
+    window.addEventListener("resize", () => snap());
 
     // Init
     setImages();
     setDots();
-    snapCenter();
+    snap();
   </script>
 
   <style>
@@ -212,6 +194,14 @@ const slides = [
       box-sizing: border-box;
     }
 
+    /* ✅ This centers the *first* card (current) in the viewport */
+    .row{
+      display: grid;
+      justify-content: center;
+      width: 100%;
+    }
+
+    /* Track starts with current centered; next naturally peeks on the right */
     .track{
       display: flex;
       align-items: center;
@@ -222,14 +212,10 @@ const slides = [
 
     .card{
       flex: 0 0 auto;
-
-      /* set card big so next only "peeks" */
       width: clamp(320px, 78vw, 980px);
-
       border-radius: 16px;
       overflow: hidden;
       aspect-ratio: 16 / 9;
-
       background: var(--card);
       border: 1px solid var(--border);
 
