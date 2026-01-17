@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 
 const slides = [
+  "/projects/01 Project One.png",
   "/projects/02 Project Two.png",
   "/projects/03 Project Three.png",
   "/projects/04 Project Four.png",
@@ -15,8 +16,11 @@ const slides = [
     <div class="full-bleed">
       <div class="carousel" id="projects">
         <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
+          <!-- Row centers the middle card perfectly (padding is applied here, not on viewport) -->
           <div class="row">
             <ul class="track" id="track" aria-live="polite">
+              <!-- 3 cards: prev | current | next (both sides peek) -->
+              <li class="card"><img id="img-prev" alt="Previous project" decoding="async" /></li>
               <li class="card is-active"><img id="img-cur" alt="Current project" decoding="async" /></li>
               <li class="card"><img id="img-next" alt="Next project" decoding="async" /></li>
             </ul>
@@ -39,7 +43,8 @@ const slides = [
     const track = document.getElementById("track");
     const dots = document.querySelectorAll("#dots .dot");
 
-    const imgCur = document.getElementById("img-cur");
+    const imgPrev = document.getElementById("img-prev");
+    const imgCur  = document.getElementById("img-cur");
     const imgNext = document.getElementById("img-next");
 
     const n = slides.length;
@@ -57,9 +62,11 @@ const slides = [
     };
 
     const setImages = () => {
-      imgCur.src = slides[index];
+      imgPrev.src = slides[mod(index - 1)];
+      imgCur.src  = slides[index];
       imgNext.src = slides[mod(index + 1)];
       imgCur.loading = "eager";
+      imgPrev.loading = "lazy";
       imgNext.loading = "lazy";
     };
 
@@ -69,11 +76,10 @@ const slides = [
     };
 
     const cardWidth = () => {
-      const card = track.querySelector(".card");
-      return card ? card.getBoundingClientRect().width : 0;
+      const curCard = track.querySelectorAll(".card")[1];
+      return curCard ? curCard.getBoundingClientRect().width : 0;
     };
 
-    // Move exactly one card to the left so "next" slides into the centered position.
     const stepDistance = () => cardWidth() + gapPx();
 
     const snap = () => {
@@ -82,18 +88,18 @@ const slides = [
       track.offsetHeight;
     };
 
-    const stepNext = () => {
+    const step = (dir) => {
       if (animating) return;
       animating = true;
 
       const dist = stepDistance();
       track.style.transition = "transform 320ms ease";
-      track.style.transform = `translateX(${-dist}px)`;
+      track.style.transform = `translateX(${dir === 1 ? -dist : dist}px)`;
 
       const onDone = () => {
         track.removeEventListener("transitionend", onDone);
 
-        index = mod(index + 1);
+        index = mod(index + dir);
         setImages();
         setDots();
         snap();
@@ -107,6 +113,14 @@ const slides = [
     const goTo = (t) => {
       t = mod(t);
       if (t === index || animating) return;
+
+      // adjacent? animate; otherwise jump
+      const forward = mod(t - index);
+      const backward = mod(index - t);
+
+      if (forward === 1) return step(1);
+      if (backward === 1) return step(-1);
+
       index = t;
       setImages();
       setDots();
@@ -120,7 +134,7 @@ const slides = [
       });
     });
 
-    // Wheel/trackpad advances
+    // Wheel/trackpad paging (directional)
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -129,14 +143,15 @@ const slides = [
         if (wheelLock || animating) return;
         wheelLock = true;
 
-        stepNext();
+        const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        step(dominant > 0 ? 1 : -1);
 
         setTimeout(() => (wheelLock = false), 340);
       },
       { passive: false }
     );
 
-    // Drag: left swipe advances
+    // Drag / swipe (both directions)
     let startX = 0;
     let dragging = false;
 
@@ -153,7 +168,9 @@ const slides = [
 
       const dx = e.clientX - startX;
       const threshold = Math.min(90, viewport.clientWidth * 0.14);
-      if (dx < -threshold) stepNext();
+
+      if (dx < -threshold) step(1);
+      else if (dx > threshold) step(-1);
     });
 
     viewport.addEventListener("pointercancel", () => {
@@ -163,7 +180,8 @@ const slides = [
     // Keyboard
     viewport.addEventListener("keydown", (e) => {
       if (animating) return;
-      if (e.key === "ArrowRight") stepNext();
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
     });
 
     window.addEventListener("resize", () => snap());
@@ -190,18 +208,19 @@ const slides = [
       overflow: hidden;
       outline: none;
       touch-action: pan-y;
-      padding-inline: clamp(10px, 2vw, 18px);
       box-sizing: border-box;
     }
 
-    /* ✅ This centers the *first* card (current) in the viewport */
+    /* ✅ Centering happens here, so padding doesn't skew centering */
     .row{
+      --edge-pad: clamp(10px, 2vw, 18px);
       display: grid;
       justify-content: center;
       width: 100%;
+      padding-inline: var(--edge-pad);
+      box-sizing: border-box;
     }
 
-    /* Track starts with current centered; next naturally peeks on the right */
     .track{
       display: flex;
       align-items: center;
@@ -212,10 +231,14 @@ const slides = [
 
     .card{
       flex: 0 0 auto;
-      width: clamp(320px, 78vw, 980px);
+
+      /* Controls peek amount */
+      width: clamp(300px, 68vw, 900px);
+
       border-radius: 16px;
       overflow: hidden;
       aspect-ratio: 16 / 9;
+
       background: var(--card);
       border: 1px solid var(--border);
 
@@ -268,6 +291,12 @@ const slides = [
       content: "";
       position: absolute;
       inset: -10px;
+    }
+
+    @media (min-width: 900px){
+      .card{
+        width: min(62vw, 980px);
+      }
     }
   </style>
 </Layout>
