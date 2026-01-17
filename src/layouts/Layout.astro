@@ -16,41 +16,37 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
     <link rel="icon" type="image/png" href="/icons/logo dark.png" />
     <link rel="apple-touch-icon" href="/icons/logo dark.png" />
 
-    <!-- Global fonts: Title = Poppins (700); Body = Roboto (400/500) -->
+    <!-- Global fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
 
-    <!-- Per-page head slot -->
     <slot name="head" />
 
     <style>
-      /* THEME TOKENS */
       :root{
         --bg:#ffffff; --text:#0b0b0b; --muted:#6b6b6b;
         --card:#f6f7f8; --border:#e8e8ee;
         --bar-bg: color-mix(in oklab, var(--bg) 92%, #000 8%);
         --hover: rgba(0,0,0,.06);
 
-        /* Content width */
-        --content-w: 60%;
+        /* Content width (✅ removed 60% restriction) */
         --content-cap: 1100px;
         --content-mob: 95%;
 
-        /* Typography sizes & line height */
+        /* Typography */
         --h1-size: clamp(28px, 5vw, 28px);
         --h2-size: clamp(22px, 4vw, 28px);
         --h3-size: clamp(18px, 3.5vw, 22px);
         --body-size: clamp(16px, 3vw, 20px);
         --line: 1.5;
 
-        /* Font families (normalized site-wide) */
         --font-title: 'Montserrat', system-ui, sans-serif;
         --font-body: 'Montserrat', system-ui, sans-serif;
 
-        /* Footer height (script will update to exact) */
         --footer-h: 72px;
       }
+
       html[data-theme="dark"]{
         --bg:#131313; --text:#e7e7e7; --muted:#b3b3b3;
         --card:#1c1c1f; --border:#2a2a2f;
@@ -65,9 +61,9 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden; /* ✅ prevents 100vw bleed causing sideways offset */
       }
 
-      /* Typography — unified across pages */
       h1, h2, h3, .acc-title, .title {
         font-family: var(--font-title);
         color: var(--text);
@@ -80,13 +76,11 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         line-height: calc(var(--line) - .15);
         letter-spacing: -0.01em;
       }
-
       h2 {
         font-size: var(--h2-size);
         margin: 1.25rem 0 .5rem;
         line-height: calc(var(--line) - .1);
       }
-
       h3 {
         font-size: var(--h3-size);
         margin: 1rem 0 .35rem;
@@ -105,39 +99,28 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
       a:visited{ color:inherit; }
       a:hover{ text-decoration:underline; text-decoration-thickness:from-font; }
 
-      /* Content area; reserve space for fixed footer */
+      /* ✅ Main content now uses full available width up to cap (no 60%) */
       main{
         margin:0 auto;
         padding:2rem 1rem calc(var(--footer-h) + env(safe-area-inset-bottom));
         min-height:0;
-
-        /* keep your normal content width */
         width: min(var(--content-mob), var(--content-cap));
       }
-      @media (min-width: 900px){
-        main{ width: min(var(--content-w), var(--content-cap)); }
-      }
 
-      /* ✅ Full-bleed utility (use inside pages) */
+      /* ✅ Full-bleed that DOESN'T create a left "dead margin" */
       .full-bleed{
-        width: 100vw;
-        margin-left: 50%;
-        transform: translateX(-50%);
+        width: 100%;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
       }
 
-      /* Optional inner wrapper to bring content back to normal width */
+      /* Inner wrapper matches main width */
       .full-bleed > .inner{
         margin: 0 auto;
         padding: 0 1rem;
         width: min(var(--content-mob), var(--content-cap));
       }
-      @media (min-width: 900px){
-        .full-bleed > .inner{
-          width: min(var(--content-w), var(--content-cap));
-        }
-      }
 
-      /* Fixed footer pinned to bottom */
       footer{
         position:fixed; left:0; right:0; bottom:0;
         border-top:1px solid var(--border);
@@ -147,6 +130,7 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         backdrop-filter:saturate(1.1) blur(4px);
         -webkit-backdrop-filter:saturate(1.1) blur(4px);
       }
+
       .foot-wrap{
         max-width:1200px;
         margin:0 auto;
@@ -158,9 +142,8 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
       (function(){
         const saved = localStorage.getItem('theme');
         let theme = 'light';
-        if (saved === 'light' || saved === 'dark') {
-          theme = saved;
-        } else {
+        if (saved === 'light' || saved === 'dark') theme = saved;
+        else {
           const h = new Date().getHours();
           theme = (h >= 19 || h < 6) ? 'dark' : 'light';
         }
