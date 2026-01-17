@@ -12,12 +12,12 @@ const slides = [
 
 <Layout title="Home" description="">
   <section class="home">
-    <!-- Full-bleed carousel row (uses .full-bleed + .inner from Layout.astro) -->
+    <!-- Full-bleed row -->
     <div class="full-bleed">
       <div class="carousel" id="projects">
         <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
           <ul class="track" id="track" aria-live="polite">
-            <li class="card"><img id="img-prev" alt="Previous project" decoding="async" /></li>
+            <!-- Only 2 cards: current + next -->
             <li class="card is-active"><img id="img-cur" alt="Current project" decoding="async" /></li>
             <li class="card"><img id="img-next" alt="Next project" decoding="async" /></li>
           </ul>
@@ -40,7 +40,6 @@ const slides = [
     const track = document.getElementById("track");
     const dots = document.querySelectorAll("#dots .dot");
 
-    const imgPrev = document.getElementById("img-prev");
     const imgCur  = document.getElementById("img-cur");
     const imgNext = document.getElementById("img-next");
 
@@ -60,16 +59,10 @@ const slides = [
       });
     };
 
-    const setCardImages = () => {
-      const prev = mod(index - 1);
-      const next = mod(index + 1);
-
-      imgPrev.src = slides[prev];
-      imgCur.src  = slides[index];
-      imgNext.src = slides[next];
-
+    const setImages = () => {
+      imgCur.src = slides[index];
+      imgNext.src = slides[mod(index + 1)];
       imgCur.loading = "eager";
-      imgPrev.loading = "lazy";
       imgNext.loading = "lazy";
     };
 
@@ -78,39 +71,31 @@ const slides = [
       return parseFloat(cs.columnGap || cs.gap || "0") || 0;
     };
 
-    const cardWidth = () => cards[1].getBoundingClientRect().width;
+    const cardWidth = () => cards[0].getBoundingClientRect().width;
 
-    // One "step" is one card + gap
-    const stepSize = () => cardWidth() + getGap();
-
-    // ✅ The magic: translate so the MIDDLE card is centered in the viewport
+    // ✅ Center the CURRENT card within the viewport
     const centerOffset = () => {
       const pL = parseFloat(getComputedStyle(viewport).paddingLeft || "0") || 0;
       const pR = parseFloat(getComputedStyle(viewport).paddingRight || "0") || 0;
       const innerW = (viewport.clientWidth - pL - pR) || 1;
 
       const w = cardWidth();
-      const g = getGap();
-
-      // Track layout is: [prev][gap][cur][gap][next]
-      // We want cur's CENTER to align with viewport inner center.
-      // cur left edge in track coords is at (w + g).
-      // So we translate by: innerCenter - (curLeft + w/2)
       const innerCenter = innerW / 2;
 
-      const curCenterInTrack = (w + g) + (w / 2);
-
-      // Also account for left padding, since translate affects content inside padding box.
+      const curCenterInTrack = w / 2; // current starts at x=0 in track
       return (pL + innerCenter) - curCenterInTrack;
     };
+
+    // One step moves left by (current width + gap) so "next" becomes current
+    const stepSize = () => cardWidth() + getGap();
 
     const snapCenter = () => {
       track.style.transition = "none";
       track.style.transform = `translateX(${centerOffset()}px)`;
-      track.offsetHeight; // reflow
+      track.offsetHeight;
     };
 
-    const step = (dir) => {
+    const stepNext = () => {
       if (animating) return;
       animating = true;
 
@@ -118,13 +103,13 @@ const slides = [
       const dist = stepSize();
 
       track.style.transition = "transform 320ms ease";
-      track.style.transform = `translateX(${base + (dir === 1 ? -dist : dist)}px)`;
+      track.style.transform = `translateX(${base - dist}px)`;
 
       const onDone = () => {
         track.removeEventListener("transitionend", onDone);
 
-        index = mod(index + dir);
-        setCardImages();
+        index = mod(index + 1);
+        setImages();
         setDots();
         snapCenter();
 
@@ -138,14 +123,9 @@ const slides = [
       target = mod(target);
       if (target === index || animating) return;
 
-      const forward = mod(target - index);
-      const backward = mod(index - target);
-
-      if (forward === 1) return step(1);
-      if (backward === 1) return step(-1);
-
+      // for non-adjacent, just jump (clean + simple)
       index = target;
-      setCardImages();
+      setImages();
       setDots();
       snapCenter();
     };
@@ -157,7 +137,7 @@ const slides = [
       });
     });
 
-    // Wheel paging
+    // Wheel/trackpad -> next only (as requested)
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -166,15 +146,14 @@ const slides = [
         if (wheelLock || animating) return;
         wheelLock = true;
 
-        const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-        step(dominant > 0 ? 1 : -1);
+        stepNext();
 
         setTimeout(() => (wheelLock = false), 340);
       },
       { passive: false }
     );
 
-    // Drag / swipe (snap on release)
+    // Drag / swipe: only left swipe advances
     let startX = 0;
     let dragging = false;
 
@@ -192,26 +171,23 @@ const slides = [
       const dx = e.clientX - startX;
       const threshold = Math.min(90, viewport.clientWidth * 0.14);
 
-      if (dx < -threshold) step(1);
-      else if (dx > threshold) step(-1);
+      if (dx < -threshold) stepNext();
     });
 
     viewport.addEventListener("pointercancel", () => {
       dragging = false;
     });
 
-    // Keyboard (when focused)
+    // Keyboard: right arrow advances
     viewport.addEventListener("keydown", (e) => {
       if (animating) return;
-      if (e.key === "ArrowRight") step(1);
-      if (e.key === "ArrowLeft") step(-1);
+      if (e.key === "ArrowRight") stepNext();
     });
 
-    // Resize: recompute center offset
     window.addEventListener("resize", () => snapCenter());
 
     // Init
-    setCardImages();
+    setImages();
     setDots();
     snapCenter();
   </script>
@@ -225,17 +201,13 @@ const slides = [
       padding-bottom: clamp(18px, 4vh, 44px);
     }
 
-    .carousel{
-      width: 100%;
-    }
+    .carousel{ width: 100%; }
 
     .viewport{
       width: 100%;
       overflow: hidden;
       outline: none;
       touch-action: pan-y;
-
-      /* side breathing room on full-bleed */
       padding-inline: clamp(10px, 2vw, 18px);
       box-sizing: border-box;
     }
@@ -251,9 +223,8 @@ const slides = [
     .card{
       flex: 0 0 auto;
 
-      /* Netflix-ish sizing */
-      width: clamp(300px, 72vw, 860px);
-      max-width: 94%;
+      /* set card big so next only "peeks" */
+      width: clamp(320px, 78vw, 980px);
 
       border-radius: 16px;
       overflow: hidden;
@@ -311,12 +282,6 @@ const slides = [
       content: "";
       position: absolute;
       inset: -10px;
-    }
-
-    @media (min-width: 900px){
-      .card{
-        width: min(68vw, 980px);
-      }
     }
   </style>
 </Layout>
