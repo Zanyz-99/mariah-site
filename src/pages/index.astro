@@ -12,19 +12,18 @@ const slides = [
 
 <Layout title="Home" description="">
   <section class="home">
-    <!-- Full-bleed carousel row (uses .full-bleed from Layout.astro) -->
+    <!-- Full-bleed carousel row (uses .full-bleed + .inner from Layout.astro) -->
     <div class="full-bleed">
       <div class="carousel" id="projects">
         <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
           <ul class="track" id="track" aria-live="polite">
-            <!-- 3 cards in DOM; images swap for infinite loop -->
             <li class="card"><img id="img-prev" alt="Previous project" decoding="async" /></li>
             <li class="card is-active"><img id="img-cur" alt="Current project" decoding="async" /></li>
             <li class="card"><img id="img-next" alt="Next project" decoding="async" /></li>
           </ul>
         </div>
 
-        <!-- Keep dots aligned with normal content width -->
+        <!-- dots pinned to normal content width -->
         <div class="inner">
           <div class="dots" id="dots" role="tablist" aria-label="Project slide navigation">
             {slides.map((_, i) => (
@@ -74,17 +73,40 @@ const slides = [
       imgNext.loading = "lazy";
     };
 
-    const stepSize = () => {
+    const getGap = () => {
       const cs = getComputedStyle(track);
-      const gap = parseFloat(cs.columnGap || cs.gap || "0") || 0;
-      const card = cards[1];
-      const w = card.getBoundingClientRect().width;
-      return w + gap;
+      return parseFloat(cs.columnGap || cs.gap || "0") || 0;
+    };
+
+    const cardWidth = () => cards[1].getBoundingClientRect().width;
+
+    // One "step" is one card + gap
+    const stepSize = () => cardWidth() + getGap();
+
+    // ✅ The magic: translate so the MIDDLE card is centered in the viewport
+    const centerOffset = () => {
+      const pL = parseFloat(getComputedStyle(viewport).paddingLeft || "0") || 0;
+      const pR = parseFloat(getComputedStyle(viewport).paddingRight || "0") || 0;
+      const innerW = (viewport.clientWidth - pL - pR) || 1;
+
+      const w = cardWidth();
+      const g = getGap();
+
+      // Track layout is: [prev][gap][cur][gap][next]
+      // We want cur's CENTER to align with viewport inner center.
+      // cur left edge in track coords is at (w + g).
+      // So we translate by: innerCenter - (curLeft + w/2)
+      const innerCenter = innerW / 2;
+
+      const curCenterInTrack = (w + g) + (w / 2);
+
+      // Also account for left padding, since translate affects content inside padding box.
+      return (pL + innerCenter) - curCenterInTrack;
     };
 
     const snapCenter = () => {
       track.style.transition = "none";
-      track.style.transform = "translateX(0px)";
+      track.style.transform = `translateX(${centerOffset()}px)`;
       track.offsetHeight; // reflow
     };
 
@@ -92,8 +114,11 @@ const slides = [
       if (animating) return;
       animating = true;
 
+      const base = centerOffset();
+      const dist = stepSize();
+
       track.style.transition = "transform 320ms ease";
-      track.style.transform = `translateX(${dir === 1 ? -stepSize() : stepSize()}px)`;
+      track.style.transform = `translateX(${base + (dir === 1 ? -dist : dist)}px)`;
 
       const onDone = () => {
         track.removeEventListener("transitionend", onDone);
@@ -182,7 +207,7 @@ const slides = [
       if (e.key === "ArrowLeft") step(-1);
     });
 
-    // If viewport size changes, just re-snap (step size recalcs cleanly)
+    // Resize: recompute center offset
     window.addEventListener("resize", () => snapCenter());
 
     // Init
@@ -200,7 +225,6 @@ const slides = [
       padding-bottom: clamp(18px, 4vh, 44px);
     }
 
-    /* Full-bleed row shouldn't inherit any max width */
     .carousel{
       width: 100%;
     }
@@ -211,7 +235,7 @@ const slides = [
       outline: none;
       touch-action: pan-y;
 
-      /* little side padding so cards don't touch screen edge */
+      /* side breathing room on full-bleed */
       padding-inline: clamp(10px, 2vw, 18px);
       box-sizing: border-box;
     }
@@ -221,14 +245,13 @@ const slides = [
       align-items: center;
       gap: clamp(10px, 2vw, 18px);
       padding: 6px 0;
-      transform: translateX(0px);
       will-change: transform;
     }
 
     .card{
       flex: 0 0 auto;
 
-      /* Bigger on full-bleed so peeks feel more Netflix-y */
+      /* Netflix-ish sizing */
       width: clamp(300px, 72vw, 860px);
       max-width: 94%;
 
