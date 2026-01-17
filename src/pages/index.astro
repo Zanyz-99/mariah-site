@@ -13,17 +13,12 @@ const slides = [
 <Layout title="Home" description="">
   <section class="home">
     <div class="carousel" id="projects">
-      <div
-        class="viewport"
-        id="viewport"
-        tabindex="0"
-        aria-label="Projects carousel"
-        style="--carousel-h: 420px;"
-      >
+      <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
         <ul class="track" id="track" aria-live="polite">
-          <li class="pane"><img id="img-prev" alt="Previous project" decoding="async" /></li>
-          <li class="pane"><img id="img-cur" alt="Current project" decoding="async" /></li>
-          <li class="pane"><img id="img-next" alt="Next project" decoding="async" /></li>
+          <!-- we only keep 3 cards in the DOM and swap their images -->
+          <li class="card"><img id="img-prev" alt="Previous project" decoding="async" /></li>
+          <li class="card is-active"><img id="img-cur" alt="Current project" decoding="async" /></li>
+          <li class="card"><img id="img-next" alt="Next project" decoding="async" /></li>
         </ul>
       </div>
 
@@ -44,6 +39,8 @@ const slides = [
     const imgCur  = document.getElementById("img-cur");
     const imgNext = document.getElementById("img-next");
 
+    const cards = Array.from(track.querySelectorAll(".card"));
+
     const n = slides.length;
     const mod = (x) => (x % n + n) % n;
 
@@ -58,39 +55,7 @@ const slides = [
       });
     };
 
-    const snapCenter = () => {
-      track.style.transition = "none";
-      track.style.transform = "translateX(-100%)";
-      track.offsetHeight; // reflow
-    };
-
-    // ✅ Dynamically size the viewport to the current image aspect ratio (no cropping)
-    const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-
-    const updateViewportHeightFromCurrent = async () => {
-      try {
-        // Ensure metadata is available
-        if (!imgCur.complete) await new Promise((r) => imgCur.addEventListener("load", r, { once: true }));
-        // decode helps prevent measuring before render on some browsers
-        if (imgCur.decode) await imgCur.decode();
-
-        const w = imgCur.naturalWidth || 1;
-        const h = imgCur.naturalHeight || 1;
-        const ratio = h / w;
-
-        const viewportW = viewport.clientWidth || 1;
-        const desiredH = viewportW * ratio;
-
-        // clamp so it stays nice on page
-        const finalH = clamp(desiredH, 260, Math.min(720, window.innerHeight * 0.8));
-
-        viewport.style.setProperty("--carousel-h", `${Math.round(finalH)}px`);
-      } catch {
-        // fallback: keep whatever height we had
-      }
-    };
-
-    const setPaneImages = () => {
+    const setCardImages = () => {
       const prev = mod(index - 1);
       const next = mod(index + 1);
 
@@ -103,32 +68,48 @@ const slides = [
       imgNext.loading = "lazy";
     };
 
+    // Calculate how far to translate for one step:
+    // card width + gap (in px). This is what enables the "peek" layout.
+    const stepSize = () => {
+      const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap || "0") || 0;
+      const card = cards[1]; // center card
+      const w = card.getBoundingClientRect().width;
+      return w + gap;
+    };
+
+    const snapCenter = () => {
+      track.style.transition = "none";
+      track.style.transform = "translateX(0px)";
+      track.offsetHeight; // reflow
+    };
+
     const step = (dir) => {
       if (animating) return;
       animating = true;
 
+      // animate left/right by one card step
       track.style.transition = "transform 320ms ease";
-      track.style.transform = dir === 1 ? "translateX(-200%)" : "translateX(0%)";
+      track.style.transform = `translateX(${dir === 1 ? -stepSize() : stepSize()}px)`;
 
-      const onDone = async () => {
+      const onDone = () => {
         track.removeEventListener("transitionend", onDone);
 
         index = mod(index + dir);
-        setPaneImages();
+        setCardImages();
         setDots();
         snapCenter();
 
-        await updateViewportHeightFromCurrent();
         animating = false;
       };
 
       track.addEventListener("transitionend", onDone);
     };
 
-    const goTo = async (target) => {
+    const goTo = (target) => {
       target = mod(target);
       if (target === index || animating) return;
 
+      // adjacent? animate; otherwise jump instantly
       const forward = mod(target - index);
       const backward = mod(index - target);
 
@@ -136,10 +117,9 @@ const slides = [
       if (backward === 1) return step(-1);
 
       index = target;
-      setPaneImages();
+      setCardImages();
       setDots();
       snapCenter();
-      await updateViewportHeightFromCurrent();
     };
 
     dots.forEach((dot) => {
@@ -149,7 +129,7 @@ const slides = [
       });
     });
 
-    // Mouse wheel / trackpad paging
+    // Wheel paging
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -182,7 +162,7 @@ const slides = [
       dragging = false;
 
       const dx = e.clientX - startX;
-      const threshold = Math.min(90, viewport.clientWidth * 0.18);
+      const threshold = Math.min(90, viewport.clientWidth * 0.14);
 
       if (dx < -threshold) step(1);
       else if (dx > threshold) step(-1);
@@ -192,20 +172,20 @@ const slides = [
       dragging = false;
     });
 
+    // Keyboard (when focused)
     viewport.addEventListener("keydown", (e) => {
       if (animating) return;
       if (e.key === "ArrowRight") step(1);
       if (e.key === "ArrowLeft") step(-1);
     });
 
-    // Resize: recompute height for current image
-    window.addEventListener("resize", () => updateViewportHeightFromCurrent());
+    // If viewport size changes, just re-snap (so step size recalcs cleanly)
+    window.addEventListener("resize", () => snapCenter());
 
     // Init
-    setPaneImages();
+    setCardImages();
     setDots();
     snapCenter();
-    updateViewportHeightFromCurrent();
   </script>
 
   <style>
@@ -223,47 +203,65 @@ const slides = [
 
     .viewport{
       width: 100%;
-      overflow: hidden;
-      border-radius: 16px;
-
-      /* ✅ height is driven by current image aspect ratio */
-      height: var(--carousel-h);
-
+      overflow: hidden;        /* keeps the row clean */
       outline: none;
       touch-action: pan-y;
     }
 
+    /* Netflix-ish row: center card big, neighbors peek */
     .track{
       display: flex;
-      width: 300%;
-      transform: translateX(-100%);
+      align-items: center;
+      gap: clamp(10px, 2vw, 18px);
+
+      /* This gives room for the "peek" without needing scroll */
+      padding: 6px 0;
+
+      transform: translateX(0px);
+      will-change: transform;
     }
 
-    .pane{
-      flex: 0 0 100%;
-      width: 100%;
-      height: 100%;
+    /* Card size controls how much peek you get:
+       - 78vw on mobile (big card, small peek)
+       - 70% on desktop (more peek)
+    */
+    .card{
+      flex: 0 0 auto;
+      width: clamp(280px, 78vw, 720px);
+      max-width: 92%;
+      border-radius: 16px;
       overflow: hidden;
 
-      display: grid;
-      place-items: center;
+      /* Consistent height without cropping: use aspect-ratio */
+      aspect-ratio: 16 / 9;
+
+      background: var(--card);
+      border: 1px solid var(--border);
+
+      /* subtle scale for depth */
+      transform: scale(0.94);
+      opacity: 0.85;
+      transition: transform 200ms ease, opacity 200ms ease;
     }
 
-    /* ✅ Key change: height/width rules that prevent “cropping” */
-    .pane img{
-      max-width: 100%;
-      max-height: 100%;
-      width: auto;
-      height: auto;
+    /* Center card emphasis */
+    .card.is-active{
+      transform: scale(1);
+      opacity: 1;
+    }
 
+    /* Images: show full PNG, no crop */
+    .card img{
+      width: 100%;
+      height: 100%;
       display: block;
       object-fit: contain;
       object-position: center;
-
       user-select: none;
       -webkit-user-drag: none;
     }
 
+    /* Dots */
     .dots{
       margin-top: 0.9rem;
       display: flex;
@@ -293,6 +291,13 @@ const slides = [
       content: "";
       position: absolute;
       inset: -10px;
+    }
+
+    /* Desktop: more "peek" */
+    @media (min-width: 900px){
+      .card{
+        width: min(70%, 760px);
+      }
     }
   </style>
 </Layout>
