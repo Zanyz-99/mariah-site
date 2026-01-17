@@ -12,13 +12,8 @@ const slides = [
 
 <Layout title="Home" description="">
   <section class="home">
-    <div class="full-bleed" id="bleed">
-      <!-- This is your normal site column; we’ll align the “center card” to THIS -->
-      <div class="inner" id="inner">
-        <!-- optional spacing/heading could go here -->
-      </div>
-
-      <!-- Full-bleed carousel row -->
+    <!-- Full-bleed carousel row (uses .full-bleed + .inner from Layout.astro) -->
+    <div class="full-bleed">
       <div class="carousel" id="projects">
         <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
           <ul class="track" id="track" aria-live="polite">
@@ -28,7 +23,7 @@ const slides = [
           </ul>
         </div>
 
-        <!-- Dots in normal content column -->
+        <!-- dots pinned to normal content width -->
         <div class="inner">
           <div class="dots" id="dots" role="tablist" aria-label="Project slide navigation">
             {slides.map((_, i) => (
@@ -41,8 +36,6 @@ const slides = [
   </section>
 
   <script define:vars={{ slides }}>
-    const bleed = document.getElementById("bleed");
-    const inner = document.getElementById("inner");
     const viewport = document.getElementById("viewport");
     const track = document.getElementById("track");
     const dots = document.querySelectorAll("#dots .dot");
@@ -86,52 +79,35 @@ const slides = [
     };
 
     const cardWidth = () => cards[1].getBoundingClientRect().width;
+
+    // One "step" is one card + gap
     const stepSize = () => cardWidth() + getGap();
 
-    // ✅ Align active card to the CENTER of your normal content column (.inner),
-    // not the viewport center.
+    // ✅ The magic: translate so the MIDDLE card is centered in the viewport
     const centerOffset = () => {
-      const gap = getGap();
+      const pL = parseFloat(getComputedStyle(viewport).paddingLeft || "0") || 0;
+      const pR = parseFloat(getComputedStyle(viewport).paddingRight || "0") || 0;
+      const innerW = (viewport.clientWidth - pL - pR) || 1;
+
       const w = cardWidth();
+      const g = getGap();
 
-      // Where is the center of the .inner column in viewport coordinates?
-      const innerRect = inner.getBoundingClientRect();
-      const innerCenterX = innerRect.left + innerRect.width / 2;
+      // Track layout is: [prev][gap][cur][gap][next]
+      // We want cur's CENTER to align with viewport inner center.
+      // cur left edge in track coords is at (w + g).
+      // So we translate by: innerCenter - (curLeft + w/2)
+      const innerCenter = innerW / 2;
 
-      // Where is the start of the track in viewport coordinates?
-      const trackRect = track.getBoundingClientRect();
-      const trackLeftX = trackRect.left;
+      const curCenterInTrack = (w + g) + (w / 2);
 
-      // Current card center position in track coordinates:
-      // prev at 0..w, gap, current starts at w+gap, center at (w+gap + w/2)
-      const curCenterInTrack = (w + gap) + (w / 2);
-
-      // We want: (trackLeftX + translateX + curCenterInTrack) === innerCenterX
-      // But trackLeftX already includes current transform, so we compute using viewport + current transform style.
-      // Easiest: compute desired translate relative to "no transform" by temporarily reading current translate.
-      const current = getComputedStyle(track).transform;
-
-      // Parse current translateX from matrix(...) (fallback 0)
-      let currentTx = 0;
-      if (current && current !== "none") {
-        const m = current.match(/matrix\\(([^)]+)\\)/);
-        if (m) {
-          const parts = m[1].split(",").map((p) => parseFloat(p.trim()));
-          // matrix(a,b,c,d,tx,ty)
-          currentTx = parts[4] || 0;
-        }
-      }
-
-      // trackRect.left already includes currentTx, so remove it to get "base" left
-      const baseTrackLeftX = trackLeftX - currentTx;
-
-      return innerCenterX - (baseTrackLeftX + curCenterInTrack);
+      // Also account for left padding, since translate affects content inside padding box.
+      return (pL + innerCenter) - curCenterInTrack;
     };
 
     const snapCenter = () => {
       track.style.transition = "none";
       track.style.transform = `translateX(${centerOffset()}px)`;
-      track.offsetHeight;
+      track.offsetHeight; // reflow
     };
 
     const step = (dir) => {
@@ -181,6 +157,7 @@ const slides = [
       });
     });
 
+    // Wheel paging
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -197,6 +174,7 @@ const slides = [
       { passive: false }
     );
 
+    // Drag / swipe (snap on release)
     let startX = 0;
     let dragging = false;
 
@@ -222,14 +200,17 @@ const slides = [
       dragging = false;
     });
 
+    // Keyboard (when focused)
     viewport.addEventListener("keydown", (e) => {
       if (animating) return;
       if (e.key === "ArrowRight") step(1);
       if (e.key === "ArrowLeft") step(-1);
     });
 
+    // Resize: recompute center offset
     window.addEventListener("resize", () => snapCenter());
 
+    // Init
     setCardImages();
     setDots();
     snapCenter();
@@ -244,7 +225,9 @@ const slides = [
       padding-bottom: clamp(18px, 4vh, 44px);
     }
 
-    .carousel{ width: 100%; }
+    .carousel{
+      width: 100%;
+    }
 
     .viewport{
       width: 100%;
@@ -252,7 +235,7 @@ const slides = [
       outline: none;
       touch-action: pan-y;
 
-      /* breathing room at edges */
+      /* side breathing room on full-bleed */
       padding-inline: clamp(10px, 2vw, 18px);
       box-sizing: border-box;
     }
@@ -267,13 +250,18 @@ const slides = [
 
     .card{
       flex: 0 0 auto;
+
+      /* Netflix-ish sizing */
       width: clamp(300px, 72vw, 860px);
       max-width: 94%;
+
       border-radius: 16px;
       overflow: hidden;
       aspect-ratio: 16 / 9;
+
       background: var(--card);
       border: 1px solid var(--border);
+
       transform: scale(0.94);
       opacity: 0.85;
       transition: transform 200ms ease, opacity 200ms ease;
@@ -326,7 +314,9 @@ const slides = [
     }
 
     @media (min-width: 900px){
-      .card{ width: min(68vw, 980px); }
+      .card{
+        width: min(68vw, 980px);
+      }
     }
   </style>
 </Layout>
