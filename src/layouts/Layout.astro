@@ -7,19 +7,22 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
 <!doctype html>
 <html lang="en" data-theme="light">
   <head>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
-    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Montserrat ONLY -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     {description && <meta name="description" content={description} />}
 
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/icons/logo dark.png" />
     <link rel="apple-touch-icon" href="/icons/logo dark.png" />
-
-    <!-- Global fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
 
     <slot name="head" />
 
@@ -30,7 +33,6 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         --bar-bg: color-mix(in oklab, var(--bg) 92%, #000 8%);
         --hover: rgba(0,0,0,.06);
 
-        /* ✅ Full-width layout (no caps) */
         --page-pad: clamp(12px, 2vw, 24px);
 
         /* Typography */
@@ -40,8 +42,9 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         --body-size: clamp(16px, 2.2vw, 20px);
         --line: 1.5;
 
-        --font-title: 'Montserrat', system-ui, sans-serif;
+        /* 🔒 Montserrat everywhere */
         --font-body: 'Montserrat', system-ui, sans-serif;
+        --font-title: 'Montserrat', system-ui, sans-serif;
 
         --footer-h: 72px;
       }
@@ -54,15 +57,16 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
       }
 
       html,body{
-        margin:0; height:100%;
+        margin:0;
+        height:100%;
         background:var(--bg);
         overflow-x:hidden;
       }
 
       /* =========================
          GLOBAL TYPOGRAPHY BASE
-         All text defaults to paragraph style
          ========================= */
+
       body{
         font-family: var(--font-body);
         font-size: var(--body-size);
@@ -75,7 +79,7 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         -moz-osx-font-smoothing: grayscale;
       }
 
-      /* Everything inherits the paragraph baseline */
+      /* EVERYTHING inherits paragraph typography */
       *, *::before, *::after{
         font-family: inherit;
         font-size: inherit;
@@ -83,17 +87,17 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         color: inherit;
       }
 
-      /* Form controls (critical for accordions) */
+      /* Reset form controls (accordion buttons!) */
       button, input, textarea, select{
         font: inherit;
         color: inherit;
       }
 
-      /* Headings / titles can differ by size + weight */
+      /* Headings differ ONLY by size + weight */
       h1, h2, h3, .acc-title, .title{
         font-family: var(--font-title);
-        color: var(--text);
         font-weight: 700;
+        color: var(--text);
       }
 
       h1{
@@ -114,50 +118,41 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
       }
 
       /* Muted is opt-in */
-      .muted, .sub{
-        color: var(--muted);
-      }
+      .muted, .sub{ color: var(--muted); }
 
       a{ color:inherit; text-decoration:none; }
       a:visited{ color:inherit; }
       a:hover{ text-decoration:underline; text-decoration-thickness:from-font; }
 
-      /* ✅ MAIN IS 100% WIDTH */
+      /* =========================
+         LAYOUT
+         ========================= */
+
       main{
         margin:0;
         padding: 2rem var(--page-pad) calc(var(--footer-h) + env(safe-area-inset-bottom));
-        width: 100%;
-        max-width: none;
-        box-sizing: border-box;
+        width:100%;
+        box-sizing:border-box;
       }
 
-      /* Full-bleed now just means "use the whole main width" */
-      .full-bleed{
-        width: 100%;
-      }
+      .full-bleed{ width:100%; }
 
-      /* Optional inner: slightly padded but still full width */
       .full-bleed > .inner{
-        width: 100%;
+        width:100%;
         padding-inline: var(--page-pad);
-        box-sizing: border-box;
-        margin: 0;
+        box-sizing:border-box;
       }
 
       footer{
-        position:fixed; left:0; right:0; bottom:0;
+        position:fixed;
+        left:0; right:0; bottom:0;
         border-top:1px solid var(--border);
         background:var(--bg);
         backdrop-filter:saturate(1.1) blur(4px);
-        -webkit-backdrop-filter:saturate(1.1) blur(4px);
       }
 
       .foot-wrap{
-        width:100%;
-        max-width:none;
-        margin:0;
-        padding: 1rem var(--page-pad) calc(1rem + env(safe-area-inset-bottom));
-        box-sizing:border-box;
+        padding:1rem var(--page-pad) calc(1rem + env(safe-area-inset-bottom));
         color: var(--muted);
       }
     </style>
@@ -196,7 +191,9 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
     <Navbar />
     <main><slot /></main>
     <footer>
-      <div class="foot-wrap">© {new Date().getFullYear()} Mariah Ippolito • Hosted on Cloudflare Pages</div>
+      <div class="foot-wrap">
+        © {new Date().getFullYear()} Mariah Ippolito • Hosted on Cloudflare Pages
+      </div>
     </footer>
   </body>
 </html>
