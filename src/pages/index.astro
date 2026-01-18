@@ -287,23 +287,22 @@ const covers = [
     }
 
     .card{
-      flex: 0 0 auto;
-      width: clamp(320px, 78vw, 980px);
-      border-radius: 16px;
-      overflow: hidden;
-      aspect-ratio: 16 / 9; /* ✅ 16x9 */
-      background: var(--card);
-      border: 1px solid var(--border);
+    flex: 0 0 auto;
+    width: clamp(320px, 78vw, 980px);
+    border-radius: 16px;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    background: var(--card);
+    border: 1px solid var(--border);
+  
+    opacity: 0.85;
+    transition: opacity 200ms ease;
+  }
+  
+  .card.is-active{
+    opacity: 1;
+  }
 
-      transform: scale(0.94);
-      opacity: 0.85;
-      transition: transform 200ms ease, opacity 200ms ease;
-    }
-
-    .card.is-active{
-      transform: scale(1);
-      opacity: 1;
-    }
 
     /* Media stack */
     .media{
