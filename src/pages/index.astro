@@ -10,7 +10,6 @@ const slides = [
   "/projects/06 Project Six.png",
 ];
 
-// Covers (project name images)
 const covers = [
   "/projects/Project Cover/Project One.png",
   "/projects/Project Cover/Project Two.png",
@@ -51,8 +50,7 @@ const covers = [
             </ul>
           </div>
         </div>
-
-        <!-- ✅ dots removed -->
+        <!-- dots removed -->
       </div>
     </div>
   </section>
@@ -78,6 +76,31 @@ const covers = [
     let animating = false;
     let baseX = 0;
 
+    // --- Preload helpers ---
+    const preload = (url) =>
+      new Promise((resolve) => {
+        const im = new Image();
+        im.decoding = "async";
+        im.onload = () => resolve(true);
+        im.onerror = () => resolve(false);
+        im.src = url;
+      });
+
+    const warmCache = () => {
+      const all = [...slides, ...covers];
+      const run = () => Promise.all(all.map(preload));
+      if ("requestIdleCallback" in window) requestIdleCallback(run);
+      else setTimeout(run, 0);
+    };
+
+    const preloadAhead = () => {
+      const ahead = [mod(index + 1), mod(index + 2)];
+      ahead.forEach((i) => {
+        preload(slides[i]);
+        preload(covers[i]);
+      });
+    };
+
     const setImages = () => {
       imgPrev.src = slides[mod(index - 1)];
       imgCur.src  = slides[index];
@@ -88,12 +111,12 @@ const covers = [
       coverNext.src = covers[mod(index + 1)];
 
       imgCur.loading = "eager";
-      imgPrev.loading = "lazy";
-      imgNext.loading = "lazy";
+      imgPrev.loading = "eager";
+      imgNext.loading = "eager";
 
       coverCur.loading = "eager";
-      coverPrev.loading = "lazy";
-      coverNext.loading = "lazy";
+      coverPrev.loading = "eager";
+      coverNext.loading = "eager";
     };
 
     const gapPx = () => {
@@ -108,7 +131,7 @@ const covers = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
-    // center current card in viewport at any size
+    // ✅ compute baseX so current card center == viewport center (works at any size)
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
       const c = cardCur.getBoundingClientRect();
@@ -138,6 +161,7 @@ const covers = [
 
         index = mod(index + dir);
         setImages();
+        preloadAhead();
 
         track.style.transition = "none";
         track.style.transform = `translate3d(${baseX}px, 0, 0)`;
@@ -150,9 +174,9 @@ const covers = [
       track.addEventListener("transitionend", onDone);
     };
 
-    // wheel direction: down/right = next, up/left = prev
+    // ✅ Scroll anywhere on the page controls the carousel
     let wheelLock = false;
-    viewport.addEventListener(
+    window.addEventListener(
       "wheel",
       (e) => {
         e.preventDefault();
@@ -167,7 +191,7 @@ const covers = [
       { passive: false }
     );
 
-    // drag/swipe
+    // drag/swipe (only when interacting on the carousel area)
     let startX = 0;
     let dragging = false;
 
@@ -194,7 +218,7 @@ const covers = [
     });
 
     // keyboard
-    viewport.addEventListener("keydown", (e) => {
+    window.addEventListener("keydown", (e) => {
       if (animating) return;
       if (e.key === "ArrowRight") step(1);
       if (e.key === "ArrowLeft") step(-1);
@@ -209,6 +233,8 @@ const covers = [
 
     // init
     setImages();
+    warmCache();
+    preloadAhead();
 
     requestAnimationFrame(() => {
       baseX = 0;
@@ -218,20 +244,20 @@ const covers = [
   </script>
 
   <style>
-    /* Prevent any accidental horizontal overflow (tiny px drift) */
+    /* ✅ No page scrollbars; wheel is used to advance slides */
     :global(html),
     :global(body){
       height: 100%;
       margin: 0;
-      overflow: hidden; /* ✅ removes the right scrollbar */
+      overflow: hidden;
     }
 
     .home{
-      display: grid;
-      gap: 16px;
+      height: 100vh;
       width: 100%;
-      padding-top: clamp(12px, 3vh, 28px);
-      padding-bottom: clamp(18px, 4vh, 44px);
+      display: grid;
+      place-items: center;
+      padding: 0;
     }
 
     .carousel{ width: 100%; }
@@ -268,20 +294,17 @@ const covers = [
       border-radius: 16px;
       overflow: hidden;
 
-      /* ✅ desktop aspect ratio */
+      /* desktop: 16:9 */
       aspect-ratio: 16 / 9;
 
       background: var(--card);
       border: 1px solid var(--border);
 
-      /* ✅ no scaling, same size always */
-      opacity: 0.92;
+      opacity: 0.98;
       transition: opacity 200ms ease;
     }
 
-    .card.is-active{
-      opacity: 1;
-    }
+    .card.is-active{ opacity: 1; }
 
     /* Media stack */
     .media{
@@ -327,14 +350,16 @@ const covers = [
       filter: none;
     }
 
-    /* ✅ Mobile: make slides 9x16 */
+    /* ✅ Mobile: 9:16 AND fits inside viewport */
     @media (max-width: 640px){
       .window{
-        width: min(100vw, 92vw);
+        width: 100vw;
       }
 
       .card{
-        width: min(92vw, 520px);
+        /* height must fit within viewport (account for address bar/safe areas) */
+        height: min(86vh, 720px);
+        width: calc(min(86vh, 720px) * 9 / 16); /* derive width from height */
         aspect-ratio: 9 / 16;
         border-radius: 14px;
       }
