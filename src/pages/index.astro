@@ -15,10 +15,10 @@ const slides = [
     <div class="full-bleed">
       <div class="carousel" id="projects">
         <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
-          <div class="window">
+          <div class="window" id="window">
             <ul class="track" id="track" aria-live="polite">
               <li class="card"><img id="img-prev" alt="Previous project" decoding="async" /></li>
-              <li class="card is-active"><img id="img-cur" alt="Current project" decoding="async" /></li>
+              <li class="card is-active" id="card-cur"><img id="img-cur" alt="Current project" decoding="async" /></li>
               <li class="card"><img id="img-next" alt="Next project" decoding="async" /></li>
             </ul>
           </div>
@@ -37,8 +37,11 @@ const slides = [
 
   <script define:vars={{ slides }}>
     const viewport = document.getElementById("viewport");
+    const windowEl = document.getElementById("window");
     const track = document.getElementById("track");
     const dots = document.querySelectorAll("#dots .dot");
+
+    const cardCur = document.getElementById("card-cur");
 
     const imgPrev = document.getElementById("img-prev");
     const imgCur  = document.getElementById("img-cur");
@@ -49,6 +52,7 @@ const slides = [
 
     let index = 0;
     let animating = false;
+    let baseX = 0; // current "resting" translateX that keeps the current card centered
 
     const setDots = () => {
       dots.forEach((d, i) => {
@@ -78,14 +82,32 @@ const slides = [
       return card ? card.getBoundingClientRect().width : 0;
     };
 
-    const stepDistance = () => cardWidth() + gapPx();
+    const stepDistance = () => Math.round(cardWidth() + gapPx());
 
-    // Track order is [prev, cur, next]; show "cur" by shifting left one card.
-    const snap = () => {
-      const dist = stepDistance();
+    // ✅ compute baseX so current card center == viewport center (works at any size)
+    const computeBaseX = () => {
+      // measure centers in screen coordinates
+      const v = viewport.getBoundingClientRect();
+      const c = cardCur.getBoundingClientRect();
+
+      const viewportCenter = v.left + v.width / 2;
+      const cardCenter = c.left + c.width / 2;
+
+      // We want to shift track by the delta between these
+      baseX += (viewportCenter - cardCenter);
+      baseX = Math.round(baseX); // keep stable
+
       track.style.transition = "none";
-      track.style.transform = `translateX(${-dist}px)`;
+      track.style.transform = `translate3d(${baseX}px, 0, 0)`;
       track.offsetHeight;
+    };
+
+    const snap = () => {
+      track.style.transition = "none";
+      track.style.transform = `translate3d(${baseX}px, 0, 0)`;
+      track.offsetHeight;
+      // re-measure to eliminate drift
+      computeBaseX();
     };
 
     const step = (dir) => {
@@ -93,8 +115,9 @@ const slides = [
       animating = true;
 
       const dist = stepDistance();
+
       track.style.transition = "transform 320ms ease";
-      track.style.transform = `translateX(${-(dist) + (dir === 1 ? -dist : dist)}px)`;
+      track.style.transform = `translate3d(${baseX + (dir === 1 ? -dist : dist)}px, 0, 0)`;
 
       const onDone = () => {
         track.removeEventListener("transitionend", onDone);
@@ -102,7 +125,12 @@ const slides = [
         index = mod(index + dir);
         setImages();
         setDots();
-        snap();
+
+        // keep same baseX, then re-center precisely
+        track.style.transition = "none";
+        track.style.transform = `translate3d(${baseX}px, 0, 0)`;
+        track.offsetHeight;
+        computeBaseX();
 
         animating = false;
       };
@@ -113,11 +141,11 @@ const slides = [
     const goTo = (t) => {
       t = mod(t);
       if (t === index || animating) return;
-
       index = t;
       setImages();
       setDots();
-      snap();
+      // after image swap, re-center precisely
+      requestAnimationFrame(() => computeBaseX());
     };
 
     dots.forEach((dot) => {
@@ -127,7 +155,7 @@ const slides = [
       });
     });
 
-    // Wheel direction: down/right = next, up/left = prev
+    // wheel direction: down/right = next, up/left = prev
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -144,7 +172,7 @@ const slides = [
       { passive: false }
     );
 
-    // Drag / swipe
+    // drag/swipe
     let startX = 0;
     let dragging = false;
 
@@ -170,21 +198,30 @@ const slides = [
       dragging = false;
     });
 
-    // Keyboard
+    // keyboard
     viewport.addEventListener("keydown", (e) => {
       if (animating) return;
       if (e.key === "ArrowRight") step(1);
       if (e.key === "ArrowLeft") step(-1);
     });
 
+    // resize: recenter after layout settles
+    let resizeT;
     window.addEventListener("resize", () => {
-      setTimeout(() => snap(), 0);
+      clearTimeout(resizeT);
+      resizeT = setTimeout(() => computeBaseX(), 60);
     });
 
-    // Init
+    // init
     setImages();
     setDots();
-    snap();
+
+    // wait one frame so layout exists, then center
+    requestAnimationFrame(() => {
+      baseX = 0;
+      track.style.transform = "translate3d(0,0,0)";
+      computeBaseX();
+    });
   </script>
 
   <style>
@@ -198,7 +235,6 @@ const slides = [
 
     .carousel{ width: 100%; }
 
-    /* ✅ Make the viewport a true centering container (no padding) */
     .viewport{
       width: 100%;
       overflow: hidden;
@@ -207,14 +243,13 @@ const slides = [
       box-sizing: border-box;
 
       display: flex;
-      justify-content: center; /* true center of available width */
+      justify-content: center;
       align-items: center;
     }
 
-    /* centered "window" equals one card width */
     .window{
       width: clamp(320px, 78vw, 980px);
-      overflow: visible; /* allow right peek */
+      overflow: visible; /* allow next peek */
     }
 
     .track{
@@ -223,6 +258,7 @@ const slides = [
       gap: clamp(10px, 2vw, 18px);
       padding: 6px 0;
       will-change: transform;
+      transform: translate3d(0,0,0);
     }
 
     .card{
