@@ -76,36 +76,65 @@ const covers = [
     let animating = false;
     let baseX = 0;
 
-    // ---------- Preload (robust + throttled) ----------
+    // -------- Preload + decode helpers --------
     const preloaded = new Set();
+
     const preload = (src) => {
       if (!src || preloaded.has(src)) return;
       preloaded.add(src);
       const im = new Image();
       im.decoding = "async";
-      im.loading = "eager";
       im.src = src;
     };
 
-    const preloadAround = (i) => {
-      // current + two ahead/behind for both main & cover
-      const targets = [
-        slides[mod(i - 2)], slides[mod(i - 1)], slides[i], slides[mod(i + 1)], slides[mod(i + 2)],
-        covers[mod(i - 2)], covers[mod(i - 1)], covers[i], covers[mod(i + 1)], covers[mod(i + 2)],
-      ];
-      targets.forEach(preload);
+    // Ensure browser has decoded image before we animate (prevents "pop in")
+    const ensureDecoded = (imgEl, src) => {
+      return new Promise((resolve) => {
+        if (!imgEl) return resolve(false);
+
+        // set src if needed
+        if (imgEl.src !== new URL(src, window.location.href).href) {
+          imgEl.src = src;
+        }
+
+        const done = () => {
+          // decode if supported, otherwise resolve
+          if (imgEl.decode) {
+            imgEl.decode().then(() => resolve(true)).catch(() => resolve(true));
+          } else {
+            resolve(true);
+          }
+        };
+
+        if (imgEl.complete && imgEl.naturalWidth > 0) return done();
+        imgEl.addEventListener("load", done, { once: true });
+        imgEl.addEventListener("error", () => resolve(false), { once: true });
+      });
     };
 
-    const setImages = () => {
-      imgPrev.src = slides[mod(index - 1)];
-      imgCur.src  = slides[index];
-      imgNext.src = slides[mod(index + 1)];
+    // Load + decode the trio (prev/cur/next) before we proceed
+    const setAndDecodeImages = async () => {
+      const prevI = slides[mod(index - 1)];
+      const curI  = slides[index];
+      const nextI = slides[mod(index + 1)];
 
-      coverPrev.src = covers[mod(index - 1)];
-      coverCur.src  = covers[index];
-      coverNext.src = covers[mod(index + 1)];
+      const prevC = covers[mod(index - 1)];
+      const curC  = covers[index];
+      const nextC = covers[mod(index + 1)];
 
-      // make sure the visible 3 decode ASAP
+      // start fetch early (even before we await)
+      [prevI, curI, nextI, prevC, curC, nextC].forEach(preload);
+
+      // assign sources
+      imgPrev.src = prevI;
+      imgCur.src  = curI;
+      imgNext.src = nextI;
+
+      coverPrev.src = prevC;
+      coverCur.src  = curC;
+      coverNext.src = nextC;
+
+      // eager decode for these 6 elements
       imgPrev.loading = "eager";
       imgCur.loading  = "eager";
       imgNext.loading = "eager";
@@ -113,7 +142,21 @@ const covers = [
       coverCur.loading  = "eager";
       coverNext.loading = "eager";
 
-      preloadAround(index);
+      await Promise.all([
+        ensureDecoded(imgPrev, prevI),
+        ensureDecoded(imgCur,  curI),
+        ensureDecoded(imgNext, nextI),
+        ensureDecoded(coverPrev, prevC),
+        ensureDecoded(coverCur,  curC),
+        ensureDecoded(coverNext, nextC),
+      ]);
+
+      // also preload further out in the background
+      const farther = [
+        slides[mod(index - 2)], slides[mod(index + 2)],
+        covers[mod(index - 2)], covers[mod(index + 2)],
+      ];
+      farther.forEach(preload);
     };
 
     const gapPx = () => {
@@ -128,7 +171,6 @@ const covers = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
-    // center current card in viewport at any size
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
       const c = cardCur.getBoundingClientRect();
@@ -144,21 +186,34 @@ const covers = [
       track.offsetHeight;
     };
 
-    const step = (dir) => {
+    // -------- Slide step (now decode-first) --------
+    const step = async (dir) => {
       if (animating) return;
       animating = true;
 
       const dist = stepDistance();
 
+      // compute target index first
+      const nextIndex = mod(index + dir);
+
+      // IMPORTANT: pre-decode the "incoming" trio BEFORE animating
+      index = nextIndex;
+      await setAndDecodeImages();
+
+      // keep baseX centered (images swapped, layout stable)
+      track.style.transition = "none";
+      track.style.transform = `translate3d(${baseX}px, 0, 0)`;
+      track.offsetHeight;
+      computeBaseX();
+
+      // now animate the movement (this moves to show new current)
       track.style.transition = "transform 320ms ease";
       track.style.transform = `translate3d(${baseX + (dir === 1 ? -dist : dist)}px, 0, 0)`;
 
       const onDone = () => {
         track.removeEventListener("transitionend", onDone);
 
-        index = mod(index + dir);
-        setImages();
-
+        // snap back to base and re-center precisely
         track.style.transition = "none";
         track.style.transform = `translate3d(${baseX}px, 0, 0)`;
         track.offsetHeight;
@@ -170,8 +225,7 @@ const covers = [
       track.addEventListener("transitionend", onDone);
     };
 
-    // ---------- Wheel works anywhere on page ----------
-    // We capture wheel at the window level and always turn it into a slide step.
+    // -------- Wheel works anywhere on page --------
     let wheelLock = false;
     window.addEventListener(
       "wheel",
@@ -183,12 +237,12 @@ const covers = [
         const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
         step(dominant > 0 ? 1 : -1);
 
-        setTimeout(() => (wheelLock = false), 360);
+        setTimeout(() => (wheelLock = false), 380);
       },
       { passive: false }
     );
 
-    // drag/swipe (still on viewport)
+    // drag/swipe (viewport)
     let startX = 0;
     let dragging = false;
 
@@ -229,25 +283,27 @@ const covers = [
     });
 
     // init
-    setImages();
-    // preload everything (fast if cached; eliminates "not loaded yet" flashes)
-    slides.forEach(preload);
-    covers.forEach(preload);
+    (async () => {
+      // preload everything up front (best chance to avoid any pop)
+      slides.forEach(preload);
+      covers.forEach(preload);
 
-    requestAnimationFrame(() => {
-      baseX = 0;
-      track.style.transform = "translate3d(0,0,0)";
-      computeBaseX();
-    });
+      await setAndDecodeImages();
+
+      requestAnimationFrame(() => {
+        baseX = 0;
+        track.style.transform = "translate3d(0,0,0)";
+        computeBaseX();
+      });
+    })();
   </script>
 
   <style>
-    /* kill scrollbars; wheel is repurposed to slide navigation */
     :global(html),
     :global(body){
       height: 100%;
       margin: 0;
-      overflow: hidden;
+      overflow: hidden; /* no page scrollbars; wheel becomes slide nav */
     }
 
     .home{
@@ -274,7 +330,7 @@ const covers = [
 
     .window{
       width: min(100vw, clamp(320px, 78vw, 980px));
-      overflow: visible; /* allow next peek (desktop) */
+      overflow: visible; /* allow next peek on desktop */
     }
 
     .track{
@@ -339,11 +395,11 @@ const covers = [
     .card:hover .img-main,
     .card:focus-within .img-main{ filter: none; }
 
-    /* Mobile: 9x16 and fit viewport height */
+    /* ✅ Mobile: go back to "no prev/next visible" + fit viewport */
     @media (max-width: 640px){
       .window{
         width: 100vw;
-        overflow: hidden; /* remove peek on mobile to avoid overflow */
+        overflow: hidden; /* hides prev/next */
       }
 
       .track{
@@ -352,14 +408,12 @@ const covers = [
       }
 
       .card{
-        width: min(92vw, 440px);
+        width: min(92vw, 520px);
         aspect-ratio: 9 / 16;
-
-        /* Fit within the visible screen height (svh avoids mobile address bar issues) */
-        height: min(calc(100svh - 24px), calc((min(92vw, 440px)) * (16 / 9)));
-        /* ^ height is capped by viewport; ratio stays correct because aspect-ratio is set */
-
         border-radius: 14px;
+
+        /* Fit inside visible viewport (svh handles address bar) */
+        max-height: calc(100svh - 24px);
       }
     }
 
