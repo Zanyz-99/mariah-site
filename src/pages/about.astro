@@ -15,11 +15,10 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <style>
+    /* Page wrapper */
     .about-wrap {
-      display: flex;
-      justify-content: center;
-      margin-inline: auto;
       width: 100%;
+      margin-inline: auto;
     }
 
     .spacer-md {
@@ -27,15 +26,16 @@ import Layout from "../layouts/Layout.astro";
       width: 100%;
     }
 
-    /* Match Resume page body text */
+    /* Centered text block */
     .about-text {
       width: 60%;
+      margin-inline: auto;
       font-size: var(--body-size);
       line-height: var(--line);
       color: var(--text);
     }
 
-    /* Mobile: relax width so text stays readable */
+    /* Mobile readability */
     @media (max-width: 768px) {
       .about-text {
         width: 100%;
