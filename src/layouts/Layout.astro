@@ -1,18 +1,14 @@
 ---
 import Navbar from "../components/Navbar.astro";
+import "../styles/global.css";
+
 interface Props { title?: string; description?: string; }
 const { title = "MariahIppolito.com", description = "" } = Astro.props;
 ---
 <!doctype html>
 <html lang="en" data-theme="light">
   <head>
-    <!-- Montserrat ONLY -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -23,6 +19,11 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
     <link rel="icon" type="image/png" href="/icons/logo dark.png" />
     <link rel="apple-touch-icon" href="/icons/logo dark.png" />
 
+    <!-- Global fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
+
     <slot name="head" />
 
     <style>
@@ -32,6 +33,7 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         --bar-bg: color-mix(in oklab, var(--bg) 92%, #000 8%);
         --hover: rgba(0,0,0,.06);
 
+        /* ✅ Full-width layout (no caps) */
         --page-pad: clamp(12px, 2vw, 24px);
 
         /* Typography */
@@ -41,9 +43,8 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         --body-size: clamp(16px, 2.2vw, 20px);
         --line: 1.5;
 
-        /* 🔒 Montserrat everywhere */
-        --font-body: 'Montserrat', system-ui, sans-serif;
         --font-title: 'Montserrat', system-ui, sans-serif;
+        --font-body: 'Montserrat', system-ui, sans-serif;
 
         --footer-h: 72px;
       }
@@ -55,95 +56,91 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         --hover: rgba(255,255,255,.08);
       }
 
-      /* ✅ Hard-set Montserrat + paragraph sizing at the root */
-      html, body{
-        margin:0;
-        height:100%;
-        background:var(--bg);
-        overflow-x:hidden;
-
+      html,body{
+        margin:0; height:100%;
+        background:var(--bg); color:var(--text);
         font-family: var(--font-body);
-        font-size: var(--body-size);
-        line-height: var(--line);
-        font-weight: 400;
-        color: var(--text);
-
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
       }
 
-      /* Everything inherits paragraph typography */
-      *, *::before, *::after{
-        font-family: inherit;
-        font-size: inherit;
-        line-height: inherit;
-        color: inherit;
-      }
-
-      /* Reset form controls (accordion buttons!) */
-      button, input, textarea, select{
-        font: inherit;
-        color: inherit;
-      }
-
-      /* Headings differ ONLY by size + weight */
-      h1, h2, h3, .acc-title, .title{
+      h1, h2, h3, .acc-title, .title {
         font-family: var(--font-title);
-        font-weight: 700;
         color: var(--text);
+        font-weight: 700;
       }
 
-      h1{
+      h1 {
         font-size: var(--h1-size);
         margin: 0 0 .25rem 0;
         line-height: calc(var(--line) - .15);
         letter-spacing: -0.01em;
       }
-      h2{
+
+      h2 {
         font-size: var(--h2-size);
         margin: 1.25rem 0 .5rem;
         line-height: calc(var(--line) - .1);
       }
-      h3{
+
+      h3 {
         font-size: var(--h3-size);
         margin: 1rem 0 .35rem;
         line-height: calc(var(--line) - .05);
       }
 
-      /* Muted is opt-in */
-      .muted, .sub{ color: var(--muted); }
+      p, .sub, .muted, li, a, .acc-panel {
+        font-family: var(--font-body);
+        font-weight: 400;
+        color: var(--muted);
+        font-size: var(--body-size);
+        line-height: var(--line);
+      }
 
       a{ color:inherit; text-decoration:none; }
       a:visited{ color:inherit; }
       a:hover{ text-decoration:underline; text-decoration-thickness:from-font; }
 
+      /* ✅ MAIN IS 100% WIDTH */
       main{
         margin:0;
         padding: 2rem var(--page-pad) calc(var(--footer-h) + env(safe-area-inset-bottom));
-        width:100%;
-        box-sizing:border-box;
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
       }
 
-      .full-bleed{ width:100%; }
+      /* Full-bleed now just means "use the whole main width" */
+      .full-bleed{
+        width: 100%;
+      }
 
+      /* Optional inner: slightly padded but still full width */
       .full-bleed > .inner{
-        width:100%;
+        width: 100%;
         padding-inline: var(--page-pad);
-        box-sizing:border-box;
+        box-sizing: border-box;
+        margin: 0;
       }
 
       footer{
-        position:fixed;
-        left:0; right:0; bottom:0;
+        position:fixed; left:0; right:0; bottom:0;
         border-top:1px solid var(--border);
+        color:var(--muted);
+        font-size:.9rem;
         background:var(--bg);
         backdrop-filter:saturate(1.1) blur(4px);
+        -webkit-backdrop-filter:saturate(1.1) blur(4px);
       }
 
       .foot-wrap{
-        padding:1rem var(--page-pad) calc(1rem + env(safe-area-inset-bottom));
-        color: var(--muted);
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 1rem var(--page-pad) calc(1rem + env(safe-area-inset-bottom));
+        box-sizing: border-box;
       }
     </style>
 
@@ -177,13 +174,12 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
       })();
     </script>
   </head>
+
   <body>
     <Navbar />
     <main><slot /></main>
     <footer>
-      <div class="foot-wrap">
-        © {new Date().getFullYear()} Mariah Ippolito • Hosted on Cloudflare Pages
-      </div>
+      <div class="foot-wrap">© {new Date().getFullYear()} Mariah Ippolito • Hosted on Cloudflare Pages</div>
     </footer>
   </body>
 </html>
