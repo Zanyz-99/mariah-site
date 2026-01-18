@@ -2,6 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 
 const slides = [
+  "/projects/01 Project One.png",  
   "/projects/02 Project Two.png",
   "/projects/03 Project Three.png",
   "/projects/04 Project Four.png",
@@ -37,7 +38,6 @@ const slides = [
 
   <script define:vars={{ slides }}>
     const viewport = document.getElementById("viewport");
-    const windowEl = document.getElementById("window");
     const track = document.getElementById("track");
     const dots = document.querySelectorAll("#dots .dot");
 
@@ -52,7 +52,56 @@ const slides = [
 
     let index = 0;
     let animating = false;
-    let baseX = 0; // current "resting" translateX that keeps the current card centered
+    let baseX = 0;
+
+    // -------------------------
+    // ✅ Preload + decode cache
+    // -------------------------
+    const preloadCache = new Map();
+
+    const preload = (src) => {
+      if (!src) return Promise.resolve();
+      if (preloadCache.has(src)) return preloadCache.get(src);
+
+      const p = new Promise((resolve) => {
+        const im = new Image();
+        im.decoding = "async";
+        im.loading = "eager";
+        im.src = src;
+
+        const done = () => resolve(true);
+
+        // decode() prevents flicker on advance (when supported)
+        if (im.decode) {
+          im.decode().then(done).catch(() => {
+            // decode can fail on some formats/browsers; fall back to load
+            if (im.complete) done();
+            else im.addEventListener("load", done, { once: true });
+            im.addEventListener("error", done, { once: true });
+          });
+        } else {
+          if (im.complete) done();
+          else im.addEventListener("load", done, { once: true });
+          im.addEventListener("error", done, { once: true });
+        }
+      });
+
+      preloadCache.set(src, p);
+      return p;
+    };
+
+    // Preload all slides (small set, simplest)
+    const preloadAll = async () => {
+      await Promise.all(slides.map(preload));
+    };
+
+    // Preload neighborhood (keeps things warm while you navigate)
+    const preloadNeighbors = (i) => {
+      preload(slides[mod(i - 1)]);
+      preload(slides[mod(i)]);
+      preload(slides[mod(i + 1)]);
+      preload(slides[mod(i + 2)]);
+    };
 
     const setDots = () => {
       dots.forEach((d, i) => {
@@ -62,14 +111,16 @@ const slides = [
       });
     };
 
+    // Set images (assumes they've been preloaded)
     const setImages = () => {
       imgPrev.src = slides[mod(index - 1)];
       imgCur.src  = slides[index];
       imgNext.src = slides[mod(index + 1)];
 
-      imgCur.loading = "eager";
-      imgPrev.loading = "lazy";
-      imgNext.loading = "lazy";
+      // keep decode async; preloader does the heavy lifting
+      imgCur.decoding = "async";
+      imgPrev.decoding = "async";
+      imgNext.decoding = "async";
     };
 
     const gapPx = () => {
@@ -84,18 +135,16 @@ const slides = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
-    // ✅ compute baseX so current card center == viewport center (works at any size)
+    // ✅ compute baseX so current card center == viewport center
     const computeBaseX = () => {
-      // measure centers in screen coordinates
       const v = viewport.getBoundingClientRect();
       const c = cardCur.getBoundingClientRect();
 
       const viewportCenter = v.left + v.width / 2;
       const cardCenter = c.left + c.width / 2;
 
-      // We want to shift track by the delta between these
       baseX += (viewportCenter - cardCenter);
-      baseX = Math.round(baseX); // keep stable
+      baseX = Math.round(baseX);
 
       track.style.transition = "none";
       track.style.transform = `translate3d(${baseX}px, 0, 0)`;
@@ -106,13 +155,21 @@ const slides = [
       track.style.transition = "none";
       track.style.transform = `translate3d(${baseX}px, 0, 0)`;
       track.offsetHeight;
-      // re-measure to eliminate drift
       computeBaseX();
     };
 
-    const step = (dir) => {
+    const step = async (dir) => {
       if (animating) return;
       animating = true;
+
+      const nextIndex = mod(index + dir);
+
+      // ✅ ensure target + neighbors are ready BEFORE animating
+      await Promise.all([
+        preload(slides[mod(nextIndex - 1)]),
+        preload(slides[nextIndex]),
+        preload(slides[mod(nextIndex + 1)]),
+      ]);
 
       const dist = stepDistance();
 
@@ -122,15 +179,13 @@ const slides = [
       const onDone = () => {
         track.removeEventListener("transitionend", onDone);
 
-        index = mod(index + dir);
-        setImages();
+        index = nextIndex;
         setDots();
+        setImages();
+        snap();
 
-        // keep same baseX, then re-center precisely
-        track.style.transition = "none";
-        track.style.transform = `translate3d(${baseX}px, 0, 0)`;
-        track.offsetHeight;
-        computeBaseX();
+        // keep warming cache
+        preloadNeighbors(index);
 
         animating = false;
       };
@@ -138,14 +193,26 @@ const slides = [
       track.addEventListener("transitionend", onDone);
     };
 
-    const goTo = (t) => {
+    const goTo = async (t) => {
       t = mod(t);
       if (t === index || animating) return;
+      animating = true;
+
+      // preload target neighborhood
+      await Promise.all([
+        preload(slides[mod(t - 1)]),
+        preload(slides[t]),
+        preload(slides[mod(t + 1)]),
+      ]);
+
       index = t;
-      setImages();
       setDots();
-      // after image swap, re-center precisely
-      requestAnimationFrame(() => computeBaseX());
+      setImages();
+      requestAnimationFrame(() => {
+        computeBaseX();
+        preloadNeighbors(index);
+        animating = false;
+      });
     };
 
     dots.forEach((dot) => {
@@ -155,7 +222,7 @@ const slides = [
       });
     });
 
-    // wheel direction: down/right = next, up/left = prev
+    // Wheel direction: down/right = next, up/left = prev
     let wheelLock = false;
     viewport.addEventListener(
       "wheel",
@@ -172,7 +239,7 @@ const slides = [
       { passive: false }
     );
 
-    // drag/swipe
+    // Drag / swipe
     let startX = 0;
     let dragging = false;
 
@@ -198,30 +265,38 @@ const slides = [
       dragging = false;
     });
 
-    // keyboard
+    // Keyboard
     viewport.addEventListener("keydown", (e) => {
       if (animating) return;
       if (e.key === "ArrowRight") step(1);
       if (e.key === "ArrowLeft") step(-1);
     });
 
-    // resize: recenter after layout settles
+    // resize
     let resizeT;
     window.addEventListener("resize", () => {
       clearTimeout(resizeT);
       resizeT = setTimeout(() => computeBaseX(), 60);
     });
 
-    // init
-    setImages();
-    setDots();
+    // Init
+    (async () => {
+      // ✅ preload everything up-front (fast with 5 images)
+      preloadAll();
 
-    // wait one frame so layout exists, then center
-    requestAnimationFrame(() => {
-      baseX = 0;
-      track.style.transform = "translate3d(0,0,0)";
-      computeBaseX();
-    });
+      // preload neighbors too (immediate warmth)
+      preloadNeighbors(index);
+
+      // set initial images
+      setImages();
+      setDots();
+
+      requestAnimationFrame(() => {
+        baseX = 0;
+        track.style.transform = "translate3d(0,0,0)";
+        computeBaseX();
+      });
+    })();
   </script>
 
   <style>
@@ -241,7 +316,6 @@ const slides = [
       outline: none;
       touch-action: pan-y;
       box-sizing: border-box;
-
       display: flex;
       justify-content: center;
       align-items: center;
@@ -269,7 +343,6 @@ const slides = [
       aspect-ratio: 16 / 9;
       background: var(--card);
       border: 1px solid var(--border);
-
       transform: scale(0.94);
       opacity: 0.85;
       transition: transform 200ms ease, opacity 200ms ease;
