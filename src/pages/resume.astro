@@ -9,39 +9,231 @@ import Layout from "../layouts/Layout.astro";
     <!-- Accordion -->
     <section class="accordion" aria-label="About sections">
 
-      <!-- EDUCATION -->
+      <!-- EDUCATION* -->
       <div class="acc" id="acc-education">
         <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-education" id="btn-education">
           <span class="acc-toggle" aria-hidden="true"></span>
           <span class="acc-title">Education</span>
         </button>
-        <div class="acc-panel" id="panel-education" role="region" aria-labelledby="btn-education">
-          <div class="block">
-            <div class="edu">
-              <div class="edu-item">
-                <div class="edu-top">
-                  <div class="edu-school">University of Washington</div>
-                  <div class="edu-dates">2021–2024</div>
-                </div>
-                <div class="edu-sub">College of Built Environments</div>
-                <ul class="bullets">
-                  <li>Master of Architecture</li>
-                  <li>Certificate of Historic Preservation</li>
-                </ul>
-              </div>
 
-              <div class="edu-item">
-                <div class="edu-top">
-                  <div class="edu-school">Boston University</div>
-                  <div class="edu-dates">2013–2017</div>
+        <div class="acc-panel" id="panel-education" role="region" aria-labelledby="btn-education">
+          <div class="nested" role="list">
+
+            <!-- UW -->
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-edu-uw" id="nbtn-edu-uw">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">University of Washington <span class="sep">·</span> College of Built Environments</span>
+              </button>
+
+              <div class="npanel" id="n-edu-uw" role="region" aria-labelledby="nbtn-edu-uw">
+                <div class="edu-grid">
+                  <div class="edu-years">2021–2024</div>
+                  <div class="edu-body">
+                    <div class="edu-line">College of Built Environments</div>
+                    <ul class="bullets">
+                      <li>Master of Architecture</li>
+                      <li>Certificate of Historic Preservation</li>
+                    </ul>
+                  </div>
                 </div>
-                <div class="edu-sub">College of Fine Arts</div>
-                <ul class="bullets">
-                  <li>BFA Graphic Design</li>
-                  <li>Cum Laude</li>
-                </ul>
               </div>
             </div>
+
+            <!-- BU -->
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-edu-bu" id="nbtn-edu-bu">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">Boston University <span class="sep">·</span> College of Fine Arts</span>
+              </button>
+
+              <div class="npanel" id="n-edu-bu" role="region" aria-labelledby="nbtn-edu-bu">
+                <div class="edu-grid">
+                  <div class="edu-years">2013–2017</div>
+                  <div class="edu-body">
+                    <div class="edu-line">BFA Graphic Design</div>
+                    <ul class="bullets">
+                      <li>Cum Laude</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- WORK* -->
+      <div class="acc" id="acc-work">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-work" id="btn-work">
+          <span class="acc-toggle" aria-hidden="true"></span>
+          <span class="acc-title">Work</span>
+        </button>
+
+        <div class="acc-panel" id="panel-work" role="region" aria-labelledby="btn-work">
+          <div class="nested" role="list">
+
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-work-mh" id="nbtn-work-mh">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">Architecture Intern / Project Architect <span class="sep">|</span> Miller Hull · Seattle, WA</span>
+              </button>
+              <div class="npanel" id="n-work-mh" role="region" aria-labelledby="nbtn-work-mh">
+                <div class="detail">
+                  <div class="detail-top">June 2022 – September 2023</div>
+                  <p class="detail-text">
+                    Initially hired as a summer architecture intern; responsibilities included rendering development,
+                    architectural graphics for awards submissions, geographic and historic site research, and physical model making.
+                    Hired as a regular employee upon completion of the internship and continued part-time through the school year.
+                    In summer 2023, contracted to Olson Kundig (remained a Miller Hull employee), focusing on renderings, site/material research,
+                    presentation design, and floor plan schemes. Due to contract agreements, rendering examples from Olson Kundig work are not available.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-work-uw" id="nbtn-work-uw">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">ARCH 151 Reader / Grader <span class="sep">|</span> University of Washington · Seattle, WA</span>
+              </button>
+              <div class="npanel" id="n-work-uw" role="region" aria-labelledby="nbtn-work-uw">
+                <div class="detail">
+                  <div class="detail-top">March 2024 – June 2024</div>
+                  <p class="detail-text">
+                    Supported course instruction through assignment evaluation and feedback; coordinated grading workflow and maintained
+                    consistency across rubric-based assessments.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-work-is" id="nbtn-work-is">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">Project Coordinator <span class="sep">|</span> Interior Showplace · Honolulu, HI</span>
+              </button>
+              <div class="npanel" id="n-work-is" role="region" aria-labelledby="nbtn-work-is">
+                <div class="detail">
+                  <div class="detail-top">March 2021 – August 2021</div>
+                  <p class="detail-text">
+                    Coordinated private and government bids involving interior design services and furniture purchases across Oahu, Maui, Hawai’i, and Kaua’i.
+                    Supported initial design services through furniture research and quote-building with designers; placed and tracked orders; coordinated delivery
+                    and scheduled installation. Projects ranged from $1,000 to $700,000. Designed presentation templates and marketing materials to support the sales team.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-work-novus" id="nbtn-work-novus">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">Marketing and Graphics Coordinator <span class="sep">|</span> Novus Architects, Inc. · Charleston, SC</span>
+              </button>
+              <div class="npanel" id="n-work-novus" role="region" aria-labelledby="nbtn-work-novus">
+                <div class="detail">
+                  <div class="detail-top">September 2019 – February 2021</div>
+                  <p class="detail-text">
+                    Supported Business Development with research and evaluation of RFPs/RFQs and created proposal submissions for public and private bids.
+                    Designed print and digital marketing materials (brochures, infographics, postcards, presentations). Coordinated project photography, developed
+                    social media campaigns, updated the website, and supported environmental graphics efforts. Reported to the Director of Business Development;
+                    led weekly marketing meetings, presented updates in bi-weekly all-office meetings, and trained/managed the marketing intern.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-work-mums" id="nbtn-work-mums">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">Marketing Coordinator <span class="sep">|</span> Mum’s Place · Monterey, CA</span>
+              </button>
+              <div class="npanel" id="n-work-mums" role="region" aria-labelledby="nbtn-work-mums">
+                <div class="detail">
+                  <div class="detail-top">September 2018 – July 2019</div>
+                  <p class="detail-text">
+                    Focused on website optimization, social media maintenance, branding development, and advertising coordination.
+                    Occasionally supported interior designers with finish selections, proposal coordination, and client communications.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- FILL IN THE GAPS* -->
+      <div class="acc" id="acc-gaps">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-gaps" id="btn-gaps">
+          <span class="acc-toggle" aria-hidden="true"></span>
+          <span class="acc-title">Fill in the Gaps</span>
+        </button>
+
+        <div class="acc-panel" id="panel-gaps" role="region" aria-labelledby="btn-gaps">
+          <div class="nested" role="list">
+
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-gap-metier" id="nbtn-gap-metier">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">Bartender <span class="sep">|</span> Métier Brewing Co. · Seattle, WA</span>
+              </button>
+              <div class="npanel" id="n-gap-metier" role="region" aria-labelledby="nbtn-gap-metier">
+                <div class="detail">
+                  <div class="detail-top">April 2022 – January 2024</div>
+                  <p class="detail-text">
+                    Managed high-volume service, maintained bar operations and inventory, and supported a welcoming guest experience.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-gap-optimism" id="nbtn-gap-optimism">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">Bartender <span class="sep">|</span> Optimism Brewery · Seattle, WA</span>
+              </button>
+              <div class="npanel" id="n-gap-optimism" role="region" aria-labelledby="nbtn-gap-optimism">
+                <div class="detail">
+                  <div class="detail-top">September 2021 – April 2022</div>
+                  <p class="detail-text">
+                    Provided fast-paced service and coordinated day-to-day bar setup/close while maintaining quality and consistency.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-gap-island" id="nbtn-gap-island">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">Server <span class="sep">|</span> Island Vintage Wine Bar · Waikiki, HI</span>
+              </button>
+              <div class="npanel" id="n-gap-island" role="region" aria-labelledby="nbtn-gap-island">
+                <div class="detail">
+                  <div class="detail-top">April 2021 – August 2021</div>
+                  <p class="detail-text">
+                    Delivered attentive table service in a high-traffic environment; coordinated timing and communication between guests, bar, and kitchen.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="nitem" role="listitem">
+              <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-gap-harpoon" id="nbtn-gap-harpoon">
+                <span class="ncaret" aria-hidden="true"></span>
+                <span class="nhead">Bartender <span class="sep">|</span> Harpoon Brewery · Boston, MA</span>
+              </button>
+              <div class="npanel" id="n-gap-harpoon" role="region" aria-labelledby="nbtn-gap-harpoon">
+                <div class="detail">
+                  <div class="detail-top">January 2018 – August 2018</div>
+                  <p class="detail-text">
+                    Supported taproom operations and guest experience; handled POS, workflow, and service standards during peak hours.
+                  </p>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -52,6 +244,7 @@ import Layout from "../layouts/Layout.astro";
           <span class="acc-toggle" aria-hidden="true"></span>
           <span class="acc-title">Skills</span>
         </button>
+
         <div class="acc-panel" id="panel-skills" role="region" aria-labelledby="btn-skills">
           <div class="block">
             <div class="chips" aria-label="Skills list">
@@ -79,6 +272,7 @@ import Layout from "../layouts/Layout.astro";
           <span class="acc-toggle" aria-hidden="true"></span>
           <span class="acc-title">Achievements / Awards</span>
         </button>
+
         <div class="acc-panel" id="panel-achievements" role="region" aria-labelledby="btn-achievements">
           <div class="block">
             <ul class="bullets">
@@ -97,6 +291,7 @@ import Layout from "../layouts/Layout.astro";
           <span class="acc-toggle" aria-hidden="true"></span>
           <span class="acc-title">Interests / Hobbies</span>
         </button>
+
         <div class="acc-panel" id="panel-interests" role="region" aria-labelledby="btn-interests">
           <div class="block">
             <ul class="bullets">
@@ -108,174 +303,17 @@ import Layout from "../layouts/Layout.astro";
         </div>
       </div>
 
-      <!-- WORK EXPERIENCE -->
-      <div class="acc" id="acc-work">
-        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-work" id="btn-work">
-          <span class="acc-toggle" aria-hidden="true"></span>
-          <span class="acc-title">Work</span>
-        </button>
-        <div class="acc-panel" id="panel-work" role="region" aria-labelledby="btn-work">
-          <div class="list dim-others" aria-label="Work history">
-
-            <!-- Miller Hull -->
-            <div class="row hoverable">
-              <div class="row-line no-logo">
-                <div class="meta">
-                  <div class="title">Architecture Intern / Project Architect</div>
-                  <div class="sub">Miller Hull · Seattle, WA</div>
-                  <div class="sub">June 2022 – September 2023</div>
-                  <div class="desc">
-                    Initially hired as a summer architecture intern; responsibilities included rendering development,
-                    architectural graphics for award submissions, geographic and historic site research, and physical
-                    model making. Hired as a regular employee after the internship and continued part-time through
-                    the school year. In summer 2023, contracted to Olson Kundig (remained a Miller Hull employee),
-                    focusing on renderings, site/material research, presentation design, and floor plan schemes.
-                    Due to contract agreements, rendering examples from Olson Kundig work are not available.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- UW Reader/Grader -->
-            <div class="row hoverable">
-              <div class="row-line no-logo">
-                <div class="meta">
-                  <div class="title">ARCH 151 Reader / Grader</div>
-                  <div class="sub">University of Washington · Seattle, WA</div>
-                  <div class="sub">March 2024 – June 2024</div>
-                  <div class="desc">
-                    Supported course instruction through assignment evaluation and feedback; coordinated grading
-                    workflow and maintained consistency across rubric-based assessments.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Interior Showplace -->
-            <div class="row hoverable">
-              <div class="row-line no-logo">
-                <div class="meta">
-                  <div class="title">Project Coordinator</div>
-                  <div class="sub">Interior Showplace · Honolulu, HI</div>
-                  <div class="sub">March 2021 – August 2021</div>
-                  <div class="desc">
-                    Coordinated private and government bids involving interior design services and furniture purchases
-                    across Oahu, Maui, Hawai’i, and Kaua’i. Supported early design services through furniture research
-                    and quote-building with designers; placed and tracked orders; coordinated delivery and installation.
-                    Projects ranged from $1,000 to $700,000. Designed presentation templates and marketing materials
-                    to support the sales team.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Novus Architects -->
-            <div class="row hoverable">
-              <div class="row-line no-logo">
-                <div class="meta">
-                  <div class="title">Marketing and Graphics Coordinator</div>
-                  <div class="sub">Novus Architects, Inc. · Charleston, SC</div>
-                  <div class="sub">September 2019 – February 2021</div>
-                  <div class="desc">
-                    Supported Business Development with research and evaluation of RFPs/RFQs and created proposal
-                    submissions for public and private bids. Designed print and digital marketing materials (brochures,
-                    infographics, postcards, presentations). Coordinated project photography, developed social media
-                    campaigns, updated the website, and supported environmental graphics efforts. Reported to the
-                    Director of Business Development; led weekly marketing meetings, presented updates in bi-weekly
-                    all-office meetings, and trained/managed a marketing intern.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Mum's Place -->
-            <div class="row hoverable">
-              <div class="row-line no-logo">
-                <div class="meta">
-                  <div class="title">Marketing Coordinator</div>
-                  <div class="sub">Mum’s Place · Monterey, CA</div>
-                  <div class="sub">September 2018 – July 2019</div>
-                  <div class="desc">
-                    Focused on website optimization, social media maintenance, branding development, and advertising
-                    coordination. Occasionally supported interior designers with finish selections, proposal coordination,
-                    and client communications.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Service / Hospitality (gaps) -->
-            <div class="row hoverable">
-              <div class="row-line no-logo">
-                <div class="meta">
-                  <div class="title">Bartender</div>
-                  <div class="sub">Métier Brewing Co. · Seattle, WA</div>
-                  <div class="sub">April 2022 – January 2024</div>
-                  <div class="desc">
-                    Managed high-volume service, maintained bar operations and inventory, and supported a welcoming
-                    guest experience.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row hoverable">
-              <div class="row-line no-logo">
-                <div class="meta">
-                  <div class="title">Bartender</div>
-                  <div class="sub">Optimism Brewery · Seattle, WA</div>
-                  <div class="sub">September 2021 – April 2022</div>
-                  <div class="desc">
-                    Provided fast-paced service and coordinated day-to-day bar setup/close while maintaining quality
-                    and consistency.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row hoverable">
-              <div class="row-line no-logo">
-                <div class="meta">
-                  <div class="title">Server</div>
-                  <div class="sub">Island Vintage Wine Bar · Waikiki, HI</div>
-                  <div class="sub">April 2021 – August 2021</div>
-                  <div class="desc">
-                    Delivered attentive table service in a high-traffic environment; coordinated timing and communication
-                    between guests, bar, and kitchen.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row hoverable">
-              <div class="row-line no-logo">
-                <div class="meta">
-                  <div class="title">Bartender</div>
-                  <div class="sub">Harpoon Brewery · Boston, MA</div>
-                  <div class="sub">January 2018 – August 2018</div>
-                  <div class="desc">
-                    Supported taproom operations and guest experience; handled POS, workflow, and service standards
-                    during peak hours.
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
     </section>
   </section>
 
-  <!-- Accordion logic: one-open + animated panels (no auto-scroll) -->
   <script type="module">
+    // Main accordion (one-open)
     const accRoot = document.querySelector('.accordion');
     if (!accRoot) throw new Error('Accordion root not found');
 
-    const items   = Array.from(accRoot.querySelectorAll('.acc'));
-    const buttons = items.map(i => i.querySelector('.acc-summary'));
-    const panels  = items.map(i => i.querySelector('.acc-panel'));
+    const accItems   = Array.from(accRoot.querySelectorAll(':scope > .acc'));
+    const accButtons = accItems.map(i => i.querySelector(':scope > .acc-summary'));
+    const accPanels  = accItems.map(i => i.querySelector(':scope > .acc-panel'));
 
     function openPanel(panel) {
       panel.hidden = false;
@@ -312,10 +350,10 @@ import Layout from "../layouts/Layout.astro";
     let openIndex = -1;
 
     function setOpen(idx) {
-      items.forEach((_, i) => {
+      accItems.forEach((_, i) => {
         const shouldOpen = i === idx;
-        buttons[i].setAttribute('aria-expanded', String(shouldOpen));
-        const p = panels[i];
+        accButtons[i].setAttribute('aria-expanded', String(shouldOpen));
+        const p = accPanels[i];
         if (shouldOpen) {
           if (p.hidden || p.style.display === 'none' || p.style.height === '0px') openPanel(p);
         } else {
@@ -331,26 +369,115 @@ import Layout from "../layouts/Layout.astro";
       setOpen(next);
     }
 
-    buttons.forEach((btn, i) => {
+    // Initialize collapsed
+    accPanels.forEach(p => { p.style.display = 'none'; p.hidden = true; p.style.height = '0px'; });
+    openIndex = -1;
+
+    accButtons.forEach((btn, i) => {
       btn.addEventListener('click', (e) => activate(i, e));
       btn.addEventListener('keydown', (e) => {
         if (e.key === ' ' || e.key === 'Enter') activate(i, e);
       });
     });
 
-    // Initialize collapsed
-    panels.forEach(p => { p.style.display = 'none'; p.hidden = true; p.style.height = '0px'; });
-    openIndex = -1;
+    // Nested accordions (one-open per section)
+    function initNested(root) {
+      const nitems = Array.from(root.querySelectorAll('.nitem'));
+      const nbtns  = nitems.map(it => it.querySelector('.nsummary'));
+      const npanels= nitems.map(it => it.querySelector('.npanel'));
+
+      // collapse all
+      npanels.forEach(p => { p.style.display = 'none'; p.hidden = true; p.style.height = '0px'; });
+
+      let openN = -1;
+
+      const openNPanel = (panel) => {
+        panel.hidden = false;
+        panel.style.display = 'block';
+        const startHeight = panel.offsetHeight;
+        const target = panel.scrollHeight;
+        panel.style.height = startHeight + 'px';
+        panel.getBoundingClientRect();
+        panel.style.height = target + 'px';
+        panel.classList.add('animating');
+        panel.addEventListener('transitionend', function done(ev){
+          if (ev.propertyName !== 'height') return;
+          panel.removeEventListener('transitionend', done);
+          panel.classList.remove('animating');
+          panel.style.height = 'auto';
+        });
+      };
+
+      const closeNPanel = (panel) => {
+        const current = panel.offsetHeight;
+        panel.style.height = current + 'px';
+        panel.getBoundingClientRect();
+        panel.style.height = '0px';
+        panel.classList.add('animating');
+        panel.addEventListener('transitionend', function done(ev){
+          if (ev.propertyName !== 'height') return;
+          panel.removeEventListener('transitionend', done);
+          panel.classList.remove('animating');
+          panel.style.display = 'none';
+          panel.hidden = true;
+        });
+      };
+
+      const setNOpen = (idx) => {
+        nitems.forEach((_, i) => {
+          const shouldOpen = i === idx;
+          nbtns[i].setAttribute('aria-expanded', String(shouldOpen));
+          const p = npanels[i];
+          if (shouldOpen) {
+            if (p.hidden || p.style.display === 'none' || p.style.height === '0px') openNPanel(p);
+          } else {
+            if (!p.hidden && p.style.display !== 'none' && p.style.height !== '0px') closeNPanel(p);
+          }
+        });
+        openN = idx;
+      };
+
+      nbtns.forEach((btn, i) => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const next = (openN === i) ? -1 : i;
+          setNOpen(next);
+        });
+        btn.addEventListener('keydown', (e) => {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            const next = (openN === i) ? -1 : i;
+            setNOpen(next);
+          }
+        });
+      });
+    }
+
+    // Init nested accordions inside each main panel
+    accPanels.forEach(p => {
+      const nested = p.querySelector('.nested');
+      if (nested) initNested(nested);
+    });
   </script>
 
   <style>
-    .about-wrap{display:grid;gap:12px;justify-items:start;align-items:start;margin-inline:auto}
+    /* Use only ~60% of page width */
+    .about-wrap{
+      display:grid;
+      gap:12px;
+      justify-items:start;
+      align-items:start;
+      margin-inline:auto;
+      max-width: min(60vw, 860px);
+      width: 100%;
+    }
+    @media (max-width: 900px){
+      .about-wrap{ max-width: 100%; }
+    }
+
     .spacer-md{ height: clamp(24px, 6vh, 64px); width: 100%; }
 
-    .accordion{
-      display:grid; gap:12px; justify-items:start;
-      width:100%; margin:0;
-    }
+    .accordion{ display:grid; gap:12px; width:100%; margin:0; }
     .acc{ width:100%; background:transparent; }
 
     .acc-summary{
@@ -361,11 +488,9 @@ import Layout from "../layouts/Layout.astro";
       padding:6px 0;
       cursor:pointer;
       user-select:none;
-      color:var(--muted);
       background:none;
       border:0;
     }
-
     .acc-toggle{
       display:flex;
       align-items:center;
@@ -402,15 +527,84 @@ import Layout from "../layouts/Layout.astro";
       color:var(--text);
     }
 
-    .block, .list{ width:100%; margin:6px 0 0; }
+    /* Nested accordion inside panels */
+    .nested{ width:100%; margin-top:6px; display:grid; gap:10px; }
+    .nitem{ width:100%; }
 
-    /* Education */
-    .edu{ display:grid; gap:14px; }
-    .edu-item{ display:grid; gap:6px; padding:10px 0; }
-    .edu-top{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-    .edu-school{ font-weight:700; font-size: clamp(16px, 1.7vw, 18px); }
-    .edu-dates{ color:var(--muted); font-weight:600; font-size: clamp(14px, 1.4vw, 16px); white-space:nowrap; }
-    .edu-sub{ color:var(--text); opacity:.9; font-weight:600; }
+    .nsummary{
+      width:100%;
+      display:flex;
+      align-items:center;
+      gap:.55rem;
+      padding:6px 0;
+      background:none;
+      border:0;
+      cursor:pointer;
+      text-align:left;
+      color:var(--text);
+      font-weight:650;
+      font-size: clamp(15px, 1.35vw, 16px);
+      letter-spacing: 0.002em;
+    }
+    .ncaret{
+      width:1rem;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:1000;
+      line-height:1;
+      opacity:.9;
+    }
+    .ncaret::before{ content:'›'; transform: translateY(-0.5px); display:inline-block; transition: transform 160ms ease; }
+    .nsummary[aria-expanded="true"] .ncaret::before{ transform: rotate(90deg) translateX(1px); }
+
+    .nhead{ display:inline; }
+    .sep{ opacity:.45; padding: 0 .15rem; }
+
+    .npanel{
+      margin:0;
+      display:block;
+      height:0;
+      overflow:hidden;
+      transition: height 200ms ease;
+      padding-left: calc(1rem + .55rem);
+    }
+    .npanel.animating{ will-change: height; }
+
+    /* Education alignment: years left-aligned with the content grid */
+    .edu-grid{
+      display:grid;
+      grid-template-columns: 110px 1fr;
+      gap: 10px;
+      align-items:start;
+      margin-top: 6px;
+    }
+    .edu-years{
+      font-weight: 650;
+      color: var(--text);
+      opacity: .9;
+      text-align: left;
+      white-space: nowrap;
+      font-size: clamp(14px, 1.25vw, 15px);
+      line-height: 1.3;
+    }
+    .edu-body{ display:grid; gap:6px; }
+    .edu-line{ font-weight: 600; opacity: .92; }
+
+    /* Work/gaps detail */
+    .detail{ margin-top: 6px; }
+    .detail-top{
+      font-weight: 650;
+      opacity: .9;
+      font-size: clamp(14px, 1.25vw, 15px);
+      margin-bottom: 6px;
+    }
+    .detail-text{
+      margin:0;
+      opacity:.92;
+      font-size: clamp(14px, 1.35vw, 16px);
+      line-height: 1.55;
+    }
 
     /* Bullets */
     .bullets{ margin: 6px 0 0; padding-left: 1.1rem; }
@@ -435,36 +629,5 @@ import Layout from "../layouts/Layout.astro";
       line-height: 1;
       white-space: nowrap;
     }
-
-    /* Work list */
-    .list{display:grid;gap:14px}
-    .row{ text-decoration:none; color:inherit; }
-    .row-line{display:flex;align-items:flex-start;gap:.85rem}
-    .row-line.no-logo{ gap: 0; }
-    .meta{display:grid;gap:.2rem}
-    .title{
-      font-weight: 650;
-      font-size: clamp(16px, 1.6vw, 18px);
-      letter-spacing: 0.005em;
-      line-height: 1.15;
-      color: var(--text);
-    }
-    .sub{
-      color:inherit;
-      font-weight: 550;
-      font-size: clamp(14px, 1.35vw, 16px);
-      opacity: .9;
-    }
-    .desc{
-      margin-top: 6px;
-      color: var(--text);
-      opacity: .92;
-      font-size: clamp(14px, 1.35vw, 16px);
-      line-height: 1.55;
-    }
-
-    /* Hover dim behavior (keeps your existing feel) */
-    .dim-others:hover .hoverable{ filter: grayscale(1) brightness(.85); opacity:.65; transition: filter 160ms ease, opacity 160ms ease; }
-    .dim-others .hoverable:hover{ filter:none; opacity:1; }
   </style>
 </Layout>
