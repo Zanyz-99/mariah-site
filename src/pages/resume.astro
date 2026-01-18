@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+const RESUME_URL = "/resume.pdf"; // <- put your PDF in /public/resume.pdf
 ---
 
 <Layout title="About" description="Background, experience, and interests.">
@@ -8,6 +9,16 @@ import Layout from "../layouts/Layout.astro";
 
     <!-- Accordion -->
     <section class="accordion" aria-label="About sections">
+
+      <!-- RESUME (link, not an accordion) -->
+      <div class="acc acc-link">
+        <a class="acc-summary acc-linkbtn" href={RESUME_URL} target="_blank" rel="noopener" aria-label="Open resume PDF">
+          <span class="acc-toggle" aria-hidden="true"></span>
+          <span class="acc-title">
+            Resume <span class="ext" aria-hidden="true">↗</span>
+          </span>
+        </a>
+      </div>
 
       <!-- EDUCATION* -->
       <div class="acc" id="acc-education">
@@ -23,19 +34,16 @@ import Layout from "../layouts/Layout.astro";
             <div class="nitem" role="listitem">
               <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-edu-uw" id="nbtn-edu-uw">
                 <span class="ncaret" aria-hidden="true"></span>
-                <span class="nhead">University of Washington <span class="sep">·</span> College of Built Environments</span>
+                <span class="nhead">University of Washington · College of Built Environments</span>
               </button>
 
               <div class="npanel" id="n-edu-uw" role="region" aria-labelledby="nbtn-edu-uw">
-                <div class="edu-grid">
-                  <div class="edu-years">2021–2024</div>
-                  <div class="edu-body">
-                    <div class="edu-line">College of Built Environments</div>
-                    <ul class="bullets">
-                      <li>Master of Architecture</li>
-                      <li>Certificate of Historic Preservation</li>
-                    </ul>
-                  </div>
+                <div class="detail">
+                  <div class="detail-top">2021–2024</div>
+                  <ul class="bullets light">
+                    <li>Master of Architecture</li>
+                    <li>Certificate of Historic Preservation</li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -44,18 +52,16 @@ import Layout from "../layouts/Layout.astro";
             <div class="nitem" role="listitem">
               <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-edu-bu" id="nbtn-edu-bu">
                 <span class="ncaret" aria-hidden="true"></span>
-                <span class="nhead">Boston University <span class="sep">·</span> College of Fine Arts</span>
+                <span class="nhead">Boston University · College of Fine Arts</span>
               </button>
 
               <div class="npanel" id="n-edu-bu" role="region" aria-labelledby="nbtn-edu-bu">
-                <div class="edu-grid">
-                  <div class="edu-years">2013–2017</div>
-                  <div class="edu-body">
-                    <div class="edu-line">BFA Graphic Design</div>
-                    <ul class="bullets">
-                      <li>Cum Laude</li>
-                    </ul>
-                  </div>
+                <div class="detail">
+                  <div class="detail-top">2013–2017</div>
+                  <ul class="bullets light">
+                    <li>Bachelors of Fine Arts in Graphic Design</li>
+                    <li>Cum Laude</li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -182,9 +188,7 @@ import Layout from "../layouts/Layout.astro";
               <div class="npanel" id="n-gap-metier" role="region" aria-labelledby="nbtn-gap-metier">
                 <div class="detail">
                   <div class="detail-top">April 2022 – January 2024</div>
-                  <p class="detail-text">
-                    Managed high-volume service, maintained bar operations and inventory, and supported a welcoming guest experience.
-                  </p>
+                  <p class="detail-text">Managed high-volume service, maintained bar operations and inventory, and supported a welcoming guest experience.</p>
                 </div>
               </div>
             </div>
@@ -197,9 +201,7 @@ import Layout from "../layouts/Layout.astro";
               <div class="npanel" id="n-gap-optimism" role="region" aria-labelledby="nbtn-gap-optimism">
                 <div class="detail">
                   <div class="detail-top">September 2021 – April 2022</div>
-                  <p class="detail-text">
-                    Provided fast-paced service and coordinated day-to-day bar setup/close while maintaining quality and consistency.
-                  </p>
+                  <p class="detail-text">Provided fast-paced service and coordinated day-to-day bar setup/close while maintaining quality and consistency.</p>
                 </div>
               </div>
             </div>
@@ -212,9 +214,7 @@ import Layout from "../layouts/Layout.astro";
               <div class="npanel" id="n-gap-island" role="region" aria-labelledby="nbtn-gap-island">
                 <div class="detail">
                   <div class="detail-top">April 2021 – August 2021</div>
-                  <p class="detail-text">
-                    Delivered attentive table service in a high-traffic environment; coordinated timing and communication between guests, bar, and kitchen.
-                  </p>
+                  <p class="detail-text">Delivered attentive table service in a high-traffic environment; coordinated timing and communication between guests, bar, and kitchen.</p>
                 </div>
               </div>
             </div>
@@ -227,9 +227,7 @@ import Layout from "../layouts/Layout.astro";
               <div class="npanel" id="n-gap-harpoon" role="region" aria-labelledby="nbtn-gap-harpoon">
                 <div class="detail">
                   <div class="detail-top">January 2018 – August 2018</div>
-                  <p class="detail-text">
-                    Supported taproom operations and guest experience; handled POS, workflow, and service standards during peak hours.
-                  </p>
+                  <p class="detail-text">Supported taproom operations and guest experience; handled POS, workflow, and service standards during peak hours.</p>
                 </div>
               </div>
             </div>
@@ -244,7 +242,6 @@ import Layout from "../layouts/Layout.astro";
           <span class="acc-toggle" aria-hidden="true"></span>
           <span class="acc-title">Skills</span>
         </button>
-
         <div class="acc-panel" id="panel-skills" role="region" aria-labelledby="btn-skills">
           <div class="block">
             <div class="chips" aria-label="Skills list">
@@ -272,10 +269,9 @@ import Layout from "../layouts/Layout.astro";
           <span class="acc-toggle" aria-hidden="true"></span>
           <span class="acc-title">Achievements / Awards</span>
         </button>
-
         <div class="acc-panel" id="panel-achievements" role="region" aria-labelledby="btn-achievements">
           <div class="block">
-            <ul class="bullets">
+            <ul class="bullets light">
               <li>Secretary, University of Washington College of Built Environments Happy Hour</li>
               <li>Youths in the Built Environments — Volunteer</li>
               <li>Captain, Boston University Lightweight Women’s Rowing</li>
@@ -291,10 +287,9 @@ import Layout from "../layouts/Layout.astro";
           <span class="acc-toggle" aria-hidden="true"></span>
           <span class="acc-title">Interests / Hobbies</span>
         </button>
-
         <div class="acc-panel" id="panel-interests" role="region" aria-labelledby="btn-interests">
           <div class="block">
-            <ul class="bullets">
+            <ul class="bullets light">
               <li>Building / Creating</li>
               <li>Hiking / Camping</li>
               <li>Traveling / Exploring</li>
@@ -311,7 +306,7 @@ import Layout from "../layouts/Layout.astro";
     const accRoot = document.querySelector('.accordion');
     if (!accRoot) throw new Error('Accordion root not found');
 
-    const accItems   = Array.from(accRoot.querySelectorAll(':scope > .acc'));
+    const accItems   = Array.from(accRoot.querySelectorAll(':scope > .acc')).filter(x => !x.classList.contains('acc-link'));
     const accButtons = accItems.map(i => i.querySelector(':scope > .acc-summary'));
     const accPanels  = accItems.map(i => i.querySelector(':scope > .acc-panel'));
 
@@ -386,7 +381,6 @@ import Layout from "../layouts/Layout.astro";
       const nbtns  = nitems.map(it => it.querySelector('.nsummary'));
       const npanels= nitems.map(it => it.querySelector('.npanel'));
 
-      // collapse all
       npanels.forEach(p => { p.style.display = 'none'; p.hidden = true; p.style.height = '0px'; });
 
       let openN = -1;
@@ -453,7 +447,6 @@ import Layout from "../layouts/Layout.astro";
       });
     }
 
-    // Init nested accordions inside each main panel
     accPanels.forEach(p => {
       const nested = p.querySelector('.nested');
       if (nested) initNested(nested);
@@ -461,7 +454,7 @@ import Layout from "../layouts/Layout.astro";
   </script>
 
   <style>
-    /* Use only ~60% of page width */
+    /* ~60% width */
     .about-wrap{
       display:grid;
       gap:12px;
@@ -471,12 +464,11 @@ import Layout from "../layouts/Layout.astro";
       max-width: min(60vw, 860px);
       width: 100%;
     }
-    @media (max-width: 900px){
-      .about-wrap{ max-width: 100%; }
-    }
+    @media (max-width: 900px){ .about-wrap{ max-width: 100%; } }
 
     .spacer-md{ height: clamp(24px, 6vh, 64px); width: 100%; }
 
+    /* Main accordion */
     .accordion{ display:grid; gap:12px; width:100%; margin:0; }
     .acc{ width:100%; background:transparent; }
 
@@ -490,6 +482,7 @@ import Layout from "../layouts/Layout.astro";
       user-select:none;
       background:none;
       border:0;
+      text-decoration:none;
     }
     .acc-toggle{
       display:flex;
@@ -513,6 +506,7 @@ import Layout from "../layouts/Layout.astro";
       line-height:calc(var(--line) - .15);
       color:var(--text);
     }
+    .ext{ opacity:.6; font-weight:900; margin-left:.25rem; font-size: .85em; }
 
     .acc-panel{
       padding-left: calc(1.25rem + 0.6rem);
@@ -527,10 +521,15 @@ import Layout from "../layouts/Layout.astro";
       color:var(--text);
     }
 
-    /* Nested accordion inside panels */
+    /* Resume link row */
+    .acc-linkbtn:hover .acc-title{ text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+    .acc-link .acc-toggle::before{ content:'+'; } /* keeps it consistent */
+
+    /* Nested accordions: consistent hierarchy */
     .nested{ width:100%; margin-top:6px; display:grid; gap:10px; }
     .nitem{ width:100%; }
 
+    /* "Bullets": bold, slightly smaller than section title */
     .nsummary{
       width:100%;
       display:flex;
@@ -542,10 +541,11 @@ import Layout from "../layouts/Layout.astro";
       cursor:pointer;
       text-align:left;
       color:var(--text);
-      font-weight:650;
-      font-size: clamp(15px, 1.35vw, 16px);
+      font-weight:750;
+      font-size: clamp(15px, 1.45vw, 16.5px);
       letter-spacing: 0.002em;
     }
+
     .ncaret{
       width:1rem;
       display:flex;
@@ -558,7 +558,6 @@ import Layout from "../layouts/Layout.astro";
     .ncaret::before{ content:'›'; transform: translateY(-0.5px); display:inline-block; transition: transform 160ms ease; }
     .nsummary[aria-expanded="true"] .ncaret::before{ transform: rotate(90deg) translateX(1px); }
 
-    .nhead{ display:inline; }
     .sep{ opacity:.45; padding: 0 .15rem; }
 
     .npanel{
@@ -571,44 +570,32 @@ import Layout from "../layouts/Layout.astro";
     }
     .npanel.animating{ will-change: height; }
 
-    /* Education alignment: years left-aligned with the content grid */
-    .edu-grid{
-      display:grid;
-      grid-template-columns: 110px 1fr;
-      gap: 10px;
-      align-items:start;
-      margin-top: 6px;
-    }
-    .edu-years{
-      font-weight: 650;
-      color: var(--text);
-      opacity: .9;
-      text-align: left;
-      white-space: nowrap;
-      font-size: clamp(14px, 1.25vw, 15px);
-      line-height: 1.3;
-    }
-    .edu-body{ display:grid; gap:6px; }
-    .edu-line{ font-weight: 600; opacity: .92; }
-
-    /* Work/gaps detail */
+    /* "Underneath": smaller and not bolded */
     .detail{ margin-top: 6px; }
     .detail-top{
-      font-weight: 650;
-      opacity: .9;
-      font-size: clamp(14px, 1.25vw, 15px);
+      font-weight: 500;
+      opacity: .85;
+      font-size: clamp(13px, 1.2vw, 14.5px);
       margin-bottom: 6px;
     }
     .detail-text{
       margin:0;
+      font-weight: 400;
       opacity:.92;
       font-size: clamp(14px, 1.35vw, 16px);
       line-height: 1.55;
     }
 
-    /* Bullets */
-    .bullets{ margin: 6px 0 0; padding-left: 1.1rem; }
-    .bullets li{ margin: 6px 0; }
+    /* Lists under details: keep them light */
+    .bullets{
+      margin: 6px 0 0;
+      padding-left: 1.1rem;
+      font-weight: 400;
+      opacity: .92;
+      font-size: clamp(14px, 1.35vw, 16px);
+      line-height: 1.55;
+    }
+    .bullets.light li{ margin: 6px 0; }
 
     /* Skills chips */
     .chips{
