@@ -4,23 +4,12 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
 ---
 
 <Layout title="Resume" description="Background, experience, and interests.">
-  <section class="content about-wrap">
+  <section class="content resume-wrap">
     <div class="spacer-md" aria-hidden="true"></div>
 
     <!-- Accordion -->
-    <section class="accordion" aria-label="About sections">
-
-      <!-- RESUME (link, not an accordion) -->
-      <div class="acc acc-link">
-        <a class="acc-summary acc-linkbtn" href={RESUME_URL} target="_blank" rel="noopener" aria-label="Open resume PDF">
-          <span class="acc-toggle" aria-hidden="true"></span>
-          <span class="acc-title">
-            Resume <span class="ext" aria-hidden="true">↗</span>
-          </span>
-        </a>
-      </div>
-
-      <!-- EDUCATION* -->
+    <section class="accordion" aria-label="Resume sections">
+      <!-- EDUCATION -->
       <div class="acc" id="acc-education">
         <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-education" id="btn-education">
           <span class="acc-toggle" aria-hidden="true"></span>
@@ -29,7 +18,6 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
 
         <div class="acc-panel" id="panel-education" role="region" aria-labelledby="btn-education">
           <div class="nested" role="list">
-
             <!-- UW -->
             <div class="nitem" role="listitem">
               <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-edu-uw" id="nbtn-edu-uw">
@@ -40,10 +28,9 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
               <div class="npanel" id="n-edu-uw" role="region" aria-labelledby="nbtn-edu-uw">
                 <div class="detail">
                   <div class="detail-top">2021–2024</div>
-                  <ul class="bullets light">
-                    <li>Master of Architecture</li>
-                    <li>Certificate of Historic Preservation</li>
-                  </ul>
+                  <!-- No bullets under year -->
+                  <p class="detail-text">Master of Architecture</p>
+                  <p class="detail-text">Certificate of Historic Preservation</p>
                 </div>
               </div>
             </div>
@@ -58,19 +45,17 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
               <div class="npanel" id="n-edu-bu" role="region" aria-labelledby="nbtn-edu-bu">
                 <div class="detail">
                   <div class="detail-top">2013–2017</div>
-                  <ul class="bullets light">
-                    <li>Bachelors of Fine Arts in Graphic Design</li>
-                    <li>Cum Laude</li>
-                  </ul>
+                  <!-- No bullets under year -->
+                  <p class="detail-text">Bachelors of Fine Arts in Graphic Design</p>
+                  <p class="detail-text">Cum Laude</p>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
 
-      <!-- WORK* -->
+      <!-- WORK -->
       <div class="acc" id="acc-work">
         <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-work" id="btn-work">
           <span class="acc-toggle" aria-hidden="true"></span>
@@ -79,7 +64,6 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
 
         <div class="acc-panel" id="panel-work" role="region" aria-labelledby="btn-work">
           <div class="nested" role="list">
-
             <div class="nitem" role="listitem">
               <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-work-mh" id="nbtn-work-mh">
                 <span class="ncaret" aria-hidden="true"></span>
@@ -165,12 +149,56 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
 
-      <!-- FILL IN THE GAPS* -->
+      <!-- SKILLS -->
+      <div class="acc" id="acc-skills">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-skills" id="btn-skills">
+          <span class="acc-toggle" aria-hidden="true"></span>
+          <span class="acc-title">Skills</span>
+        </button>
+        <div class="acc-panel" id="panel-skills" role="region" aria-labelledby="btn-skills">
+          <div class="block">
+            <div class="chips" aria-label="Skills list">
+              <span class="chip">Adobe Suite</span>
+              <span class="chip">Rhino 7</span>
+              <span class="chip">Revit</span>
+              <span class="chip">Enscape / Lumion</span>
+              <span class="chip">Microsoft Office</span>
+              <span class="chip">3D printing</span>
+              <span class="chip">Laser Cutting</span>
+              <span class="chip">CNC Milling</span>
+              <span class="chip">Woodworking</span>
+              <span class="chip">TIG Welding</span>
+              <span class="chip">Knitting</span>
+              <span class="chip">Sewing</span>
+              <span class="chip">Needlepoint</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACHIEVEMENTS / AWARDS -->
+      <div class="acc" id="acc-achievements">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-achievements" id="btn-achievements">
+          <span class="acc-toggle" aria-hidden="true"></span>
+          <span class="acc-title">Achievements / Awards</span>
+        </button>
+        <div class="acc-panel" id="panel-achievements" role="region" aria-labelledby="btn-achievements">
+          <div class="block">
+            <ul class="bullets light">
+              <li>Secretary, University of Washington College of Built Environments Happy Hour</li>
+              <li>Youths in the Built Environments — Volunteer</li>
+              <li>Captain, Boston University Lightweight Women’s Rowing</li>
+              <li>BU Athletics Leadership Academy</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILL IN THE GAPS -->
       <div class="acc" id="acc-gaps">
         <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-gaps" id="btn-gaps">
           <span class="acc-toggle" aria-hidden="true"></span>
@@ -179,7 +207,6 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
 
         <div class="acc-panel" id="panel-gaps" role="region" aria-labelledby="btn-gaps">
           <div class="nested" role="list">
-
             <div class="nitem" role="listitem">
               <button class="nsummary" type="button" aria-expanded="false" aria-controls="n-gap-metier" id="nbtn-gap-metier">
                 <span class="ncaret" aria-hidden="true"></span>
@@ -231,73 +258,19 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>
 
-      <!-- SKILLS -->
-      <div class="acc" id="acc-skills">
-        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-skills" id="btn-skills">
+      <!-- PDF (link, last) -->
+      <div class="acc acc-link" id="acc-pdf">
+        <a class="acc-summary acc-linkbtn" href={RESUME_URL} target="_blank" rel="noopener" aria-label="Open resume PDF">
           <span class="acc-toggle" aria-hidden="true"></span>
-          <span class="acc-title">Skills</span>
-        </button>
-        <div class="acc-panel" id="panel-skills" role="region" aria-labelledby="btn-skills">
-          <div class="block">
-            <div class="chips" aria-label="Skills list">
-              <span class="chip">Adobe Suite</span>
-              <span class="chip">Rhino 7</span>
-              <span class="chip">Revit</span>
-              <span class="chip">Enscape / Lumion</span>
-              <span class="chip">Microsoft Office</span>
-              <span class="chip">3D printing</span>
-              <span class="chip">Laser Cutting</span>
-              <span class="chip">CNC Milling</span>
-              <span class="chip">Woodworking</span>
-              <span class="chip">TIG Welding</span>
-              <span class="chip">Knitting</span>
-              <span class="chip">Sewing</span>
-              <span class="chip">Needlepoint</span>
-            </div>
-          </div>
-        </div>
+          <span class="acc-title">
+            Pdf <span class="ext" aria-hidden="true">↗</span>
+          </span>
+        </a>
       </div>
-
-      <!-- ACHIEVEMENTS / AWARDS -->
-      <div class="acc" id="acc-achievements">
-        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-achievements" id="btn-achievements">
-          <span class="acc-toggle" aria-hidden="true"></span>
-          <span class="acc-title">Achievements / Awards</span>
-        </button>
-        <div class="acc-panel" id="panel-achievements" role="region" aria-labelledby="btn-achievements">
-          <div class="block">
-            <ul class="bullets light">
-              <li>Secretary, University of Washington College of Built Environments Happy Hour</li>
-              <li>Youths in the Built Environments — Volunteer</li>
-              <li>Captain, Boston University Lightweight Women’s Rowing</li>
-              <li>BU Athletics Leadership Academy</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <!-- INTERESTS / HOBBIES -->
-      <div class="acc" id="acc-interests">
-        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-interests" id="btn-interests">
-          <span class="acc-toggle" aria-hidden="true"></span>
-          <span class="acc-title">Interests / Hobbies</span>
-        </button>
-        <div class="acc-panel" id="panel-interests" role="region" aria-labelledby="btn-interests">
-          <div class="block">
-            <ul class="bullets light">
-              <li>Building / Creating</li>
-              <li>Hiking / Camping</li>
-              <li>Traveling / Exploring</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
     </section>
   </section>
 
@@ -454,17 +427,13 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
   </script>
 
   <style>
-    /* ~60% width */
-    .about-wrap{
-      display:grid;
-      gap:12px;
-      justify-items:start;
-      align-items:start;
-      margin-inline:auto;
-      max-width: min(60vw, 860px);
+    /* Match About page: centered 60% text block feel */
+    .resume-wrap{
       width: 100%;
+      margin-inline: auto;
+      max-width: min(60vw, 860px);
     }
-    @media (max-width: 900px){ .about-wrap{ max-width: 100%; } }
+    @media (max-width: 900px){ .resume-wrap{ max-width: 100%; } }
 
     .spacer-md{ height: clamp(24px, 6vh, 64px); width: 100%; }
 
@@ -517,19 +486,18 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
       overflow-anchor:none;
       transition: height 220ms ease;
       font-size:var(--body-size);
-      line-height:1.45;
+      line-height: var(--line);
       color:var(--text);
     }
 
-    /* Resume link row */
+    /* PDF link row (keeps + icon consistent) */
     .acc-linkbtn:hover .acc-title{ text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
-    .acc-link .acc-toggle::before{ content:'+'; } /* keeps it consistent */
+    .acc-link .acc-toggle::before{ content:'+'; }
 
-    /* Nested accordions: consistent hierarchy */
+    /* Nested accordions: main bullets match About text size */
     .nested{ width:100%; margin-top:6px; display:grid; gap:10px; }
     .nitem{ width:100%; }
 
-    /* "Bullets": bold, slightly smaller than section title */
     .nsummary{
       width:100%;
       display:flex;
@@ -541,9 +509,9 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
       cursor:pointer;
       text-align:left;
       color:var(--text);
-      font-weight:750;
-      font-size: clamp(15px, 1.45vw, 16.5px);
-      letter-spacing: 0.002em;
+      font-weight: 800;          /* plus bolded */
+      font-size: var(--body-size); /* same size as about-text */
+      line-height: var(--line);
     }
 
     .ncaret{
@@ -570,30 +538,30 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
     }
     .npanel.animating{ will-change: height; }
 
-    /* "Underneath": smaller and not bolded */
+    /* Keep everything inside panels the same text size for now */
     .detail{ margin-top: 6px; }
     .detail-top{
-      font-weight: 500;
+      font-weight: 600;
       opacity: .85;
-      font-size: clamp(13px, 1.2vw, 14.5px);
+      font-size: var(--body-size);
+      line-height: var(--line);
       margin-bottom: 6px;
     }
     .detail-text{
-      margin:0;
+      margin: 0 0 6px 0;
       font-weight: 400;
-      opacity:.92;
-      font-size: clamp(14px, 1.35vw, 16px);
-      line-height: 1.55;
+      opacity: .92;
+      font-size: var(--body-size);
+      line-height: var(--line);
     }
 
-    /* Lists under details: keep them light */
     .bullets{
       margin: 6px 0 0;
       padding-left: 1.1rem;
       font-weight: 400;
       opacity: .92;
-      font-size: clamp(14px, 1.35vw, 16px);
-      line-height: 1.55;
+      font-size: var(--body-size);
+      line-height: var(--line);
     }
     .bullets.light li{ margin: 6px 0; }
 
