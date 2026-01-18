@@ -250,6 +250,12 @@ const covers = [
   </script>
 
   <style>
+
+    :global(html),
+    :global(body){
+      overflow-x: hidden;
+    }
+
     .home{
       display: grid;
       gap: 16px;
@@ -273,8 +279,8 @@ const covers = [
     }
 
     .window{
-      width: clamp(320px, 78vw, 980px);
-      overflow: visible;
+      width: min(100vw, clamp(320px, 78vw, 980px));
+      overflow: visible; /* allow next peek */
     }
 
     .track{
