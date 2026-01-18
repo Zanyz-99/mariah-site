@@ -55,18 +55,13 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         --hover: rgba(255,255,255,.08);
       }
 
-      html,body{
+      /* ✅ Hard-set Montserrat + paragraph sizing at the root */
+      html, body{
         margin:0;
         height:100%;
         background:var(--bg);
         overflow-x:hidden;
-      }
 
-      /* =========================
-         GLOBAL TYPOGRAPHY BASE
-         ========================= */
-
-      body{
         font-family: var(--font-body);
         font-size: var(--body-size);
         line-height: var(--line);
@@ -78,7 +73,7 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
         -moz-osx-font-smoothing: grayscale;
       }
 
-      /* EVERYTHING inherits paragraph typography */
+      /* Everything inherits paragraph typography */
       *, *::before, *::after{
         font-family: inherit;
         font-size: inherit;
@@ -122,10 +117,6 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
       a{ color:inherit; text-decoration:none; }
       a:visited{ color:inherit; }
       a:hover{ text-decoration:underline; text-decoration-thickness:from-font; }
-
-      /* =========================
-         LAYOUT
-         ========================= */
 
       main{
         margin:0;
