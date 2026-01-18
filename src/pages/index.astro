@@ -10,7 +10,7 @@ const slides = [
   "/projects/06 Project Six.png",
 ];
 
-// Covers (project name images) — matches your "Project One.png" ... "Project Six.png"
+// Covers (project name images)
 const covers = [
   "/projects/Project Cover/Project One.png",
   "/projects/Project Cover/Project Two.png",
@@ -52,13 +52,7 @@ const covers = [
           </div>
         </div>
 
-        <div class="inner">
-          <div class="dots" id="dots" role="tablist" aria-label="Project slide navigation">
-            {slides.map((_, i) => (
-              <button class="dot" type="button" data-index={i} aria-label={`Go to slide ${i + 1}`} />
-            ))}
-          </div>
-        </div>
+        <!-- ✅ dots removed -->
       </div>
     </div>
   </section>
@@ -66,7 +60,6 @@ const covers = [
   <script define:vars={{ slides, covers }}>
     const viewport = document.getElementById("viewport");
     const track = document.getElementById("track");
-    const dots = document.querySelectorAll("#dots .dot");
 
     const cardCur = document.getElementById("card-cur");
 
@@ -84,14 +77,6 @@ const covers = [
     let index = 0;
     let animating = false;
     let baseX = 0;
-
-    const setDots = () => {
-      dots.forEach((d, i) => {
-        if (i === index) d.setAttribute("data-active", "true");
-        else d.removeAttribute("data-active");
-        d.setAttribute("aria-selected", i === index ? "true" : "false");
-      });
-    };
 
     const setImages = () => {
       imgPrev.src = slides[mod(index - 1)];
@@ -123,6 +108,7 @@ const covers = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
+    // center current card in viewport at any size
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
       const c = cardCur.getBoundingClientRect();
@@ -152,7 +138,6 @@ const covers = [
 
         index = mod(index + dir);
         setImages();
-        setDots();
 
         track.style.transition = "none";
         track.style.transform = `translate3d(${baseX}px, 0, 0)`;
@@ -164,22 +149,6 @@ const covers = [
 
       track.addEventListener("transitionend", onDone);
     };
-
-    const goTo = (t) => {
-      t = mod(t);
-      if (t === index || animating) return;
-      index = t;
-      setImages();
-      setDots();
-      requestAnimationFrame(() => computeBaseX());
-    };
-
-    dots.forEach((dot) => {
-      dot.addEventListener("click", () => {
-        const t = Number(dot.getAttribute("data-index"));
-        goTo(t);
-      });
-    });
 
     // wheel direction: down/right = next, up/left = prev
     let wheelLock = false;
@@ -240,7 +209,6 @@ const covers = [
 
     // init
     setImages();
-    setDots();
 
     requestAnimationFrame(() => {
       baseX = 0;
@@ -250,7 +218,7 @@ const covers = [
   </script>
 
   <style>
-
+    /* Prevent any accidental horizontal overflow (tiny px drift) */
     :global(html),
     :global(body){
       overflow-x: hidden;
@@ -293,22 +261,25 @@ const covers = [
     }
 
     .card{
-    flex: 0 0 auto;
-    width: clamp(320px, 78vw, 980px);
-    border-radius: 16px;
-    overflow: hidden;
-    aspect-ratio: 16 / 9;
-    background: var(--card);
-    border: 1px solid var(--border);
-  
-    opacity: 0.85;
-    transition: opacity 200ms ease;
-  }
-  
-  .card.is-active{
-    opacity: 1;
-  }
+      flex: 0 0 auto;
+      width: clamp(320px, 78vw, 980px);
+      border-radius: 16px;
+      overflow: hidden;
 
+      /* ✅ desktop aspect ratio */
+      aspect-ratio: 16 / 9;
+
+      background: var(--card);
+      border: 1px solid var(--border);
+
+      /* ✅ no scaling, same size always */
+      opacity: 0.92;
+      transition: opacity 200ms ease;
+    }
+
+    .card.is-active{
+      opacity: 1;
+    }
 
     /* Media stack */
     .media{
@@ -324,25 +295,23 @@ const covers = [
       width: 100%;
       height: 100%;
       display: block;
-      object-fit: cover;   /* fill 16:9 nicely */
+      object-fit: cover;
       object-position: center;
       user-select: none;
       -webkit-user-drag: none;
     }
 
-    /* Base state: main image is B/W */
+    /* Base: main image is B/W */
     .img-main{
       filter: grayscale(100%) saturate(0.9);
       transition: filter 220ms ease;
     }
 
-    /* Cover state: low opacity overlay (project name image) */
+    /* Cover: low opacity overlay */
     .img-cover{
       opacity: 0.28;
       transition: opacity 220ms ease;
       pointer-events: none;
-      /* optional: makes the text look a bit more “printed” */
-      mix-blend-mode: normal;
     }
 
     /* Hover/focus: cover fades away, main goes color */
@@ -356,44 +325,23 @@ const covers = [
       filter: none;
     }
 
-    /* Dots */
-    .dots{
-      margin-top: 0.9rem;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
+    /* ✅ Mobile: make slides 9x16 */
+    @media (max-width: 640px){
+      .window{
+        width: min(100vw, 92vw);
+      }
+
+      .card{
+        width: min(92vw, 520px);
+        aspect-ratio: 9 / 16;
+        border-radius: 14px;
+      }
     }
 
-    .dot{
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      border: 0;
-      background: currentColor;
-      opacity: 0.35;
-      cursor: pointer;
-      transition: transform 160ms ease, opacity 160ms ease;
-      position: relative;
-    }
-
-    .dot[data-active="true"]{
-      opacity: 1;
-      transform: scale(1.35);
-    }
-
-    .dot::before{
-      content: "";
-      position: absolute;
-      inset: -10px;
-    }
-
-    /* Nice-to-have: respect reduced motion */
     @media (prefers-reduced-motion: reduce){
       .card,
       .img-main,
-      .img-cover,
-      .dot{
+      .img-cover{
         transition: none !important;
       }
     }
