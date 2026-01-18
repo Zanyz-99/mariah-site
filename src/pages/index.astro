@@ -10,6 +10,7 @@ const slides = [
   "/projects/06 Project Six.png",
 ];
 
+// Covers (project name images)
 const covers = [
   "/projects/Project Cover/Project One.png",
   "/projects/Project Cover/Project Two.png",
@@ -50,7 +51,8 @@ const covers = [
             </ul>
           </div>
         </div>
-        <!-- dots removed -->
+
+        <!-- ✅ dots removed -->
       </div>
     </div>
   </section>
@@ -76,31 +78,6 @@ const covers = [
     let animating = false;
     let baseX = 0;
 
-    // --- Preload helpers ---
-    const preload = (url) =>
-      new Promise((resolve) => {
-        const im = new Image();
-        im.decoding = "async";
-        im.onload = () => resolve(true);
-        im.onerror = () => resolve(false);
-        im.src = url;
-      });
-
-    const warmCache = () => {
-      const all = [...slides, ...covers];
-      const run = () => Promise.all(all.map(preload));
-      if ("requestIdleCallback" in window) requestIdleCallback(run);
-      else setTimeout(run, 0);
-    };
-
-    const preloadAhead = () => {
-      const ahead = [mod(index + 1), mod(index + 2)];
-      ahead.forEach((i) => {
-        preload(slides[i]);
-        preload(covers[i]);
-      });
-    };
-
     const setImages = () => {
       imgPrev.src = slides[mod(index - 1)];
       imgCur.src  = slides[index];
@@ -111,12 +88,12 @@ const covers = [
       coverNext.src = covers[mod(index + 1)];
 
       imgCur.loading = "eager";
-      imgPrev.loading = "eager";
-      imgNext.loading = "eager";
+      imgPrev.loading = "lazy";
+      imgNext.loading = "lazy";
 
       coverCur.loading = "eager";
-      coverPrev.loading = "eager";
-      coverNext.loading = "eager";
+      coverPrev.loading = "lazy";
+      coverNext.loading = "lazy";
     };
 
     const gapPx = () => {
@@ -131,7 +108,7 @@ const covers = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
-    // ✅ compute baseX so current card center == viewport center (works at any size)
+    // center current card in viewport at any size
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
       const c = cardCur.getBoundingClientRect();
@@ -161,7 +138,6 @@ const covers = [
 
         index = mod(index + dir);
         setImages();
-        preloadAhead();
 
         track.style.transition = "none";
         track.style.transform = `translate3d(${baseX}px, 0, 0)`;
@@ -174,9 +150,9 @@ const covers = [
       track.addEventListener("transitionend", onDone);
     };
 
-    // ✅ Scroll anywhere on the page controls the carousel
+    // wheel direction: down/right = next, up/left = prev
     let wheelLock = false;
-    window.addEventListener(
+    viewport.addEventListener(
       "wheel",
       (e) => {
         e.preventDefault();
@@ -191,7 +167,7 @@ const covers = [
       { passive: false }
     );
 
-    // drag/swipe (only when interacting on the carousel area)
+    // drag/swipe
     let startX = 0;
     let dragging = false;
 
@@ -218,7 +194,7 @@ const covers = [
     });
 
     // keyboard
-    window.addEventListener("keydown", (e) => {
+    viewport.addEventListener("keydown", (e) => {
       if (animating) return;
       if (e.key === "ArrowRight") step(1);
       if (e.key === "ArrowLeft") step(-1);
@@ -233,8 +209,6 @@ const covers = [
 
     // init
     setImages();
-    warmCache();
-    preloadAhead();
 
     requestAnimationFrame(() => {
       baseX = 0;
@@ -244,20 +218,19 @@ const covers = [
   </script>
 
   <style>
-    /* ✅ No page scrollbars; wheel is used to advance slides */
     :global(html),
     :global(body){
       height: 100%;
       margin: 0;
-      overflow: hidden;
+      overflow: hidden; /* ✅ removes the right scrollbar */
     }
 
     .home{
-      height: 100vh;
-      width: 100%;
       display: grid;
-      place-items: center;
-      padding: 0;
+      gap: 16px;
+      width: 100%;
+      padding-top: clamp(12px, 3vh, 28px);
+      padding-bottom: clamp(18px, 4vh, 44px);
     }
 
     .carousel{ width: 100%; }
@@ -294,17 +267,20 @@ const covers = [
       border-radius: 16px;
       overflow: hidden;
 
-      /* desktop: 16:9 */
+      /* ✅ desktop aspect ratio */
       aspect-ratio: 16 / 9;
 
       background: var(--card);
       border: 1px solid var(--border);
 
-      opacity: 0.98;
+      /* ✅ no scaling, same size always */
+      opacity: 0.92;
       transition: opacity 200ms ease;
     }
 
-    .card.is-active{ opacity: 1; }
+    .card.is-active{
+      opacity: 1;
+    }
 
     /* Media stack */
     .media{
@@ -350,16 +326,14 @@ const covers = [
       filter: none;
     }
 
-    /* ✅ Mobile: 9:16 AND fits inside viewport */
+    /* ✅ Mobile: make slides 9x16 */
     @media (max-width: 640px){
       .window{
-        width: 100vw;
+        width: min(100vw, 92vw);
       }
 
       .card{
-        /* height must fit within viewport (account for address bar/safe areas) */
-        height: min(86vh, 720px);
-        width: calc(min(86vh, 720px) * 9 / 16); /* derive width from height */
+        width: min(92vw, 520px);
         aspect-ratio: 9 / 16;
         border-radius: 14px;
       }
