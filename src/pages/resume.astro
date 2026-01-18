@@ -1,83 +1,114 @@
 ---
 import Layout from "../layouts/Layout.astro";
-
-const ATHLETE_ID = Number(import.meta.env.STRAVA_ATHLETE_ID) || 35369206;
-const STRAVA_PROFILE = `https://www.strava.com/athletes/${ATHLETE_ID}`;
-const dataUrl = new URL('/data/strava-latest.json', Astro.url).pathname;
 ---
-<Layout title="About | Zach Scholz" description="Background, focus areas, and interests.">
-  <Fragment slot="head">
-    <!-- Preload above-the-fold or “first-open” images -->
-    <link rel="preload" as="image" href="/photos/about-1.webp" imagesrcset="/photos/about-1.jpg 1x, /photos/about-1.webp 1x" fetchpriority="high">
-    <link rel="preload" as="image" href="/photos/about-2.webp" imagesrcset="/photos/about-2.jpg 1x, /photos/about-2.webp 1x">
-    <link rel="preload" as="image" href="/photos/about-3.webp" imagesrcset="/photos/about-3.jpg 1x, /photos/about-3.webp 1x">
 
-    <!-- DNS/TLS warm-up for Strava images (dynamic) -->
-    <link rel="preconnect" href="https://images.strava.com" crossorigin>
-    <link rel="dns-prefetch" href="//images.strava.com">
-  </Fragment>
-
-  <!-- Use shared width/alignment via .content -->
+<Layout title="About" description="Background, experience, and interests.">
   <section class="content about-wrap">
     <div class="spacer-md" aria-hidden="true"></div>
 
     <!-- Accordion -->
     <section class="accordion" aria-label="About sections">
-      <!-- ABOUT ME -->
-      <div class="acc" id="acc-about">
-        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-about" id="btn-about">
+
+      <!-- EDUCATION -->
+      <div class="acc" id="acc-education">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-education" id="btn-education">
           <span class="acc-toggle" aria-hidden="true"></span>
-          <span class="acc-title">About Me</span>
+          <span class="acc-title">Education</span>
         </button>
-        <div class="acc-panel" id="panel-about" role="region" aria-labelledby="btn-about">
+        <div class="acc-panel" id="panel-education" role="region" aria-labelledby="btn-education">
           <div class="block">
-            <p>
-              Hi there! I’m Zach, a U.S. Navy veteran currently enjoying a break before joining the civilian workforce in March, 2026.<br><br>
-              I grew up in New England, where my family’s submarine service inspired my path 
-              to the Navy and instilled a passion for taking on complex and challenging problems.<br><br>
-              I studied nuclear and mechanical engineering at the U.S. Naval Academy and later
-              Operations Research at the Naval Postgraduate School, where I developed a strong foundation 
-              in quantitative analysis, optimization, and data-driven problem solving.<br><br>
-              Alongside my Navy career, I’ve continued to expand my technical background. I've built and 
-              published mobile apps and used coding and modeling to optimize networks, resources, and 
-              operations.<br><br>
-              Outside of my professional life, I’m passionate about spearfishing, mountaineering, motorcycles,
-              and tackling new challenges.
-            </p>
-          </div>
+            <div class="edu">
+              <div class="edu-item">
+                <div class="edu-top">
+                  <div class="edu-school">University of Washington</div>
+                  <div class="edu-dates">2021–2024</div>
+                </div>
+                <div class="edu-sub">College of Built Environments</div>
+                <ul class="bullets">
+                  <li>Master of Architecture</li>
+                  <li>Certificate of Historic Preservation</li>
+                </ul>
+              </div>
 
-          <!-- Photos 2×2 -->
-          <div class="photos4" id="about-photos">
-            <figure class="ph"><img src="/photos/about-1.jpg" alt="Trail photo 1" loading="lazy" /></figure>
-            <figure class="ph"><img src="/photos/about-2.jpg" alt="Trail photo 2" loading="lazy" /></figure>
-            <figure class="ph"><img src="/photos/about-3.jpg" alt="Build / ship / iterate" loading="lazy" /></figure>
-
-            <!-- Dynamic Strava tile -->
-            <a class="ph strava" id="strava-card" href={STRAVA_PROFILE} target="_blank" rel="noopener" aria-label="Latest Strava activity">
-              <img id="strava-img" src="/icons/strava.png" alt="Latest Strava activity" loading="lazy" />
-              <span class="strava-cta">View on Strava ↗</span>
-              <div class="stats" id="strava-stats" hidden></div>
-            </a>
+              <div class="edu-item">
+                <div class="edu-top">
+                  <div class="edu-school">Boston University</div>
+                  <div class="edu-dates">2013–2017</div>
+                </div>
+                <div class="edu-sub">College of Fine Arts</div>
+                <ul class="bullets">
+                  <li>BFA Graphic Design</li>
+                  <li>Cum Laude</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- CONNECT -->
-      <div class="acc" id="acc-connect">
-        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-connect" id="btn-connect">
+      <!-- SKILLS -->
+      <div class="acc" id="acc-skills">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-skills" id="btn-skills">
           <span class="acc-toggle" aria-hidden="true"></span>
-          <span class="acc-title">Connect</span>
+          <span class="acc-title">Skills</span>
         </button>
-        <div class="acc-panel" id="panel-connect" role="region" aria-labelledby="btn-connect">
-          <ul class="stack gray-hover" aria-label="Connect links">
-            <li class="stack-item hoverable"><a href="https://www.linkedin.com/in/zachary-scholz/" target="_blank" rel="noopener">LinkedIn</a></li>
-            <li class="stack-item hoverable"><a href="mailto:ztscholz86@gmail.com">Email</a></li>
-            <li class="stack-item hoverable"><a href={STRAVA_PROFILE} target="_blank" rel="noopener">Strava</a></li>
-          </ul>
+        <div class="acc-panel" id="panel-skills" role="region" aria-labelledby="btn-skills">
+          <div class="block">
+            <div class="chips" aria-label="Skills list">
+              <span class="chip">Adobe Suite</span>
+              <span class="chip">Rhino 7</span>
+              <span class="chip">Revit</span>
+              <span class="chip">Enscape / Lumion</span>
+              <span class="chip">Microsoft Office</span>
+              <span class="chip">3D printing</span>
+              <span class="chip">Laser Cutting</span>
+              <span class="chip">CNC Milling</span>
+              <span class="chip">Woodworking</span>
+              <span class="chip">TIG Welding</span>
+              <span class="chip">Knitting</span>
+              <span class="chip">Sewing</span>
+              <span class="chip">Needlepoint</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- WORK -->
+      <!-- ACHIEVEMENTS / AWARDS -->
+      <div class="acc" id="acc-achievements">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-achievements" id="btn-achievements">
+          <span class="acc-toggle" aria-hidden="true"></span>
+          <span class="acc-title">Achievements / Awards</span>
+        </button>
+        <div class="acc-panel" id="panel-achievements" role="region" aria-labelledby="btn-achievements">
+          <div class="block">
+            <ul class="bullets">
+              <li>Secretary, University of Washington College of Built Environments Happy Hour</li>
+              <li>Youths in the Built Environments — Volunteer</li>
+              <li>Captain, Boston University Lightweight Women’s Rowing</li>
+              <li>BU Athletics Leadership Academy</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTERESTS / HOBBIES -->
+      <div class="acc" id="acc-interests">
+        <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-interests" id="btn-interests">
+          <span class="acc-toggle" aria-hidden="true"></span>
+          <span class="acc-title">Interests / Hobbies</span>
+        </button>
+        <div class="acc-panel" id="panel-interests" role="region" aria-labelledby="btn-interests">
+          <div class="block">
+            <ul class="bullets">
+              <li>Building / Creating</li>
+              <li>Hiking / Camping</li>
+              <li>Traveling / Exploring</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORK EXPERIENCE -->
       <div class="acc" id="acc-work">
         <button class="acc-summary" type="button" aria-expanded="false" aria-controls="panel-work" id="btn-work">
           <span class="acc-toggle" aria-hidden="true"></span>
@@ -85,55 +116,151 @@ const dataUrl = new URL('/data/strava-latest.json', Astro.url).pathname;
         </button>
         <div class="acc-panel" id="panel-work" role="region" aria-labelledby="btn-work">
           <div class="list dim-others" aria-label="Work history">
+
+            <!-- Miller Hull -->
             <div class="row hoverable">
               <div class="row-line no-logo">
                 <div class="meta">
-                  <div class="title">Foreign Affairs Officer</div>
-                  <div class="sub">U.S. Naval Forces Europe · U.S. Navy</div>
-                  <div class="sub">Naples, IT · 2023 – Present</div>
+                  <div class="title">Architecture Intern / Project Architect</div>
+                  <div class="sub">Miller Hull · Seattle, WA</div>
+                  <div class="sub">June 2022 – September 2023</div>
+                  <div class="desc">
+                    Initially hired as a summer architecture intern; responsibilities included rendering development,
+                    architectural graphics for award submissions, geographic and historic site research, and physical
+                    model making. Hired as a regular employee after the internship and continued part-time through
+                    the school year. In summer 2023, contracted to Olson Kundig (remained a Miller Hull employee),
+                    focusing on renderings, site/material research, presentation design, and floor plan schemes.
+                    Due to contract agreements, rendering examples from Olson Kundig work are not available.
+                  </div>
                 </div>
               </div>
             </div>
-            
+
+            <!-- UW Reader/Grader -->
             <div class="row hoverable">
               <div class="row-line no-logo">
                 <div class="meta">
-                  <div class="title">Inactivation Coordinator</div>
-                  <div class="sub">USS Chicago (SSN-721) · U.S. Navy</div>
-                  <div class="sub">Bremerton, WA · 2023</div>
+                  <div class="title">ARCH 151 Reader / Grader</div>
+                  <div class="sub">University of Washington · Seattle, WA</div>
+                  <div class="sub">March 2024 – June 2024</div>
+                  <div class="desc">
+                    Supported course instruction through assignment evaluation and feedback; coordinated grading
+                    workflow and maintained consistency across rubric-based assessments.
+                  </div>
                 </div>
               </div>
             </div>
-            
+
+            <!-- Interior Showplace -->
             <div class="row hoverable">
               <div class="row-line no-logo">
                 <div class="meta">
-                  <div class="title">Assistant Operations Officer</div>
-                  <div class="sub">USS Chicago (SSN-721) · U.S. Navy</div>
-                  <div class="sub">Pearl Harbor, HI · 2022</div>
+                  <div class="title">Project Coordinator</div>
+                  <div class="sub">Interior Showplace · Honolulu, HI</div>
+                  <div class="sub">March 2021 – August 2021</div>
+                  <div class="desc">
+                    Coordinated private and government bids involving interior design services and furniture purchases
+                    across Oahu, Maui, Hawai’i, and Kaua’i. Supported early design services through furniture research
+                    and quote-building with designers; placed and tracked orders; coordinated delivery and installation.
+                    Projects ranged from $1,000 to $700,000. Designed presentation templates and marketing materials
+                    to support the sales team.
+                  </div>
                 </div>
               </div>
             </div>
-            
+
+            <!-- Novus Architects -->
             <div class="row hoverable">
               <div class="row-line no-logo">
                 <div class="meta">
-                  <div class="title">Reactor Control Assistant</div>
-                  <div class="sub">USS Chicago (SSN-721) · U.S. Navy</div>
-                  <div class="sub">Pearl Harbor, HI · 2021</div>
+                  <div class="title">Marketing and Graphics Coordinator</div>
+                  <div class="sub">Novus Architects, Inc. · Charleston, SC</div>
+                  <div class="sub">September 2019 – February 2021</div>
+                  <div class="desc">
+                    Supported Business Development with research and evaluation of RFPs/RFQs and created proposal
+                    submissions for public and private bids. Designed print and digital marketing materials (brochures,
+                    infographics, postcards, presentations). Coordinated project photography, developed social media
+                    campaigns, updated the website, and supported environmental graphics efforts. Reported to the
+                    Director of Business Development; led weekly marketing meetings, presented updates in bi-weekly
+                    all-office meetings, and trained/managed a marketing intern.
+                  </div>
                 </div>
               </div>
             </div>
-            
+
+            <!-- Mum's Place -->
             <div class="row hoverable">
               <div class="row-line no-logo">
                 <div class="meta">
-                  <div class="title">Graduate Student</div>
-                  <div class="sub">Naval Postgraduate School · U.S. Navy</div>
-                  <div class="sub">Monterey, CA · 2018 – 2019</div>
+                  <div class="title">Marketing Coordinator</div>
+                  <div class="sub">Mum’s Place · Monterey, CA</div>
+                  <div class="sub">September 2018 – July 2019</div>
+                  <div class="desc">
+                    Focused on website optimization, social media maintenance, branding development, and advertising
+                    coordination. Occasionally supported interior designers with finish selections, proposal coordination,
+                    and client communications.
+                  </div>
                 </div>
               </div>
             </div>
+
+            <!-- Service / Hospitality (gaps) -->
+            <div class="row hoverable">
+              <div class="row-line no-logo">
+                <div class="meta">
+                  <div class="title">Bartender</div>
+                  <div class="sub">Métier Brewing Co. · Seattle, WA</div>
+                  <div class="sub">April 2022 – January 2024</div>
+                  <div class="desc">
+                    Managed high-volume service, maintained bar operations and inventory, and supported a welcoming
+                    guest experience.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row hoverable">
+              <div class="row-line no-logo">
+                <div class="meta">
+                  <div class="title">Bartender</div>
+                  <div class="sub">Optimism Brewery · Seattle, WA</div>
+                  <div class="sub">September 2021 – April 2022</div>
+                  <div class="desc">
+                    Provided fast-paced service and coordinated day-to-day bar setup/close while maintaining quality
+                    and consistency.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row hoverable">
+              <div class="row-line no-logo">
+                <div class="meta">
+                  <div class="title">Server</div>
+                  <div class="sub">Island Vintage Wine Bar · Waikiki, HI</div>
+                  <div class="sub">April 2021 – August 2021</div>
+                  <div class="desc">
+                    Delivered attentive table service in a high-traffic environment; coordinated timing and communication
+                    between guests, bar, and kitchen.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row hoverable">
+              <div class="row-line no-logo">
+                <div class="meta">
+                  <div class="title">Bartender</div>
+                  <div class="sub">Harpoon Brewery · Boston, MA</div>
+                  <div class="sub">January 2018 – August 2018</div>
+                  <div class="desc">
+                    Supported taproom operations and guest experience; handled POS, workflow, and service standards
+                    during peak hours.
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -149,8 +276,6 @@ const dataUrl = new URL('/data/strava-latest.json', Astro.url).pathname;
     const items   = Array.from(accRoot.querySelectorAll('.acc'));
     const buttons = items.map(i => i.querySelector('.acc-summary'));
     const panels  = items.map(i => i.querySelector('.acc-panel'));
-
-    function pinAccordionTop(){}
 
     function openPanel(panel) {
       panel.hidden = false;
@@ -202,9 +327,8 @@ const dataUrl = new URL('/data/strava-latest.json', Astro.url).pathname;
 
     function activate(i, evt) {
       if (evt) evt.preventDefault();
-      const next = (openIndex === i) ? -1 : i; // toggle to close if clicking the same
+      const next = (openIndex === i) ? -1 : i;
       setOpen(next);
-      pinAccordionTop();
     }
 
     buttons.forEach((btn, i) => {
@@ -217,63 +341,11 @@ const dataUrl = new URL('/data/strava-latest.json', Astro.url).pathname;
     // Initialize collapsed
     panels.forEach(p => { p.style.display = 'none'; p.hidden = true; p.style.height = '0px'; });
     openIndex = -1;
-
-    // Strava hover -> gray out other photos
-    const photosWrap = document.getElementById('about-photos');
-    const stravaCard = document.getElementById('strava-card');
-    if (photosWrap && stravaCard) {
-      stravaCard.addEventListener('mouseenter', () => photosWrap.classList.add('grey-others'));
-      stravaCard.addEventListener('mouseleave', () => photosWrap.classList.remove('grey-others'));
-      stravaCard.addEventListener('touchstart', () => photosWrap.classList.add('grey-others'), { passive:true });
-      stravaCard.addEventListener('touchend',   () => photosWrap.classList.remove('grey-others'));
-    }
-  </script>
-
-  <script type="module" define:vars={{ dataUrl }}>
-    (async () => {
-      const sameOrigin = dataUrl;
-      const pagesOrigin = 'https://zanyz-99.github.io/my-site/data/strava-latest.json';
-      const load = async (url) => {
-        const r = await fetch(`${url}?ts=${Date.now()}`, { cache: 'no-store' });
-        if (!r.ok) throw new Error(String(r.status));
-        return r.json();
-      };
-
-      let data;
-      try { data = await load(sameOrigin); }
-      catch { try { data = await load(pagesOrigin); } catch {} }
-      if (!data) return;
-
-      const img = document.getElementById('strava-img');
-      const statsEl = document.getElementById('strava-stats');
-      const link = document.getElementById('strava-card');
-
-      if (data.photoUrl && img) img.src = data.photoUrl;
-      if (data.activityUrl && link) link.href = data.activityUrl;
-
-      const s = data.stats;
-      if (statsEl && s) {
-        if (s.isRun && s.distance && s.pace && s.duration) {
-          statsEl.innerHTML = `
-            <span class="metric">${s.distance}</span>
-            <span class="dot">•</span>
-            <span class="metric">${s.pace}</span>
-            <span class="dot">•</span>
-            <span class="metric">${s.duration}</span>`;
-        } else if (s.duration) {
-          statsEl.textContent = s.duration;
-        }
-        statsEl.hidden = false;
-      }
-    })();
   </script>
 
   <style>
-    /* Wrapper */
     .about-wrap{display:grid;gap:12px;justify-items:start;align-items:start;margin-inline:auto}
-
     .spacer-md{ height: clamp(24px, 6vh, 64px); width: 100%; }
-    .muted{color:var(--muted)}
 
     .accordion{
       display:grid; gap:12px; justify-items:start;
@@ -281,47 +353,42 @@ const dataUrl = new URL('/data/strava-latest.json', Astro.url).pathname;
     }
     .acc{ width:100%; background:transparent; }
 
-    /* Header: grid so '+' and title align */
-    .acc-summary {
-      width: 100%;
-      display: flex;                /* simpler: flex handles centering */
-      align-items: center;          /* vertical centering */
-      gap: 0.6rem;
-      padding: 6px 0;
-      cursor: pointer;
-      user-select: none;
-      color: var(--muted);
-      background: none;
-      border: 0;
+    .acc-summary{
+      width:100%;
+      display:flex;
+      align-items:center;
+      gap:0.6rem;
+      padding:6px 0;
+      cursor:pointer;
+      user-select:none;
+      color:var(--muted);
+      background:none;
+      border:0;
     }
 
-    /* Toggle: same font as title but adjusted size/line-height */
-    .acc-toggle {
-      display: flex;                /* center the glyph inside */
-      align-items: center;
-      justify-content: center;
-      width: 1.25rem;               /* fixed column width */
-      font-size: calc(var(--h1-size) * 0.8); /* a bit smaller so it optically matches */
-      font-weight: 1000;
-      line-height: 1;               /* prevents extra vertical offset */
-      color: var(--text);
-      text-align: center;
+    .acc-toggle{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:1.25rem;
+      font-size:calc(var(--h1-size) * 0.8);
+      font-weight:1000;
+      line-height:1;
+      color:var(--text);
+      text-align:center;
+    }
+    .acc-toggle::before{ content:'+'; }
+    .acc-summary[aria-expanded="true"] .acc-toggle::before{ content:'–'; }
+
+    .acc-title{
+      margin:0;
+      font-size:var(--h1-size);
+      font-weight:1000;
+      letter-spacing:-0.01em;
+      line-height:calc(var(--line) - .15);
+      color:var(--text);
     }
 
-    .acc-toggle::before { content: '+'; }
-    .acc-summary[aria-expanded="true"] .acc-toggle::before { content: '–'; }
-
-    /* Title uses your h1 look */
-    .acc-title {
-      margin: 0;
-      font-size: var(--h1-size);
-      font-weight: 1000;
-      letter-spacing: -0.01em;
-      line-height: calc(var(--line) - .15);
-      color: var(--text);
-    }
-
-    /* Panel */
     .acc-panel{
       padding-left: calc(1.25rem + 0.6rem);
       margin:0;
@@ -335,82 +402,69 @@ const dataUrl = new URL('/data/strava-latest.json', Astro.url).pathname;
       color:var(--text);
     }
 
-    /* Lists and rows */
-    .block, .stack, .list, .photos4{ width:100%; margin:6px 0 0; }
-    .stack{list-style:none;padding:0}
-    .stack-item{padding:8px 0}
-    .gray-hover:hover .hoverable { filter: grayscale(1) brightness(.8); opacity:.6; transition: filter 160ms ease, opacity 160ms ease; }
-    .gray-hover .hoverable:hover { filter:none; opacity:1; }
+    .block, .list{ width:100%; margin:6px 0 0; }
 
-    .list{display:grid;gap:10px}
-    .row{text-decoration:none;color:inherit}
-    .row-line{display:flex;align-items:center;gap:.85rem}
-    .row-line.no-logo{ gap: 0; }
-    .meta{display:grid;gap:.15rem}
-    .title{line-height:1.15}
-    .sub{color:inherit;font-size:clamp(15px, 2.5vw, 18px)}
+    /* Education */
+    .edu{ display:grid; gap:14px; }
+    .edu-item{ display:grid; gap:6px; padding:10px 0; }
+    .edu-top{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+    .edu-school{ font-weight:700; font-size: clamp(16px, 1.7vw, 18px); }
+    .edu-dates{ color:var(--muted); font-weight:600; font-size: clamp(14px, 1.4vw, 16px); white-space:nowrap; }
+    .edu-sub{ color:var(--text); opacity:.9; font-weight:600; }
 
-    /* Photos 2×2 */
-    .photos4{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      grid-template-rows:repeat(2,1fr);
-      gap:16px;
-    }
-    .photos4 .ph{ margin:0; padding:0; display:block; position:relative; }
-    .photos4 img{
-      width:100%;
-      aspect-ratio:1/1;
-      object-fit:cover;
-      border-radius:0 0 25% 0;
-      display:block;
-      box-shadow:0 8px 24px rgba(0,0,0,.18);
-      filter:grayscale(1);
-      transition:filter 200ms ease;
-    }
-    .photos4 img:hover{ filter:grayscale(0); }
+    /* Bullets */
+    .bullets{ margin: 6px 0 0; padding-left: 1.1rem; }
+    .bullets li{ margin: 6px 0; }
 
-    /* Strava overlays */
-    .strava{position:relative;text-decoration:none;color:inherit}
-    .strava-cta{
-      position:absolute;left:10px;bottom:10px;
-      color:#fff;font-weight:700;
-      background:rgba(0,0,0,.35);padding:.25rem .5rem;border-radius:8px;
+    /* Skills chips */
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      padding: 6px 0 2px;
     }
-    .stats{
-      position:absolute;right:10px;top:10px;
-      display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;
-      background:rgba(0,0,0,.55);color:#fff;font-weight:600;
-      padding:.4rem .6rem;border-radius:10px;backdrop-filter:blur(2px);
-      font-size:14px; line-height:1;
-    }
-    .stats .dot{opacity:.6}
-    .stats .metric{white-space:nowrap}
-
-    /* Work meta hierarchy */
-    .meta .title {             /* Job title */
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      padding: .45rem .65rem;
+      border-radius: 999px;
+      border: 1px solid rgba(127,127,127,.35);
+      background: rgba(127,127,127,.08);
       font-weight: 600;
+      font-size: clamp(13px, 1.25vw, 15px);
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    /* Work list */
+    .list{display:grid;gap:14px}
+    .row{ text-decoration:none; color:inherit; }
+    .row-line{display:flex;align-items:flex-start;gap:.85rem}
+    .row-line.no-logo{ gap: 0; }
+    .meta{display:grid;gap:.2rem}
+    .title{
+      font-weight: 650;
       font-size: clamp(16px, 1.6vw, 18px);
       letter-spacing: 0.005em;
+      line-height: 1.15;
       color: var(--text);
     }
-    
-    .meta .sub:first-of-type { /* Organization / unit */
-      font-weight: 500;
-      font-size: clamp(15px, 1.4vw, 17px);
-      color: var(--text);
+    .sub{
+      color:inherit;
+      font-weight: 550;
+      font-size: clamp(14px, 1.35vw, 16px);
+      opacity: .9;
     }
-    
-    .meta .sub:last-of-type {  /* Location / dates */
-      font-weight: 500;
-      font-size: clamp(15px, 1.4vw, 17px);
+    .desc{
+      margin-top: 6px;
       color: var(--text);
+      opacity: .92;
+      font-size: clamp(14px, 1.35vw, 16px);
+      line-height: 1.55;
     }
 
-
-    @media (max-width: 640px){
-      .strava-cta, .stats{ display:none !important; }
-    }
-    .photos4.grey-others .ph:not(.strava) img{ filter: grayscale(1) brightness(.75); }
+    /* Hover dim behavior (keeps your existing feel) */
+    .dim-others:hover .hoverable{ filter: grayscale(1) brightness(.85); opacity:.65; transition: filter 160ms ease, opacity 160ms ease; }
+    .dim-others .hoverable:hover{ filter:none; opacity:1; }
   </style>
 </Layout>
