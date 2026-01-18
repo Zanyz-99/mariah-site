@@ -30,22 +30,22 @@ const covers = [
             <ul class="track" id="track" aria-live="polite">
               <li class="card">
                 <div class="media">
-                  <img class="img-main" id="img-prev" alt="Previous project" decoding="async" />
-                  <img class="img-cover" id="cover-prev" alt="" decoding="async" aria-hidden="true" />
+                  <img class="img-main" id="img-prev" alt="Previous project" decoding="sync" />
+                  <img class="img-cover" id="cover-prev" alt="" decoding="sync" aria-hidden="true" />
                 </div>
               </li>
 
               <li class="card is-active" id="card-cur">
                 <div class="media">
-                  <img class="img-main" id="img-cur" alt="Current project" decoding="async" />
-                  <img class="img-cover" id="cover-cur" alt="" decoding="async" aria-hidden="true" />
+                  <img class="img-main" id="img-cur" alt="Current project" decoding="sync" fetchpriority="high" />
+                  <img class="img-cover" id="cover-cur" alt="" decoding="sync" fetchpriority="high" aria-hidden="true" />
                 </div>
               </li>
 
               <li class="card">
                 <div class="media">
-                  <img class="img-main" id="img-next" alt="Next project" decoding="async" />
-                  <img class="img-cover" id="cover-next" alt="" decoding="async" aria-hidden="true" />
+                  <img class="img-main" id="img-next" alt="Next project" decoding="sync" />
+                  <img class="img-cover" id="cover-next" alt="" decoding="sync" aria-hidden="true" />
                 </div>
               </li>
             </ul>
@@ -76,9 +76,8 @@ const covers = [
     let animating = false;
     let baseX = 0;
 
-    // -------- Preload + decode helpers --------
+    // ---------- Preload everything (main + cover) ----------
     const preloaded = new Set();
-
     const preload = (src) => {
       if (!src || preloaded.has(src)) return;
       preloaded.add(src);
@@ -87,76 +86,25 @@ const covers = [
       im.src = src;
     };
 
-    // Ensure browser has decoded image before we animate (prevents "pop in")
-    const ensureDecoded = (imgEl, src) => {
-      return new Promise((resolve) => {
-        if (!imgEl) return resolve(false);
+    slides.forEach(preload);
+    covers.forEach(preload);
 
-        // set src if needed
-        if (imgEl.src !== new URL(src, window.location.href).href) {
-          imgEl.src = src;
-        }
+    const setImages = () => {
+      imgPrev.src = slides[mod(index - 1)];
+      imgCur.src  = slides[index];
+      imgNext.src = slides[mod(index + 1)];
 
-        const done = () => {
-          // decode if supported, otherwise resolve
-          if (imgEl.decode) {
-            imgEl.decode().then(() => resolve(true)).catch(() => resolve(true));
-          } else {
-            resolve(true);
-          }
-        };
+      coverPrev.src = covers[mod(index - 1)];
+      coverCur.src  = covers[index];
+      coverNext.src = covers[mod(index + 1)];
 
-        if (imgEl.complete && imgEl.naturalWidth > 0) return done();
-        imgEl.addEventListener("load", done, { once: true });
-        imgEl.addEventListener("error", () => resolve(false), { once: true });
-      });
-    };
-
-    // Load + decode the trio (prev/cur/next) before we proceed
-    const setAndDecodeImages = async () => {
-      const prevI = slides[mod(index - 1)];
-      const curI  = slides[index];
-      const nextI = slides[mod(index + 1)];
-
-      const prevC = covers[mod(index - 1)];
-      const curC  = covers[index];
-      const nextC = covers[mod(index + 1)];
-
-      // start fetch early (even before we await)
-      [prevI, curI, nextI, prevC, curC, nextC].forEach(preload);
-
-      // assign sources
-      imgPrev.src = prevI;
-      imgCur.src  = curI;
-      imgNext.src = nextI;
-
-      coverPrev.src = prevC;
-      coverCur.src  = curC;
-      coverNext.src = nextC;
-
-      // eager decode for these 6 elements
+      // keep these eager so browser prioritizes decode/paint
       imgPrev.loading = "eager";
       imgCur.loading  = "eager";
       imgNext.loading = "eager";
       coverPrev.loading = "eager";
       coverCur.loading  = "eager";
       coverNext.loading = "eager";
-
-      await Promise.all([
-        ensureDecoded(imgPrev, prevI),
-        ensureDecoded(imgCur,  curI),
-        ensureDecoded(imgNext, nextI),
-        ensureDecoded(coverPrev, prevC),
-        ensureDecoded(coverCur,  curC),
-        ensureDecoded(coverNext, nextC),
-      ]);
-
-      // also preload further out in the background
-      const farther = [
-        slides[mod(index - 2)], slides[mod(index + 2)],
-        covers[mod(index - 2)], covers[mod(index + 2)],
-      ];
-      farther.forEach(preload);
     };
 
     const gapPx = () => {
@@ -171,6 +119,7 @@ const covers = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
+    // ✅ compute baseX so current card center == viewport center (works at any size)
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
       const c = cardCur.getBoundingClientRect();
@@ -186,34 +135,21 @@ const covers = [
       track.offsetHeight;
     };
 
-    // -------- Slide step (now decode-first) --------
-    const step = async (dir) => {
+    const step = (dir) => {
       if (animating) return;
       animating = true;
 
       const dist = stepDistance();
 
-      // compute target index first
-      const nextIndex = mod(index + dir);
-
-      // IMPORTANT: pre-decode the "incoming" trio BEFORE animating
-      index = nextIndex;
-      await setAndDecodeImages();
-
-      // keep baseX centered (images swapped, layout stable)
-      track.style.transition = "none";
-      track.style.transform = `translate3d(${baseX}px, 0, 0)`;
-      track.offsetHeight;
-      computeBaseX();
-
-      // now animate the movement (this moves to show new current)
       track.style.transition = "transform 320ms ease";
       track.style.transform = `translate3d(${baseX + (dir === 1 ? -dist : dist)}px, 0, 0)`;
 
       const onDone = () => {
         track.removeEventListener("transitionend", onDone);
 
-        // snap back to base and re-center precisely
+        index = mod(index + dir);
+        setImages();
+
         track.style.transition = "none";
         track.style.transform = `translate3d(${baseX}px, 0, 0)`;
         track.offsetHeight;
@@ -225,7 +161,7 @@ const covers = [
       track.addEventListener("transitionend", onDone);
     };
 
-    // -------- Wheel works anywhere on page --------
+    // wheel anywhere: down/right = next, up/left = prev
     let wheelLock = false;
     window.addEventListener(
       "wheel",
@@ -237,12 +173,12 @@ const covers = [
         const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
         step(dominant > 0 ? 1 : -1);
 
-        setTimeout(() => (wheelLock = false), 380);
+        setTimeout(() => (wheelLock = false), 360);
       },
       { passive: false }
     );
 
-    // drag/swipe (viewport)
+    // drag/swipe
     let startX = 0;
     let dragging = false;
 
@@ -268,7 +204,7 @@ const covers = [
       dragging = false;
     });
 
-    // keyboard (page-level)
+    // keyboard
     window.addEventListener("keydown", (e) => {
       if (animating) return;
       if (e.key === "ArrowRight") step(1);
@@ -283,19 +219,12 @@ const covers = [
     });
 
     // init
-    (async () => {
-      // preload everything up front (best chance to avoid any pop)
-      slides.forEach(preload);
-      covers.forEach(preload);
-
-      await setAndDecodeImages();
-
-      requestAnimationFrame(() => {
-        baseX = 0;
-        track.style.transform = "translate3d(0,0,0)";
-        computeBaseX();
-      });
-    })();
+    setImages();
+    requestAnimationFrame(() => {
+      baseX = 0;
+      track.style.transform = "translate3d(0,0,0)";
+      computeBaseX();
+    });
   </script>
 
   <style>
@@ -330,7 +259,7 @@ const covers = [
 
     .window{
       width: min(100vw, clamp(320px, 78vw, 980px));
-      overflow: visible; /* allow next peek on desktop */
+      overflow: visible; /* allow next peek (desktop) */
     }
 
     .track{
@@ -395,7 +324,7 @@ const covers = [
     .card:hover .img-main,
     .card:focus-within .img-main{ filter: none; }
 
-    /* ✅ Mobile: go back to "no prev/next visible" + fit viewport */
+    /* ✅ Mobile: no prev/next visible + fit viewport */
     @media (max-width: 640px){
       .window{
         width: 100vw;
@@ -412,7 +341,7 @@ const covers = [
         aspect-ratio: 9 / 16;
         border-radius: 14px;
 
-        /* Fit inside visible viewport (svh handles address bar) */
+        /* fit within visible viewport height */
         max-height: calc(100svh - 24px);
       }
     }
