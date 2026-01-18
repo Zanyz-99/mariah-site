@@ -2,179 +2,74 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="Contact | Zach Scholz" description="Ways to get in touch.">
-  <section class="content contact-wrap">
+<Layout title="Contact" description="Get in touch.">
+  <section class="contact">
     <div class="spacer-md" aria-hidden="true"></div>
 
-    <!-- Accordion -->
-    <section class="accordion" aria-label="Contact sections">
-      <!-- CONNECT -->
-      <div class="acc" id="acc-connect">
-        <button
-          class="acc-summary"
-          type="button"
-          aria-expanded="false"
-          aria-controls="panel-connect"
-          id="btn-connect"
-        >
-          <span class="acc-toggle" aria-hidden="true"></span>
-          <span class="acc-title">Connect</span>
-        </button>
-
-        <div class="acc-panel" id="panel-connect" role="region" aria-labelledby="btn-connect">
-          <ul class="stack gray-hover" aria-label="Connect links">
-            <li class="stack-item hoverable">
-              <a href="https://www.linkedin.com/in/zachary-scholz/" target="_blank" rel="noopener">LinkedIn</a>
-            </li>
-            <li class="stack-item hoverable">
-              <a href="mailto:ztscholz86@gmail.com">Email</a>
-            </li>
-            <li class="stack-item hoverable">
-              <a href="https://www.strava.com/athletes/35369206" target="_blank" rel="noopener">Strava</a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
+    <ul class="links gray-hover" aria-label="Contact links">
+      <li class="link-item hoverable">
+        <a href="https://www.linkedin.com/in/mariah-ippolito/" target="_blank" rel="noopener">
+          LinkedIn
+        </a>
+      </li>
+      <li class="link-item hoverable">
+        <a href="mailto:mippolito.ny@gmail.com">
+          Email
+        </a>
+      </li>
+    </ul>
   </section>
 
-  <!-- Accordion logic: one-open + animated panels (no auto-scroll) -->
-  <script type="module">
-    const accRoot = document.querySelector('.accordion');
-    if (!accRoot) throw new Error('Accordion root not found');
-
-    const items   = Array.from(accRoot.querySelectorAll('.acc'));
-    const buttons = items.map(i => i.querySelector('.acc-summary'));
-    const panels  = items.map(i => i.querySelector('.acc-panel'));
-
-    function openPanel(panel) {
-      panel.hidden = false;
-      panel.style.display = 'block';
-      const startHeight = panel.offsetHeight;
-      const target = panel.scrollHeight;
-      panel.style.height = startHeight + 'px';
-      panel.getBoundingClientRect();
-      panel.style.height = target + 'px';
-      panel.classList.add('animating');
-      panel.addEventListener('transitionend', function done(ev){
-        if (ev.propertyName !== 'height') return;
-        panel.removeEventListener('transitionend', done);
-        panel.classList.remove('animating');
-        panel.style.height = 'auto';
-      });
-    }
-
-    function closePanel(panel) {
-      const current = panel.offsetHeight;
-      panel.style.height = current + 'px';
-      panel.getBoundingClientRect();
-      panel.style.height = '0px';
-      panel.classList.add('animating');
-      panel.addEventListener('transitionend', function done(ev){
-        if (ev.propertyName !== 'height') return;
-        panel.removeEventListener('transitionend', done);
-        panel.classList.remove('animating');
-        panel.style.display = 'none';
-        panel.hidden = true;
-      });
-    }
-
-    let openIndex = -1;
-
-    function setOpen(idx) {
-      items.forEach((_, i) => {
-        const shouldOpen = i === idx;
-        buttons[i].setAttribute('aria-expanded', String(shouldOpen));
-        const p = panels[i];
-        if (shouldOpen) {
-          if (p.hidden || p.style.display === 'none' || p.style.height === '0px') openPanel(p);
-        } else {
-          if (!p.hidden && p.style.display !== 'none' && p.style.height !== '0px') closePanel(p);
-        }
-      });
-      openIndex = idx;
-    }
-
-    function activate(i, evt) {
-      if (evt) evt.preventDefault();
-      const next = (openIndex === i) ? -1 : i;
-      setOpen(next);
-    }
-
-    buttons.forEach((btn, i) => {
-      btn.addEventListener('click', (e) => activate(i, e));
-      btn.addEventListener('keydown', (e) => {
-        if (e.key === ' ' || e.key === 'Enter') activate(i, e);
-      });
-    });
-
-    // Initialize collapsed
-    panels.forEach(p => { p.style.display = 'none'; p.hidden = true; p.style.height = '0px'; });
-    openIndex = -1;
-  </script>
-
   <style>
-    .contact-wrap{display:grid;gap:12px;justify-items:start;align-items:start;margin-inline:auto}
-    .spacer-md{ height: clamp(24px, 6vh, 64px); width: 100%; }
-
-    .accordion{
-      display:grid; gap:12px; justify-items:start;
-      width:100%; margin:0;
+    /* Page width */
+    .contact {
+      width: 60%;
+      margin-inline: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
     }
-    .acc{ width:100%; background:transparent; }
 
-    .acc-summary {
+    .spacer-md {
+      height: clamp(32px, 8vh, 96px);
       width: 100%;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 6px 0;
-      cursor: pointer;
-      user-select: none;
-      color: var(--muted);
-      background: none;
-      border: 0;
     }
 
-    .acc-toggle {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.25rem;
-      font-size: calc(var(--h1-size) * 0.8);
-      font-weight: 1000;
-      line-height: 1;
-      color: var(--text);
-      text-align: center;
-    }
-    .acc-toggle::before { content: '+'; }
-    .acc-summary[aria-expanded="true"] .acc-toggle::before { content: '–'; }
-
-    .acc-title {
+    /* Links */
+    .links {
+      list-style: none;
+      padding: 0;
       margin: 0;
+      width: 100%;
+      display: grid;
+      gap: 18px;
+    }
+
+    .link-item a {
       font-size: var(--h1-size);
       font-weight: 1000;
       letter-spacing: -0.01em;
-      line-height: calc(var(--line) - .15);
+      line-height: 1.1;
       color: var(--text);
+      text-decoration: none;
     }
 
-    .acc-panel{
-      padding-left: calc(1.25rem + 0.6rem);
-      margin:0;
-      display:block;
-      height:0;
-      overflow:hidden;
-      overflow-anchor:none;
-      transition: height 220ms ease;
-      font-size:var(--body-size);
-      line-height:1.45;
-      color:var(--text);
+    /* Hover behavior (matches your site language) */
+    .gray-hover:hover .hoverable {
+      filter: grayscale(1) brightness(.8);
+      opacity: .6;
+      transition: filter 160ms ease, opacity 160ms ease;
+    }
+    .gray-hover .hoverable:hover {
+      filter: none;
+      opacity: 1;
     }
 
-    .stack{ width:100%; margin:6px 0 0; list-style:none; padding:0; }
-    .stack-item{ padding:8px 0 }
-    .gray-hover:hover .hoverable { filter: grayscale(1) brightness(.8); opacity:.6; transition: filter 160ms ease, opacity 160ms ease; }
-    .gray-hover .hoverable:hover { filter:none; opacity:1; }
+    /* Mobile */
+    @media (max-width: 768px) {
+      .contact {
+        width: 90%;
+      }
+    }
   </style>
 </Layout>
