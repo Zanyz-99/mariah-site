@@ -55,43 +55,67 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
 
       html,body{
         margin:0; height:100%;
-        background:var(--bg); color:var(--text);
+        background:var(--bg);
+        overflow-x:hidden;
+      }
+
+      /* =========================
+         GLOBAL TYPOGRAPHY BASE
+         All text defaults to paragraph style
+         ========================= */
+      body{
         font-family: var(--font-body);
+        font-size: var(--body-size);
+        line-height: var(--line);
+        font-weight: 400;
+        color: var(--text);
+
         text-rendering: optimizeLegibility;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        overflow-x: hidden;
       }
 
-      h1, h2, h3, .acc-title, .title {
+      /* Everything inherits the paragraph baseline */
+      *, *::before, *::after{
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
+        color: inherit;
+      }
+
+      /* Form controls (critical for accordions) */
+      button, input, textarea, select{
+        font: inherit;
+        color: inherit;
+      }
+
+      /* Headings / titles can differ by size + weight */
+      h1, h2, h3, .acc-title, .title{
         font-family: var(--font-title);
         color: var(--text);
         font-weight: 700;
       }
 
-      h1 {
+      h1{
         font-size: var(--h1-size);
         margin: 0 0 .25rem 0;
         line-height: calc(var(--line) - .15);
         letter-spacing: -0.01em;
       }
-      h2 {
+      h2{
         font-size: var(--h2-size);
         margin: 1.25rem 0 .5rem;
         line-height: calc(var(--line) - .1);
       }
-      h3 {
+      h3{
         font-size: var(--h3-size);
         margin: 1rem 0 .35rem;
         line-height: calc(var(--line) - .05);
       }
 
-      p, .sub, .muted, li, a, .acc-panel {
-        font-family: var(--font-body);
-        font-weight: 400;
+      /* Muted is opt-in */
+      .muted, .sub{
         color: var(--muted);
-        font-size: var(--body-size);
-        line-height: var(--line);
       }
 
       a{ color:inherit; text-decoration:none; }
@@ -123,19 +147,18 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
       footer{
         position:fixed; left:0; right:0; bottom:0;
         border-top:1px solid var(--border);
-        color:var(--muted);
-        font-size:.9rem;
         background:var(--bg);
         backdrop-filter:saturate(1.1) blur(4px);
         -webkit-backdrop-filter:saturate(1.1) blur(4px);
       }
 
       .foot-wrap{
-        width: 100%;
-        max-width: none;
-        margin: 0;
+        width:100%;
+        max-width:none;
+        margin:0;
         padding: 1rem var(--page-pad) calc(1rem + env(safe-area-inset-bottom));
-        box-sizing: border-box;
+        box-sizing:border-box;
+        color: var(--muted);
       }
     </style>
 
@@ -172,6 +195,8 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
   <body>
     <Navbar />
     <main><slot /></main>
-    <footer><div class="foot-wrap">© {new Date().getFullYear()} Mariah Ippolito • Hosted on Cloudflare Pages</div></footer>
+    <footer>
+      <div class="foot-wrap">© {new Date().getFullYear()} Mariah Ippolito • Hosted on Cloudflare Pages</div>
+    </footer>
   </body>
 </html>
