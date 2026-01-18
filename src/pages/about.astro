@@ -2,21 +2,24 @@
 import Layout from "../layouts/Layout.astro";
 ---
 
-<Layout title="About" description="About Me">
+<Layout title="About" description="About Mariah.">
   <section class="content about-wrap">
     <div class="spacer-md" aria-hidden="true"></div>
 
     <p class="about-text">
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+      Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+      Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
       Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
     </p>
   </section>
 
   <style>
     .about-wrap {
+      display: flex;
+      justify-content: center;
       margin-inline: auto;
+      width: 100%;
     }
 
     .spacer-md {
@@ -24,12 +27,19 @@ import Layout from "../layouts/Layout.astro";
       width: 100%;
     }
 
-    /* Match Resume page body text exactly */
+    /* Match Resume page body text */
     .about-text {
+      width: 60%;
       font-size: var(--body-size);
       line-height: var(--line);
       color: var(--text);
-      max-width: 60ch; /* optional, remove if resume page doesn't constrain */
+    }
+
+    /* Mobile: relax width so text stays readable */
+    @media (max-width: 768px) {
+      .about-text {
+        width: 100%;
+      }
     }
   </style>
 </Layout>
