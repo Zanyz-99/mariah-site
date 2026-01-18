@@ -76,24 +76,24 @@ const covers = [
     let animating = false;
     let baseX = 0;
 
-    // ---------- Preload helpers ----------
-    const preloadImage = (src) =>
-      new Promise((resolve) => {
-        if (!src) return resolve(false);
-        const im = new Image();
-        im.decoding = "async";
-        im.onload = () => resolve(true);
-        im.onerror = () => resolve(false);
-        im.src = src;
-      });
+    // ---------- Preload (robust + throttled) ----------
+    const preloaded = new Set();
+    const preload = (src) => {
+      if (!src || preloaded.has(src)) return;
+      preloaded.add(src);
+      const im = new Image();
+      im.decoding = "async";
+      im.loading = "eager";
+      im.src = src;
+    };
 
     const preloadAround = (i) => {
-      // preload next/prev + next-next/prev-prev for smoother scrolling
+      // current + two ahead/behind for both main & cover
       const targets = [
         slides[mod(i - 2)], slides[mod(i - 1)], slides[i], slides[mod(i + 1)], slides[mod(i + 2)],
         covers[mod(i - 2)], covers[mod(i - 1)], covers[i], covers[mod(i + 1)], covers[mod(i + 2)],
       ];
-      targets.forEach((src) => preloadImage(src));
+      targets.forEach(preload);
     };
 
     const setImages = () => {
@@ -105,16 +105,14 @@ const covers = [
       coverCur.src  = covers[index];
       coverNext.src = covers[mod(index + 1)];
 
-      // keep these eager so the 3 in-view cards decode immediately
+      // make sure the visible 3 decode ASAP
       imgPrev.loading = "eager";
       imgCur.loading  = "eager";
       imgNext.loading = "eager";
-
       coverPrev.loading = "eager";
       coverCur.loading  = "eager";
       coverNext.loading = "eager";
 
-      // start preloading further-out slides/covers
       preloadAround(index);
     };
 
@@ -172,13 +170,12 @@ const covers = [
       track.addEventListener("transitionend", onDone);
     };
 
-    // ---------- Make wheel work ANYWHERE on the page ----------
-    // We listen on window, not viewport.
+    // ---------- Wheel works anywhere on page ----------
+    // We capture wheel at the window level and always turn it into a slide step.
     let wheelLock = false;
     window.addEventListener(
       "wheel",
       (e) => {
-        // because we disable page scroll, always hijack wheel
         e.preventDefault();
         if (wheelLock || animating) return;
         wheelLock = true;
@@ -233,9 +230,9 @@ const covers = [
 
     // init
     setImages();
-    // eagerly preload everything once (fast if cached, safe if not)
-    slides.forEach(preloadImage);
-    covers.forEach(preloadImage);
+    // preload everything (fast if cached; eliminates "not loaded yet" flashes)
+    slides.forEach(preload);
+    covers.forEach(preload);
 
     requestAnimationFrame(() => {
       baseX = 0;
@@ -245,19 +242,20 @@ const covers = [
   </script>
 
   <style>
+    /* kill scrollbars; wheel is repurposed to slide navigation */
     :global(html),
     :global(body){
       height: 100%;
       margin: 0;
-      overflow: hidden; /* no page scrollbars */
+      overflow: hidden;
     }
 
     .home{
-      height: 100vh;
-      width: 100%;
       display: grid;
-      place-items: center;
-      padding: 0;
+      gap: 16px;
+      width: 100%;
+      padding-top: clamp(12px, 3vh, 28px);
+      padding-bottom: clamp(18px, 4vh, 44px);
     }
 
     .carousel{ width: 100%; }
@@ -266,7 +264,6 @@ const covers = [
       width: 100%;
       overflow: hidden;
       outline: none;
-      /* allow vertical wheel while we intercept it globally */
       touch-action: pan-y;
       box-sizing: border-box;
 
@@ -277,7 +274,7 @@ const covers = [
 
     .window{
       width: min(100vw, clamp(320px, 78vw, 980px));
-      overflow: visible; /* allow next peek */
+      overflow: visible; /* allow next peek (desktop) */
     }
 
     .track{
@@ -295,7 +292,6 @@ const covers = [
       border-radius: 16px;
       overflow: hidden;
 
-      /* desktop */
       aspect-ratio: 16 / 9;
 
       background: var(--card);
@@ -305,11 +301,8 @@ const covers = [
       transition: opacity 200ms ease;
     }
 
-    .card.is-active{
-      opacity: 1;
-    }
+    .card.is-active{ opacity: 1; }
 
-    /* Media stack */
     .media{
       position: relative;
       width: 100%;
@@ -329,35 +322,28 @@ const covers = [
       -webkit-user-drag: none;
     }
 
-    /* Base: main image is B/W */
     .img-main{
       filter: grayscale(100%) saturate(0.9);
       transition: filter 220ms ease;
     }
 
-    /* Cover: low opacity overlay */
     .img-cover{
       opacity: 0.28;
       transition: opacity 220ms ease;
       pointer-events: none;
     }
 
-    /* Hover/focus: cover fades away, main goes color */
     .card:hover .img-cover,
-    .card:focus-within .img-cover{
-      opacity: 0;
-    }
+    .card:focus-within .img-cover{ opacity: 0; }
 
     .card:hover .img-main,
-    .card:focus-within .img-main{
-      filter: none;
-    }
+    .card:focus-within .img-main{ filter: none; }
 
-    /* ✅ Mobile: 9x16 AND fit the viewing window */
+    /* Mobile: 9x16 and fit viewport height */
     @media (max-width: 640px){
       .window{
         width: 100vw;
-        overflow: hidden; /* no peek on mobile; keeps it clean and fits */
+        overflow: hidden; /* remove peek on mobile to avoid overflow */
       }
 
       .track{
@@ -366,12 +352,12 @@ const covers = [
       }
 
       .card{
-        width: min(92vw, 420px);
+        width: min(92vw, 440px);
         aspect-ratio: 9 / 16;
 
-        /* fit within viewport height (accounts for safe areas) */
-        max-height: calc(100svh - 24px);
-        height: auto;
+        /* Fit within the visible screen height (svh avoids mobile address bar issues) */
+        height: min(calc(100svh - 24px), calc((min(92vw, 440px)) * (16 / 9)));
+        /* ^ height is capped by viewport; ratio stays correct because aspect-ratio is set */
 
         border-radius: 14px;
       }
