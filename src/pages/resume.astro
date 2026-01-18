@@ -437,7 +437,10 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
   </script>
 
   <style>
-    /* ~60% width */
+    /* =========================
+       LAYOUT
+       ========================= */
+  
     .about-wrap{
       display:grid;
       gap:12px;
@@ -445,73 +448,108 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
       align-items:start;
       margin-inline:auto;
       max-width: min(60vw, 860px);
-      width: 100%;
+      width:100%;
     }
-    @media (max-width: 900px){ .about-wrap{ max-width: 100%; } }
-
-    .spacer-md{ height: clamp(24px, 6vh, 64px); width: 100%; }
-
-    /* Main accordion */
-    .accordion{ display:grid; gap:12px; width:100%; margin:0; }
-    .acc{ width:100%; background:transparent; }
-
+    @media (max-width:900px){
+      .about-wrap{ max-width:100%; }
+    }
+  
+    .spacer-md{
+      height: clamp(24px, 6vh, 64px);
+      width:100%;
+    }
+  
+    /* =========================
+       MAIN ACCORDION
+       ========================= */
+  
+    .accordion{
+      display:grid;
+      gap:12px;
+      width:100%;
+    }
+  
+    .acc{
+      width:100%;
+      background:transparent;
+    }
+  
     .acc-summary{
       width:100%;
       display:flex;
       align-items:center;
-      gap:0.6rem;
+      gap:.6rem;
       padding:6px 0;
       cursor:pointer;
-      user-select:none;
       background:none;
       border:0;
       text-decoration:none;
     }
+  
     .acc-toggle{
+      width:1.25rem;
       display:flex;
       align-items:center;
       justify-content:center;
-      width:1.25rem;
-      font-size:calc(var(--h1-size) * 0.8);
       font-weight:1000;
+      font-size: calc(var(--h1-size) * .8);
       line-height:1;
       color:var(--text);
-      text-align:center;
     }
+  
     .acc-toggle::before{ content:'+'; }
     .acc-summary[aria-expanded="true"] .acc-toggle::before{ content:'–'; }
-
+  
     .acc-title{
-      margin:0;
-      font-size:var(--h1-size);
+      font-size: var(--h1-size);
       font-weight:1000;
-      letter-spacing:-0.01em;
-      line-height:calc(var(--line) - .15);
+      line-height: calc(var(--line) - .15);
+      letter-spacing:-.01em;
       color:var(--text);
     }
-    .ext{ opacity:.6; font-weight:900; margin-left:.25rem; font-size: .85em; }
-
+  
+    .ext{
+      opacity:.6;
+      font-weight:900;
+      margin-left:.25rem;
+      font-size:.85em;
+    }
+  
     .acc-panel{
-      padding-left: calc(1.25rem + 0.6rem);
-      margin:0;
-      display:block;
+      padding-left: calc(1.25rem + .6rem);
       height:0;
       overflow:hidden;
-      overflow-anchor:none;
       transition: height 220ms ease;
-      font-size:var(--body-size);
-      line-height:var(--line);
-      color:var(--text);
+      overflow-anchor:none;
+  
+      /* ABOUT-TEXT TYPOGRAPHY */
+      font-size: var(--body-size);
+      line-height: var(--line);
+      color: var(--text);
     }
-
+  
     /* PDF link row */
-    .acc-linkbtn:hover .acc-title{ text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
-    .acc-link .acc-toggle::before{ content:'+'; } /* keeps it consistent */
-
-    /* Nested accordions: match About body size, but bold */
-    .nested{ width:100%; margin-top:6px; display:grid; gap:10px; }
+    .acc-linkbtn:hover .acc-title{
+      text-decoration: underline;
+      text-decoration-thickness:2px;
+      text-underline-offset:4px;
+    }
+    .acc-link .acc-toggle::before{ content:'+'; }
+  
+    /* =========================
+       NESTED ACCORDION
+       ========================= */
+  
+    .nested{
+      margin-top:6px;
+      display:grid;
+      gap:10px;
+    }
+  
     .nitem{ width:100%; }
-
+  
+    /* MAIN BULLETS
+       same size as about-text, just bold */
     .nsummary{
       width:100%;
       display:flex;
@@ -522,13 +560,13 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
       border:0;
       cursor:pointer;
       text-align:left;
-      color:var(--text);
+  
+      font-size: var(--body-size);
+      line-height: var(--line);
       font-weight:800;
-      font-size:var(--body-size);
-      line-height:var(--line);
-      letter-spacing: 0;
+      color:var(--text);
     }
-
+  
     .ncaret{
       width:1rem;
       display:flex;
@@ -538,77 +576,101 @@ const RESUME_URL = "/resume/IPPOLITO_Resume_3D%20Architectural%20Visualizer.pdf"
       line-height:1;
       opacity:.9;
     }
-    .ncaret::before{ content:'›'; transform: translateY(-0.5px); display:inline-block; transition: transform 160ms ease; }
-    .nsummary[aria-expanded="true"] .ncaret::before{ transform: rotate(90deg) translateX(1px); }
-
-    .sep{ opacity:.45; padding: 0 .15rem; }
-
+  
+    .ncaret::before{
+      content:'›';
+      transform: translateY(-.5px);
+      transition: transform 160ms ease;
+      display:inline-block;
+    }
+  
+    .nsummary[aria-expanded="true"] .ncaret::before{
+      transform: rotate(90deg) translateX(1px);
+    }
+  
+    .sep{
+      opacity:.45;
+      padding:0 .15rem;
+    }
+  
     .npanel{
-      margin:0;
-      display:block;
+      padding-left: calc(1rem + .55rem);
       height:0;
       overflow:hidden;
       transition: height 200ms ease;
-      padding-left: calc(1rem + .55rem);
     }
-    .npanel.animating{ will-change: height; }
-
-    /* Make all "underneath" content the same size for now */
-    .detail{ margin-top: 6px; }
+    .npanel.animating{ will-change:height; }
+  
+    /* =========================
+       DETAIL CONTENT
+       ========================= */
+  
+    .detail{
+      margin-top:6px;
+    }
+  
+    /* Year line — SAME SIZE, lighter weight */
     .detail-top{
-      font-weight: 500;
-      opacity: .85;
       font-size: var(--body-size);
       line-height: var(--line);
-      margin-bottom: 6px;
+      font-weight:400;
+      opacity:.85;
+      margin-bottom:6px;
     }
+  
+    /* Paragraph text — SAME AS ABOUT TEXT */
     .detail-text{
       margin:0;
-      font-weight: 400;
+      font-size: var(--body-size);
+      line-height: var(--line);
+      font-weight:400;
       opacity:.92;
-      font-size: var(--body-size);
-      line-height: var(--line);
     }
-
-    /* Education lines (no bullets) */
+  
+    /* Education (no bullets) */
     .edu-lines{
-      font-size: var(--body-size);
-      line-height: var(--line);
-      font-weight: 400;
-      opacity: .92;
       display:grid;
-      gap: 4px;
-    }
-
-    /* Lists */
-    .bullets{
-      margin: 6px 0 0;
-      padding-left: 1.1rem;
-      font-weight: 400;
-      opacity: .92;
+      gap:4px;
       font-size: var(--body-size);
       line-height: var(--line);
+      font-weight:400;
+      opacity:.92;
     }
-    .bullets.light li{ margin: 6px 0; }
-
-    /* Skills chips (unchanged) */
+  
+    /* Lists (Achievements, etc.) */
+    .bullets{
+      margin:6px 0 0;
+      padding-left:1.1rem;
+      font-size: var(--body-size);
+      line-height: var(--line);
+      font-weight:400;
+      opacity:.92;
+    }
+    .bullets.light li{ margin:6px 0; }
+  
+    /* =========================
+       SKILLS CHIPS
+       ========================= */
+  
     .chips{
       display:flex;
       flex-wrap:wrap;
       gap:10px;
-      padding: 6px 0 2px;
+      padding:6px 0 2px;
     }
+  
     .chip{
       display:inline-flex;
       align-items:center;
-      padding: .45rem .65rem;
-      border-radius: 999px;
-      border: 1px solid rgba(127,127,127,.35);
+      padding:.45rem .65rem;
+      border-radius:999px;
+      border:1px solid rgba(127,127,127,.35);
       background: rgba(127,127,127,.08);
-      font-weight: 600;
+      font-weight:600;
       font-size: clamp(13px, 1.25vw, 15px);
-      line-height: 1;
-      white-space: nowrap;
+      line-height:1;
+      white-space:nowrap;
     }
   </style>
+  
 </Layout>
