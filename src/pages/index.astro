@@ -227,11 +227,11 @@ const covers = [
     }
 
     .home{
-      height: 100vh;          /* lock page to viewport height */
-      width: 100%;
       display: grid;
-      place-items: center;     /* centers carousel vertically */
-      padding: 0;              /* remove extra height */
+      gap: 16px;
+      width: 100%;
+      padding-top: clamp(12px, 3vh, 28px);
+      padding-bottom: clamp(18px, 4vh, 44px);
     }
 
     .carousel{ width: 100%; }
