@@ -5,7 +5,7 @@ const ATHLETE_ID = Number(import.meta.env.STRAVA_ATHLETE_ID) || 35369206;
 const STRAVA_PROFILE = `https://www.strava.com/athletes/${ATHLETE_ID}`;
 const dataUrl = new URL('/data/strava-latest.json', Astro.url).pathname;
 ---
-<Layout title="About | Zach Scholz" description="Background, focus areas, and interests.">
+<Layout title="About" description="Background, focus areas, and interests.">
   <Fragment slot="head">
     <!-- Preload above-the-fold or “first-open” images -->
     <link rel="preload" as="image" href="/photos/about-1.webp" imagesrcset="/photos/about-1.jpg 1x, /photos/about-1.webp 1x" fetchpriority="high">
