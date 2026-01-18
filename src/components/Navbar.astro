@@ -23,19 +23,19 @@ const pageTitle = titleMap[pathname] ?? '';
       <img class="logo" src="/icons/logo dark.png" alt="Logo" />
     </a>
 
-    <!-- Center spacer (keeps right alignment consistent) -->
+    <!-- Center spacer -->
     <div class="spacer" aria-hidden="true"></div>
 
-    <!-- Right: Desktop menu (right aligned) -->
+    <!-- Right: Desktop menu -->
     <ul class="menu" role="menubar" aria-label="Main">
       <li role="none">
         <a role="menuitem" class={`link ${active('/about')}`} href="/about">About</a>
       </li>
       <li role="none">
-        <a role="menuitem" class={`link ${active('/hobbies')}`} href="/hobbies">Hobbies</a>
+        <a role="menuitem" class={`link link-outline ${active('/resume')}`} href="/resume">Resume</a>
       </li>
       <li role="none">
-        <a role="menuitem" class={`link link-outline ${active('/resume')}`} href="/resume">Resume</a>
+        <a role="menuitem" class={`link ${active('/hobbies')}`} href="/hobbies">Hobbies</a>
       </li>
       <li role="none">
         <a role="menuitem" class={`link ${active('/contact')}`} href="/contact">Contact</a>
@@ -61,8 +61,8 @@ const pageTitle = titleMap[pathname] ?? '';
   <div class="mobile-menu" id="mobileMenu" hidden>
     <ul class="mobile-list" role="menu" aria-label="Mobile">
       <li role="none"><a role="menuitem" class={`link ${active('/about')}`} href="/about">About</a></li>
+      <li role="none"><a role="menuitem" class={`link ${active('/resume')}`} href="/resume">Resume</a></li>
       <li role="none"><a role="menuitem" class={`link ${active('/hobbies')}`} href="/hobbies">Hobbies</a></li>
-      <li role="none"><a role="menuitem" class={`link link-outline ${active('/resume')}`} href="/resume">Resume</a></li>
       <li role="none"><a role="menuitem" class={`link ${active('/contact')}`} href="/contact">Contact</a></li>
     </ul>
   </div>
@@ -128,7 +128,7 @@ const pageTitle = titleMap[pathname] ?? '';
   .logo-link{ display:inline-flex; align-items:center; }
   .logo{ height:32px; width:auto; }
 
-  .spacer{ min-width: 0; }
+  .spacer{ min-width:0; }
 
   .menu{
     list-style:none;
@@ -136,7 +136,7 @@ const pageTitle = titleMap[pathname] ?? '';
     padding:.2rem;
     display:flex;
     gap:1.25rem;
-    justify-self:end; /* right aligned */
+    justify-self:end;
     align-items:center;
   }
 
@@ -156,25 +156,23 @@ const pageTitle = titleMap[pathname] ?? '';
     color:var(--text);
   }
 
-  /* Resume outline — desktop only */
+  /* Resume outline — desktop only (rectangle) */
   @media (min-width: 769px){
     .link-outline{
       padding:.45rem .75rem;
-      border:1px solid rgba(255,255,255,.85);
-      border-radius:999px;
+      border:1px solid rgba(255,255,255,.9);
+      border-radius:8px; /* rectangle (not pill) */
       line-height:1;
       color:var(--text);
     }
-  
     .link-outline:hover{
       border-color: rgba(255,255,255,1);
     }
-  
     .link-outline.active{
       border-color: rgba(255,255,255,1);
     }
   }
-  
+
   /* Mobile: no outline */
   @media (max-width: 768px){
     .link-outline{
@@ -183,7 +181,6 @@ const pageTitle = titleMap[pathname] ?? '';
       border-radius:0;
     }
   }
-
 
   .hamburger{
     appearance:none;
@@ -202,7 +199,11 @@ const pageTitle = titleMap[pathname] ?? '';
     overflow:hidden;
     white-space:nowrap;
     text-overflow:ellipsis;
-    text-align:right; /* right aligned title if you ever show it */
+    text-align:right;
+  }
+
+  .mobile-menu{
+    position: relative;
   }
 
   .mobile-list{
@@ -210,7 +211,7 @@ const pageTitle = titleMap[pathname] ?? '';
     top:100%;
     right:1rem;
     margin:.25rem 0 0;
-    padding:.6rem;
+    padding:.5rem .6rem;
     list-style:none;
     background:var(--bg);
     border:1px solid var(--border);
@@ -219,9 +220,11 @@ const pageTitle = titleMap[pathname] ?? '';
     display:flex;
     flex-direction:column;
     gap:.75rem;
-    min-width: 170px;
-    align-items:flex-end; /* right align items in the dropdown */
-    text-align:right;
+
+    /* key: only as wide as its contents */
+    width: max-content;
+    min-width: 0;
+    align-items:flex-start;
   }
 
   @media (max-width:768px){
