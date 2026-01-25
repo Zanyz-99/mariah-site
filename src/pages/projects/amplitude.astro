@@ -1,5 +1,5 @@
 ---
-import Layout from "../../layouts/Layout.astro"; // adjust if needed
+import Layout from "../../layouts/Layout.astro";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
@@ -17,7 +17,6 @@ let imagesInFolder: string[] = [];
 
 try {
   descriptionText = await fs.readFile(path.join(PUBLIC_DIR, txtFile), "utf-8");
-
   const entries = await fs.readdir(PUBLIC_DIR, { withFileTypes: true });
   imagesInFolder = entries
     .filter((e) => e.isFile() && isImage(e.name))
@@ -26,7 +25,6 @@ try {
   console.error("[Amplitude page] asset read error:", err);
 }
 
-// ✅ EXACT order you requested (no “append remaining”)
 const orderedFiles = [
   "Images-08.png",
   "Images-06.png",
@@ -35,11 +33,10 @@ const orderedFiles = [
   "Images-10.png",
   "Images-09.png",
   "Images-04.png",
-  "cover-image.png", // treat as Images-02
+  "cover-image.png",
   "Images-01.png",
 ];
 
-// Match filenames case-insensitively to what exists in the folder
 const byLower = new Map(imagesInFolder.map((n) => [n.toLowerCase(), n]));
 const finalFiles = orderedFiles
   .map((n) => byLower.get(n.toLowerCase()))
@@ -48,11 +45,9 @@ const finalFiles = orderedFiles
 const finalUrls = finalFiles.map((name) => `${BASE}/${encodeURIComponent(name)}`);
 const galleryImages = finalUrls;
 
-// For top row (cover photo first)
 const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.png");
 const coverSrc = coverIndex >= 0 ? finalUrls[coverIndex] : `${BASE}/cover-image.png`;
 
-// For grid rendering: top row uses cover + desc, then render the rest in your order excluding cover
 const nonCover = finalFiles
   .map((file, i) => ({ file, src: finalUrls[i], i }))
   .filter((x) => x.file.toLowerCase() !== "cover-image.png");
@@ -60,43 +55,48 @@ const nonCover = finalFiles
 
 <Layout title="Amplitude" description="Amplitude project">
   <main class="amp">
-    <section class="amp__grid" aria-label="Amplitude project grid">
-      <!-- Top row LEFT: Cover image -->
-      <figure class="amp__photo amp__card amp__photoCard">
-        <button
-          class="amp__imgBtn"
-          type="button"
-          data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
-          aria-label="Open cover image"
-        >
-          <img src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
-        </button>
-      </figure>
+    <!-- ✅ Same container system as Navbar -->
+    <div class="container">
+      <div class="row">
+        <section class="amp__grid" aria-label="Amplitude project grid">
+          <!-- Top row LEFT: Cover image -->
+          <figure class="amp__photo amp__card amp__photoCard">
+            <button
+              class="amp__imgBtn"
+              type="button"
+              data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
+              aria-label="Open cover image"
+            >
+              <img src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
+            </button>
+          </figure>
 
-      <!-- Top row RIGHT: Title + subtitle + description (all in one block, left aligned) -->
-      <article class="amp__desc amp__card" id="descBlock">
-        <h1 class="amp__title">Amplitude</h1>
-        <div class="amp__subtitle">{subtitle}</div>
+          <!-- Top row RIGHT: Title + subtitle + description -->
+          <article class="amp__desc amp__card" id="descBlock">
+            <h1 class="amp__title">Amplitude</h1>
+            <div class="amp__subtitle">{subtitle}</div>
 
-        {descriptionText ? (
-          <div class="amp__body">{descriptionText}</div>
-        ) : (
-          <div class="amp__body amp__body--error">
-            Couldn’t load <code>amplitude.txt</code><br />
-            Expected: <code>public/projects/{FOLDER}/amplitude.txt</code>
-          </div>
-        )}
-      </article>
+            {descriptionText ? (
+              <div class="amp__body">{descriptionText}</div>
+            ) : (
+              <div class="amp__body amp__body--error">
+                Couldn’t load <code>amplitude.txt</code><br />
+                Expected: <code>public/projects/{FOLDER}/amplitude.txt</code>
+              </div>
+            )}
+          </article>
 
-      <!-- Follow-on rows: images in your exact requested order (excluding cover because it’s already in row 1) -->
-      {nonCover.map(({ src, i }) => (
-        <figure class="amp__photo amp__card amp__photoCard">
-          <button class="amp__imgBtn" type="button" data-lb-index={String(i)} aria-label="Open image">
-            <img src={src} alt="" loading="lazy" decoding="async" />
-          </button>
-        </figure>
-      ))}
-    </section>
+          <!-- Follow-on rows -->
+          {nonCover.map(({ src, i }) => (
+            <figure class="amp__photo amp__card amp__photoCard">
+              <button class="amp__imgBtn" type="button" data-lb-index={String(i)} aria-label="Open image">
+                <img src={src} alt="" loading="lazy" decoding="async" />
+              </button>
+            </figure>
+          ))}
+        </section>
+      </div>
+    </div>
 
     <!-- Lightbox -->
     <div class="lb" id="lightbox" aria-hidden="true">
@@ -157,14 +157,12 @@ const nonCover = finalFiles
 
         document.addEventListener("click", (e) => {
           const t = e.target;
-
           const btn = t.closest?.("[data-lb-index]");
           if (btn) {
             const i = Number(btn.getAttribute("data-lb-index") || 0);
             if (!Number.isNaN(i)) open(i);
             return;
           }
-
           if (t.closest?.("[data-lb-close]")) return close();
           if (t.closest?.("[data-lb-next]")) return next();
           if (t.closest?.("[data-lb-prev]")) return prev();
@@ -179,7 +177,6 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Height matching: set all photos to description block height -->
     <script is:inline>
       (function () {
         const desc = document.getElementById("descBlock");
@@ -203,14 +200,21 @@ const nonCover = finalFiles
   </main>
 
   <style>
-    .amp {
-      width: 80vw;          /* center 80% of the page */
-      max-width: 1400px;    /* optional safety cap for huge screens */
-      margin: 0 auto;
+    .amp{
+      padding: 2rem 0 3rem;
     }
 
+    /* ✅ Same container rules as Navbar */
+    .container{
+      width: 80%;
+      margin: 0 auto;
+    }
+    .row{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1rem; /* match navbar horizontal padding */
+    }
 
-    /* Two columns */
     .amp__grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -218,7 +222,6 @@ const nonCover = finalFiles
       align-items: start;
     }
 
-    /* Cards: square edges */
     .amp__card {
       border-radius: 0;
       overflow: hidden;
@@ -226,7 +229,6 @@ const nonCover = finalFiles
       border: 1px solid rgba(0, 0, 0, 0.08);
     }
 
-    /* Description block */
     .amp__desc {
       padding: 1.1rem 1.1rem 0.95rem;
       text-align: left;
@@ -254,10 +256,7 @@ const nonCover = finalFiles
       opacity: 0.95;
     }
 
-    /* Photos: height matches description block */
-    .amp__photoCard {
-      height: var(--amp-row-h, auto);
-    }
+    .amp__photoCard { height: var(--amp-row-h, auto); }
 
     .amp__imgBtn {
       display: block;
@@ -276,7 +275,6 @@ const nonCover = finalFiles
       display: block;
     }
 
-    /* Lightbox background matches page to prevent "see-through" PNGs */
     .lb {
       position: fixed;
       inset: 0;
@@ -320,7 +318,7 @@ const nonCover = finalFiles
       max-height: 100%;
       object-fit: contain;
       border-radius: 0;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
     }
 
     .lb__close {
@@ -329,8 +327,8 @@ const nonCover = finalFiles
       right: 18px;
       width: 44px;
       height: 44px;
-      border: 1px solid rgba(0, 0, 0, 0.15);
-      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0,0,0,0.15);
+      background: rgba(255,255,255,0.9);
       color: #111;
       font-size: 28px;
       line-height: 40px;
@@ -341,8 +339,8 @@ const nonCover = finalFiles
     .lb__nav {
       width: 44px;
       height: 64px;
-      border: 1px solid rgba(0, 0, 0, 0.15);
-      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0,0,0,0.15);
+      background: rgba(255,255,255,0.9);
       color: #111;
       font-size: 40px;
       border-radius: 10px;
@@ -354,6 +352,7 @@ const nonCover = finalFiles
     :global(body.lb-open) { overflow: hidden; }
 
     @media (max-width: 800px) {
+      .container{ width: 92%; }
       .amp__grid { grid-template-columns: 1fr; }
       .amp__photoCard { height: auto; }
       .amp__photo img { height: auto; }
