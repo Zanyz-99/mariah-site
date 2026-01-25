@@ -10,7 +10,6 @@ const slides = [
   "/projects/06 Project Six.png",
 ];
 
-// Project names + placeholder descriptions (same order as slides)
 const projects = [
   { name: "Project One", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
   { name: "Project Two", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris." },
@@ -89,7 +88,7 @@ const projects = [
     let animating = false;
     let baseX = 0;
 
-    // ---------- Preload everything (main images only) ----------
+    // Preload main images
     const preloaded = new Set();
     const preload = (src) => {
       if (!src || preloaded.has(src)) return;
@@ -111,7 +110,6 @@ const projects = [
       imgCur.src  = slides[index];
       imgNext.src = slides[mod(index + 1)];
 
-      // keep these eager so browser prioritizes decode/paint
       imgPrev.loading = "eager";
       imgCur.loading  = "eager";
       imgNext.loading = "eager";
@@ -133,7 +131,7 @@ const projects = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
-    // compute baseX so current card center == viewport center (works at any size)
+    // center current card in viewport
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
       const c = cardCur.getBoundingClientRect();
@@ -246,29 +244,31 @@ const projects = [
     :global(body){
       height: 100%;
       margin: 0;
-      overflow: hidden; /* no page scrollbars; wheel becomes slide nav */
+      overflow: hidden; /* wheel becomes slide nav */
     }
 
     .home{
-      /* shared sizing vars */
+      /* tweak this if your navbar/topbar is taller/shorter */
+      --header-h: 72px;
+
       --pt: clamp(12px, 3vh, 28px);
       --pb: clamp(18px, 4vh, 44px);
-      --meta-h: 140px;
+      --meta-h: 150px;
 
-      height: 100svh;
+      height: calc(100svh - var(--header-h));
       width: 100%;
       box-sizing: border-box;
       padding-top: var(--pt);
       padding-bottom: var(--pb);
 
       display: grid;
-      gap: 16px;
     }
 
     .carousel{ width: 100%; }
 
     .viewport{
       width: 100%;
+      height: calc(100% - 0px); /* within .home */
       overflow: hidden;
       outline: none;
       touch-action: pan-y;
@@ -281,26 +281,28 @@ const projects = [
 
     .window{
       width: 100vw;
-      overflow: visible; /* allow next/prev peek (desktop) */
+      overflow: visible; /* desktop peek */
     }
 
     .track{
       display: flex;
       align-items: center;
       gap: clamp(10px, 2vw, 18px);
-      padding: 6px 0;
+      padding: 0; /* IMPORTANT: removes extra vertical overflow */
       will-change: transform;
       transform: translate3d(0,0,0);
     }
 
     .card{
-      /* ✅ Always fit inside viewport height (account for page padding) */
-      height: calc(100svh - var(--pt) - var(--pb));
-      max-height: calc(100svh - var(--pt) - var(--pb));
+      /* ✅ Always fit inside available viewport space (minus header + padding) */
+      height: calc(100% - var(--pt) - var(--pb));
+      max-height: calc(100% - var(--pt) - var(--pb));
       min-height: 0;
 
-      /* ✅ Width flexes from image aspect (since image height is fixed by card height) */
+      /* ✅ width flexes from image aspect BUT never exceeds viewport width */
       width: auto;
+      max-width: 92vw;
+
       flex: 0 0 auto;
 
       border-radius: 16px;
@@ -319,7 +321,6 @@ const projects = [
     .card.is-active{ opacity: 1; }
 
     .meta{
-      /* ✅ fixed text footprint => image size stays identical across all cards */
       flex: 0 0 auto;
       height: var(--meta-h);
       box-sizing: border-box;
@@ -340,7 +341,6 @@ const projects = [
       line-height: 1.45;
       opacity: 0.85;
 
-      /* ✅ prevent longer text from changing card/image sizing */
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 3;
@@ -348,7 +348,6 @@ const projects = [
     }
 
     .media{
-      /* ✅ image gets remaining height; width comes from aspect ratio */
       flex: 1 1 auto;
       min-height: 0;
 
@@ -377,43 +376,24 @@ const projects = [
     .card:hover .img-main,
     .card:focus-within .img-main{ filter: none; }
 
-    /* ✅ Mobile: ensure card width never exceeds viewport while keeping aspect */
     @media (max-width: 640px){
+      .home{
+        --header-h: 64px;
+        --meta-h: 170px;
+      }
+
       .window{
         width: 100vw;
-        overflow: hidden; /* hides prev/next */
+        overflow: hidden;
       }
 
       .track{
         gap: 0;
-        padding: 0;
-      }
-
-      .home{
-        --meta-h: 150px;
-
-        /*
-          To guarantee the card fits in BOTH dimensions on mobile:
-          card height <= (92vw * 9/16) + meta height
-        */
       }
 
       .card{
-        height: min(
-          calc(100svh - var(--pt) - var(--pb)),
-          calc(92vw * 0.5625 + var(--meta-h))
-        );
-        max-height: min(
-          calc(100svh - var(--pt) - var(--pb)),
-          calc(92vw * 0.5625 + var(--meta-h))
-        );
-
-        /* the card width will naturally be ~92vw from the above constraint */
+        max-width: 92vw;
         border-radius: 14px;
-      }
-
-      .meta{
-        padding: 12px 14px 14px;
       }
 
       .desc{
