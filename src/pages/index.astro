@@ -25,30 +25,33 @@ const covers = [
           <div class="window" id="window">
             <ul class="track" id="track" aria-live="polite">
               <li class="card">
-                <a class="card-link" id="link-prev" href="#">
-                  <div class="media">
-                    <img class="img-main" id="img-prev" alt="Previous project" decoding="sync" />
+                <div class="media">
+                  <img class="img-main" id="img-prev" alt="Previous project" decoding="sync" />
+                  <!-- ✅ Link is on the cover image -->
+                  <a class="cover-link" id="link-prev" href="#" aria-label="Open project">
                     <img class="img-cover" id="cover-prev" alt="" decoding="sync" aria-hidden="true" />
-                  </div>
-                </a>
+                  </a>
+                </div>
               </li>
 
               <li class="card is-active" id="card-cur">
-                <a class="card-link" id="link-cur" href="#">
-                  <div class="media">
-                    <img class="img-main" id="img-cur" alt="Current project" decoding="sync" fetchpriority="high" />
+                <div class="media">
+                  <img class="img-main" id="img-cur" alt="Current project" decoding="sync" fetchpriority="high" />
+                  <!-- ✅ Link is on the cover image -->
+                  <a class="cover-link" id="link-cur" href="#" aria-label="Open project">
                     <img class="img-cover" id="cover-cur" alt="" decoding="sync" fetchpriority="high" aria-hidden="true" />
-                  </div>
-                </a>
+                  </a>
+                </div>
               </li>
 
               <li class="card">
-                <a class="card-link" id="link-next" href="#">
-                  <div class="media">
-                    <img class="img-main" id="img-next" alt="Next project" decoding="sync" />
+                <div class="media">
+                  <img class="img-main" id="img-next" alt="Next project" decoding="sync" />
+                  <!-- ✅ Link is on the cover image -->
+                  <a class="cover-link" id="link-next" href="#" aria-label="Open project">
                     <img class="img-cover" id="cover-next" alt="" decoding="sync" aria-hidden="true" />
-                  </div>
-                </a>
+                  </a>
+                </div>
               </li>
             </ul>
           </div>
@@ -95,7 +98,7 @@ const covers = [
     slides.forEach(preload);
     covers.forEach(preload);
 
-    // "/projects/amplitude.png" -> "/projects/amplitude" (route to src/pages/projects/amplitude.astro)
+    // "/projects/amplitude.png" -> "/projects/amplitude"
     const pageFromSlide = (src) => src.replace(/\.png$/i, "");
 
     const setImages = () => {
@@ -111,7 +114,7 @@ const covers = [
       coverCur.src  = covers[index];
       coverNext.src = covers[mod(index + 1)];
 
-      // update clickable links
+      // ✅ update links (on the cover images)
       linkPrev.href = pageFromSlide(prev);
       linkCur.href  = pageFromSlide(cur);
       linkNext.href = pageFromSlide(next);
@@ -306,14 +309,6 @@ const covers = [
 
     .card.is-active{ opacity: 1; }
 
-    .card-link{
-      display: block;
-      width: 100%;
-      height: 100%;
-      text-decoration: none;
-      color: inherit;
-    }
-
     .media{
       position: relative;
       width: 100%;
@@ -338,10 +333,21 @@ const covers = [
       transition: filter 220ms ease;
     }
 
+    /* ✅ cover is inside a link now, so no pointer-events:none here */
     .img-cover{
       opacity: 0.28;
       transition: opacity 220ms ease;
-      pointer-events: none;
+    }
+
+    /* ✅ the link is the clickable layer */
+    .cover-link{
+      position: absolute;
+      inset: 0;
+      display: block;
+      z-index: 5;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
     }
 
     .card:hover .img-cover,
