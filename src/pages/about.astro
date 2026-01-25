@@ -12,9 +12,9 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <style>
-    /* Page wrapper */
+    /* Page wrapper: centered 80% */
     .about-wrap {
-      width: 80%;
+      width: min(80%, 1200px); /* optional max-width safety */
       margin-inline: auto;
     }
 
@@ -23,19 +23,18 @@ import Layout from "../layouts/Layout.astro";
       width: 100%;
     }
 
-    /* Centered text block */
+    /* Text block */
     .about-text {
-      width: 60%;
-      margin-inline: auto;
       font-size: var(--body-size);
       line-height: var(--line);
       color: var(--text);
+      max-width: 65ch; /* ideal reading width */
     }
 
-    /* Mobile readability */
+    /* Mobile */
     @media (max-width: 768px) {
-      .about-text {
-        width: 100%;
+      .about-wrap {
+        width: 90%;
       }
     }
   </style>
