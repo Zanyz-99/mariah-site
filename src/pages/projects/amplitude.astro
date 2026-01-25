@@ -3,7 +3,7 @@ import Layout from "../../layouts/Layout.astro"; // adjust if needed
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-// IMPORTANT: folder is capital-A per your repo: public/projects/Amplitude
+// IMPORTANT: your folder is capital-A
 const FOLDER = "Amplitude";
 
 const BASE = `/projects/${FOLDER}`; // public URL base
@@ -20,10 +20,8 @@ let descriptionText = "";
 let subsequentImages: string[] = [];
 
 try {
-  // Read text directly from /public (no fetch needed)
   descriptionText = await fs.readFile(path.join(PUBLIC_DIR, txtFile), "utf-8");
 
-  // List images in the folder
   const entries = await fs.readdir(PUBLIC_DIR, { withFileTypes: true });
 
   const imgs = entries
@@ -32,13 +30,16 @@ try {
     .sort((a, b) => a.localeCompare(b));
 
   subsequentImages = imgs
-    .filter((name) => name !== coverFile) // exclude cover
+    .filter((name) => name !== coverFile)
     .map((name) => `${BASE}/${encodeURIComponent(name)}`);
 } catch (err) {
   console.error("[Amplitude page] asset read error:", err);
 }
 
 const coverSrc = `${BASE}/${coverFile}`;
+
+// Lightbox list (include cover first so you can click through everything)
+const galleryImages = [coverSrc, ...subsequentImages];
 ---
 
 <Layout title="Amplitude" description="Amplitude project">
@@ -49,9 +50,16 @@ const coverSrc = `${BASE}/${coverFile}`;
     </div>
 
     <section class="amp__grid" aria-label="Amplitude project grid">
-      <!-- Row 1: Cover image -->
+      <!-- Row 1: Cover image (clickable) -->
       <figure class="amp__card amp__card--cover">
-        <img src={coverSrc} alt="Amplitude cover" loading="eager" decoding="async" />
+        <button
+          class="amp__imgBtn"
+          type="button"
+          data-lb-index="0"
+          aria-label="Open cover image"
+        >
+          <img src={coverSrc} alt="Amplitude cover" loading="eager" decoding="async" />
+        </button>
       </figure>
 
       <!-- Row 1: Subtitle + description -->
@@ -59,24 +67,119 @@ const coverSrc = `${BASE}/${coverFile}`;
         <div class="amp__subtitle">{subtitle}</div>
 
         {descriptionText ? (
-          <pre class="amp__pre">{descriptionText}</pre>
+          <div class="amp__body">{descriptionText}</div>
         ) : (
-          <pre class="amp__pre amp__pre--error">
-Couldn’t load amplitude.txt
-
-Expected:
-public/projects/{FOLDER}/amplitude.txt
-          </pre>
+          <div class="amp__body amp__body--error">
+            Couldn’t load amplitude.txt<br />
+            Expected: <code>public/projects/{FOLDER}/amplitude.txt</code>
+          </div>
         )}
       </article>
 
-      <!-- Follow-on rows: subsequent images -->
-      {subsequentImages.map((src) => (
+      <!-- Follow-on rows: subsequent images (clickable) -->
+      {subsequentImages.map((src, i) => (
         <figure class="amp__card amp__card--img">
-          <img src={src} alt="" loading="lazy" decoding="async" />
+          <button
+            class="amp__imgBtn"
+            type="button"
+            data-lb-index={String(i + 1)} /* +1 because cover is index 0 */
+            aria-label="Open image"
+          >
+            <img src={src} alt="" loading="lazy" decoding="async" />
+          </button>
         </figure>
       ))}
     </section>
+
+    <!-- Lightbox modal -->
+    <div class="lb" id="lightbox" aria-hidden="true">
+      <div class="lb__backdrop" data-lb-close></div>
+
+      <div class="lb__panel" role="dialog" aria-modal="true" aria-label="Image viewer">
+        <button class="lb__close" type="button" data-lb-close aria-label="Close">×</button>
+
+        <button class="lb__nav lb__nav--prev" type="button" data-lb-prev aria-label="Previous">‹</button>
+
+        <figure class="lb__figure">
+          <img class="lb__img" id="lbImg" alt="" />
+        </figure>
+
+        <button class="lb__nav lb__nav--next" type="button" data-lb-next aria-label="Next">›</button>
+      </div>
+    </div>
+
+    <script is:inline>
+      (function () {
+        const images = JSON.parse("{JSON.stringify(galleryImages)}");
+        const lb = document.getElementById("lightbox");
+        const lbImg = document.getElementById("lbImg");
+
+        let index = 0;
+        let lastFocus = null;
+
+        const setOpen = (open) => {
+          lb.setAttribute("aria-hidden", open ? "false" : "true");
+          document.documentElement.classList.toggle("lb-open", open);
+        };
+
+        const show = (i) => {
+          index = (i + images.length) % images.length;
+          lbImg.src = images[index];
+        };
+
+        const open = (i) => {
+          lastFocus = document.activeElement;
+          show(i);
+          setOpen(true);
+          // focus close button for accessibility
+          const closeBtn = lb.querySelector("[data-lb-close]");
+          closeBtn && closeBtn.focus();
+        };
+
+        const close = () => {
+          setOpen(false);
+          lbImg.src = "";
+          if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+        };
+
+        const next = () => show(index + 1);
+        const prev = () => show(index - 1);
+
+        // Open on image click
+        document.addEventListener("click", (e) => {
+          const btn = e.target.closest("[data-lb-index]");
+          if (btn) {
+            const i = Number(btn.getAttribute("data-lb-index") || "0");
+            open(i);
+            return;
+          }
+
+          if (e.target.closest("[data-lb-close]")) {
+            close();
+            return;
+          }
+
+          if (e.target.closest("[data-lb-next]")) {
+            next();
+            return;
+          }
+
+          if (e.target.closest("[data-lb-prev]")) {
+            prev();
+            return;
+          }
+        });
+
+        // Keyboard controls
+        document.addEventListener("keydown", (e) => {
+          if (lb.getAttribute("aria-hidden") === "true") return;
+
+          if (e.key === "Escape") close();
+          if (e.key === "ArrowRight") next();
+          if (e.key === "ArrowLeft") prev();
+        });
+      })();
+    </script>
   </main>
 
   <style>
@@ -106,10 +209,21 @@ public/projects/{FOLDER}/amplitude.txt
     }
 
     .amp__card {
-      border-radius: 16px;
+      /* keep subtle separation; no rounding */
+      border-radius: 0;
       overflow: hidden;
       background: rgba(0, 0, 0, 0.03);
       border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    /* Make images feel like images, not buttons */
+    .amp__imgBtn {
+      display: block;
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      cursor: zoom-in;
     }
 
     .amp__card img {
@@ -136,20 +250,109 @@ public/projects/{FOLDER}/amplitude.txt
       margin-bottom: 0.6rem;
     }
 
-    .amp__pre {
+    /* Fix font scheme: normal body font, not monospace */
+    .amp__body {
       margin: 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      line-height: 1.55;
-      font-size: 0.95rem;
+      font: inherit;            /* uses your site’s global font */
+      white-space: pre-line;    /* preserves line breaks from the .txt */
+      line-height: 1.6;
+      font-size: 1rem;
       opacity: 0.95;
       max-height: 70vh;
       overflow: auto;
       padding-right: 0.25rem;
     }
 
-    .amp__pre--error {
+    .amp__body--error {
       opacity: 0.85;
+    }
+
+    .amp__body code {
+      font-size: 0.95em;
+    }
+
+    /* Lightbox */
+    .lb {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 9999;
+    }
+    .lb[aria-hidden="false"] {
+      display: block;
+    }
+    .lb__backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+    }
+    .lb__panel {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 56px 1fr 56px;
+      align-items: center;
+      gap: 0;
+      padding: 2rem 1rem;
+    }
+
+    .lb__figure {
+      margin: 0;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+
+    .lb__img {
+      max-width: min(1100px, 92vw);
+      max-height: 86vh;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      border-radius: 0; /* keep square in lightbox too */
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .lb__close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.35);
+      color: #fff;
+      font-size: 28px;
+      line-height: 40px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .lb__nav {
+      width: 44px;
+      height: 64px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.35);
+      color: #fff;
+      font-size: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .lb__nav--prev {
+      justify-self: start;
+    }
+    .lb__nav--next {
+      justify-self: end;
+    }
+
+    /* Prevent background scroll when open */
+    :global(html.lb-open),
+    :global(body.lb-open) {
+      overflow: hidden;
     }
 
     @media (max-width: 800px) {
@@ -159,8 +362,16 @@ public/projects/{FOLDER}/amplitude.txt
       .amp__grid {
         grid-template-columns: 1fr;
       }
-      .amp__pre {
+      .amp__body {
         max-height: none;
+      }
+      .lb__panel {
+        grid-template-columns: 44px 1fr 44px;
+        padding: 1.25rem 0.75rem;
+      }
+      .lb__nav {
+        width: 40px;
+        height: 56px;
       }
     }
   </style>
