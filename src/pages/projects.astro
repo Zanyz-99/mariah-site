@@ -1,0 +1,405 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const slides = [
+  "/projects/amplitude.png",
+  "/projects/immersion.png",
+  "/projects/symbiosis.png",
+  "/projects/tini.png",
+];
+
+const covers = [
+  "/projects/Project Cover/Project One.png",
+  "/projects/Project Cover/Project Two.png",
+  "/projects/Project Cover/Project Three.png",
+  "/projects/Project Cover/Project Four.png",
+];
+---
+
+<Layout title="Home" description="">
+  <section class="home">
+    <div class="full-bleed">
+      <div class="carousel" id="projects">
+        <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
+          <div class="window" id="window">
+            <ul class="track" id="track" aria-live="polite">
+              <li class="card">
+                <a class="card-link" id="link-prev" href="#">
+                  <div class="media">
+                    <img class="img-main" id="img-prev" alt="Previous project" decoding="sync" />
+                    <img class="img-cover" id="cover-prev" alt="" decoding="sync" aria-hidden="true" />
+                  </div>
+                </a>
+              </li>
+
+              <li class="card is-active" id="card-cur">
+                <a class="card-link" id="link-cur" href="#">
+                  <div class="media">
+                    <img class="img-main" id="img-cur" alt="Current project" decoding="sync" fetchpriority="high" />
+                    <img class="img-cover" id="cover-cur" alt="" decoding="sync" fetchpriority="high" aria-hidden="true" />
+                  </div>
+                </a>
+              </li>
+
+              <li class="card">
+                <a class="card-link" id="link-next" href="#">
+                  <div class="media">
+                    <img class="img-main" id="img-next" alt="Next project" decoding="sync" />
+                    <img class="img-cover" id="cover-next" alt="" decoding="sync" aria-hidden="true" />
+                  </div>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- dots removed -->
+      </div>
+    </div>
+  </section>
+
+  <script define:vars={{ slides, covers }}>
+    const viewport = document.getElementById("viewport");
+    const track = document.getElementById("track");
+    const cardCur = document.getElementById("card-cur");
+
+    const imgPrev = document.getElementById("img-prev");
+    const imgCur  = document.getElementById("img-cur");
+    const imgNext = document.getElementById("img-next");
+
+    const coverPrev = document.getElementById("cover-prev");
+    const coverCur  = document.getElementById("cover-cur");
+    const coverNext = document.getElementById("cover-next");
+
+    const linkPrev = document.getElementById("link-prev");
+    const linkCur  = document.getElementById("link-cur");
+    const linkNext = document.getElementById("link-next");
+
+    const n = slides.length;
+    const mod = (x) => (x % n + n) % n;
+
+    let index = 0;
+    let animating = false;
+    let baseX = 0;
+
+    // Drag state
+    let startX = 0;
+    let pointerId = null;
+    let didMove = false;
+    let handlingLinkClick = false;
+
+    // ---------- Preload everything (main + cover) ----------
+    const preloaded = new Set();
+    const preload = (src) => {
+      if (!src || preloaded.has(src)) return;
+      preloaded.add(src);
+      const im = new Image();
+      im.decoding = "async";
+      im.src = src;
+    };
+
+    slides.forEach(preload);
+    covers.forEach(preload);
+
+    // "/projects/amplitude.png" -> "/projects/amplitude"
+    const pageFromSlide = (src) => src.replace(/\.png$/i, "");
+
+    const setImages = () => {
+      const prev = slides[mod(index - 1)];
+      const cur  = slides[index];
+      const next = slides[mod(index + 1)];
+
+      imgPrev.src = prev;
+      imgCur.src  = cur;
+      imgNext.src = next;
+
+      coverPrev.src = covers[mod(index - 1)];
+      coverCur.src  = covers[index];
+      coverNext.src = covers[mod(index + 1)];
+
+      linkPrev.href = pageFromSlide(prev);
+      linkCur.href  = pageFromSlide(cur);
+      linkNext.href = pageFromSlide(next);
+
+      imgPrev.loading = "eager";
+      imgCur.loading  = "eager";
+      imgNext.loading = "eager";
+      coverPrev.loading = "eager";
+      coverCur.loading  = "eager";
+      coverNext.loading = "eager";
+    };
+
+    const gapPx = () => {
+      const cs = getComputedStyle(track);
+      return parseFloat(cs.columnGap || cs.gap || "0") || 0;
+    };
+
+    const cardWidth = () => {
+      const card = track.querySelector(".card");
+      return card ? card.getBoundingClientRect().width : 0;
+    };
+
+    const stepDistance = () => Math.round(cardWidth() + gapPx());
+
+    const computeBaseX = () => {
+      const v = viewport.getBoundingClientRect();
+      const c = cardCur.getBoundingClientRect();
+
+      const viewportCenter = v.left + v.width / 2;
+      const cardCenter = c.left + c.width / 2;
+
+      baseX += (viewportCenter - cardCenter);
+      baseX = Math.round(baseX);
+
+      track.style.transition = "none";
+      track.style.transform = `translate3d(${baseX}px, 0, 0)`;
+      track.offsetHeight;
+    };
+
+    const step = (dir) => {
+      if (animating) return;
+      animating = true;
+
+      const dist = stepDistance();
+      track.style.transition = "transform 320ms ease";
+      track.style.transform = `translate3d(${baseX + (dir === 1 ? -dist : dist)}px, 0, 0)`;
+
+      const onDone = () => {
+        track.removeEventListener("transitionend", onDone);
+
+        index = mod(index + dir);
+        setImages();
+
+        track.style.transition = "none";
+        track.style.transform = `translate3d(${baseX}px, 0, 0)`;
+        track.offsetHeight;
+        computeBaseX();
+
+        animating = false;
+      };
+
+      track.addEventListener("transitionend", onDone);
+    };
+
+    // wheel navigation
+    let wheelLock = false;
+    window.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        if (wheelLock || animating) return;
+        wheelLock = true;
+
+        const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        step(dominant > 0 ? 1 : -1);
+
+        setTimeout(() => (wheelLock = false), 360);
+      },
+      { passive: false }
+    );
+
+    // ✅ If the pointerdown starts on a link, DON'T capture pointer; let browser handle click
+    viewport.addEventListener("pointerdown", (e) => {
+      if (animating) return;
+
+      const onLink = !!e.target.closest("a.card-link");
+      handlingLinkClick = onLink;
+
+      startX = e.clientX;
+      didMove = false;
+      pointerId = e.pointerId;
+
+      if (!onLink) {
+        viewport.setPointerCapture?.(e.pointerId);
+      }
+    });
+
+    viewport.addEventListener("pointermove", (e) => {
+      if (pointerId == null || e.pointerId !== pointerId) return;
+      if (handlingLinkClick) return;
+
+      if (Math.abs(e.clientX - startX) > 8) didMove = true;
+    });
+
+    viewport.addEventListener("pointerup", (e) => {
+      if (pointerId == null || e.pointerId !== pointerId) return;
+
+      const wasLink = handlingLinkClick;
+      const moved = didMove;
+
+      // reset state first
+      pointerId = null;
+      handlingLinkClick = false;
+      didMove = false;
+
+      // If it was a link interaction, do NOTHING here.
+      // Browser will navigate naturally (this was being blocked before).
+      if (wasLink) return;
+
+      if (animating) return;
+
+      const dx = e.clientX - startX;
+      const threshold = Math.min(90, viewport.clientWidth * 0.14);
+
+      if (dx < -threshold) step(1);
+      else if (dx > threshold) step(-1);
+    });
+
+    viewport.addEventListener("pointercancel", () => {
+      pointerId = null;
+      handlingLinkClick = false;
+      didMove = false;
+    });
+
+    // keyboard
+    window.addEventListener("keydown", (e) => {
+      if (animating) return;
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
+    });
+
+    // resize recenter
+    let resizeT;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(() => computeBaseX(), 60);
+    });
+
+    // init
+    setImages();
+    requestAnimationFrame(() => {
+      baseX = 0;
+      track.style.transform = "translate3d(0,0,0)";
+      computeBaseX();
+    });
+  </script>
+
+  <style>
+    :global(html),
+    :global(body){
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .home{
+      display: grid;
+      gap: 16px;
+      width: 100%;
+      padding-top: clamp(12px, 3vh, 28px);
+      padding-bottom: clamp(18px, 4vh, 44px);
+    }
+
+    .carousel{ width: 100%; }
+
+    .viewport{
+      width: 100%;
+      overflow: hidden;
+      outline: none;
+      touch-action: pan-y;
+      box-sizing: border-box;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .window{
+      width: min(100vw, clamp(320px, 78vw, 980px));
+      overflow: visible;
+    }
+
+    .track{
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 2vw, 18px);
+      padding: 6px 0;
+      will-change: transform;
+      transform: translate3d(0,0,0);
+    }
+
+    .card{
+      flex: 0 0 auto;
+      width: clamp(320px, 78vw, 980px);
+      border-radius: 16px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      background: var(--card);
+      border: 1px solid var(--border);
+      opacity: 0.92;
+      transition: opacity 200ms ease;
+    }
+
+    .card.is-active{ opacity: 1; }
+
+    .card-link{
+      display: block;
+      width: 100%;
+      height: 100%;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .media{
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .img-main,
+    .img-cover{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .img-main{
+      filter: grayscale(100%) saturate(0.9);
+      transition: filter 220ms ease;
+    }
+
+    .img-cover{
+      opacity: 0.28;
+      transition: opacity 220ms ease;
+      pointer-events: none;
+    }
+
+    .card:hover .img-cover,
+    .card:focus-within .img-cover{ opacity: 0; }
+
+    .card:hover .img-main,
+    .card:focus-within .img-main{ filter: none; }
+
+    @media (max-width: 640px){
+      .window{
+        width: 100vw;
+        overflow: hidden;
+      }
+
+      .track{
+        gap: 0;
+        padding: 0;
+      }
+
+      .card{
+        width: min(92vw, 520px);
+        aspect-ratio: 9 / 16;
+        border-radius: 14px;
+        max-height: calc(100svh - 24px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .card,
+      .img-main,
+      .img-cover{
+        transition: none !important;
+      }
+    }
+  </style>
+</Layout>
