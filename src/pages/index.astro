@@ -25,30 +25,24 @@ const covers = [
           <div class="window" id="window">
             <ul class="track" id="track" aria-live="polite">
               <li class="card">
-                <a class="card-link" id="link-prev" href="#">
-                  <div class="media">
-                    <img class="img-main" id="img-prev" alt="Previous project" decoding="sync" />
-                    <img class="img-cover" id="cover-prev" alt="" decoding="sync" aria-hidden="true" />
-                  </div>
-                </a>
+                <div class="media">
+                  <img class="img-main" id="img-prev" alt="Previous project" decoding="sync" />
+                  <img class="img-cover" id="cover-prev" alt="" decoding="sync" aria-hidden="true" />
+                </div>
               </li>
 
               <li class="card is-active" id="card-cur">
-                <a class="card-link" id="link-cur" href="#">
-                  <div class="media">
-                    <img class="img-main" id="img-cur" alt="Current project" decoding="sync" fetchpriority="high" />
-                    <img class="img-cover" id="cover-cur" alt="" decoding="sync" fetchpriority="high" aria-hidden="true" />
-                  </div>
-                </a>
+                <div class="media">
+                  <img class="img-main" id="img-cur" alt="Current project" decoding="sync" fetchpriority="high" />
+                  <img class="img-cover" id="cover-cur" alt="" decoding="sync" fetchpriority="high" aria-hidden="true" />
+                </div>
               </li>
 
               <li class="card">
-                <a class="card-link" id="link-next" href="#">
-                  <div class="media">
-                    <img class="img-main" id="img-next" alt="Next project" decoding="sync" />
-                    <img class="img-cover" id="cover-next" alt="" decoding="sync" aria-hidden="true" />
-                  </div>
-                </a>
+                <div class="media">
+                  <img class="img-main" id="img-next" alt="Next project" decoding="sync" />
+                  <img class="img-cover" id="cover-next" alt="" decoding="sync" aria-hidden="true" />
+                </div>
               </li>
             </ul>
           </div>
@@ -71,10 +65,6 @@ const covers = [
     const coverCur  = document.getElementById("cover-cur");
     const coverNext = document.getElementById("cover-next");
 
-    const linkPrev = document.getElementById("link-prev");
-    const linkCur  = document.getElementById("link-cur");
-    const linkNext = document.getElementById("link-next");
-
     const n = slides.length;
     const mod = (x) => (x % n + n) % n;
 
@@ -95,28 +85,14 @@ const covers = [
     slides.forEach(preload);
     covers.forEach(preload);
 
-    const pageFromSlide = (src) => {
-      // "/projects/amplitude.png" -> "/projects/amplitude"
-      return src.replace(/\.png$/i, "");
-    };
-
     const setImages = () => {
-      const prev = slides[mod(index - 1)];
-      const cur  = slides[index];
-      const next = slides[mod(index + 1)];
-
-      imgPrev.src = prev;
-      imgCur.src  = cur;
-      imgNext.src = next;
+      imgPrev.src = slides[mod(index - 1)];
+      imgCur.src  = slides[index];
+      imgNext.src = slides[mod(index + 1)];
 
       coverPrev.src = covers[mod(index - 1)];
       coverCur.src  = covers[index];
       coverNext.src = covers[mod(index + 1)];
-
-      // clickable links to matching Astro routes
-      linkPrev.href = pageFromSlide(prev);
-      linkCur.href  = pageFromSlide(cur);
-      linkNext.href = pageFromSlide(next);
 
       // keep these eager so browser prioritizes decode/paint
       imgPrev.loading = "eager";
@@ -307,14 +283,6 @@ const covers = [
     }
 
     .card.is-active{ opacity: 1; }
-
-    .card-link{
-      display: block;
-      width: 100%;
-      height: 100%;
-      text-decoration: none;
-      color: inherit;
-    }
 
     .media{
       position: relative;
