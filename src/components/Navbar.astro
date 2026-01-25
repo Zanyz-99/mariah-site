@@ -11,7 +11,7 @@ const titleMap: Record<string, string> = {
   '/': 'Home',
   '/about': 'About',
   '/resume': 'Resume',
-  '/hobbies': 'Hobbies',
+  '/design': 'Design',
   '/contact': 'Contact',
 };
 const pageTitle = titleMap[pathname] ?? '';
@@ -35,7 +35,7 @@ const pageTitle = titleMap[pathname] ?? '';
         <a role="menuitem" class={`link link-outline ${active('/resume')}`} href="/resume">Resume</a>
       </li>
       <li role="none">
-        <a role="menuitem" class={`link ${active('/hobbies')}`} href="/hobbies">Hobbies</a>
+        <a role="menuitem" class={`link ${active('/design')}`} href="/design">Design</a>
       </li>
       <li role="none">
         <a role="menuitem" class={`link ${active('/contact')}`} href="/contact">Contact</a>
@@ -62,7 +62,7 @@ const pageTitle = titleMap[pathname] ?? '';
     <ul class="mobile-list" role="menu" aria-label="Mobile">
       <li role="none"><a role="menuitem" class={`link ${active('/about')}`} href="/about">About</a></li>
       <li role="none"><a role="menuitem" class={`link ${active('/resume')}`} href="/resume">Resume</a></li>
-      <li role="none"><a role="menuitem" class={`link ${active('/hobbies')}`} href="/hobbies">Hobbies</a></li>
+      <li role="none"><a role="menuitem" class={`link ${active('/design')}`} href="/design">Design</a></li>
       <li role="none"><a role="menuitem" class={`link ${active('/contact')}`} href="/contact">Contact</a></li>
     </ul>
   </div>
