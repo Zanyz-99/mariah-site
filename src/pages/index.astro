@@ -21,36 +21,32 @@ const covers = [
   <section class="home">
     <div class="full-bleed">
       <div class="carousel" id="projects">
-        <div class="viewport" id="viewport" tabindex="0" aria-label="Projects carousel">
-          <div class="window" id="window">
-            <ul class="track" id="track" aria-live="polite">
-              <li class="card">
+        <div class="viewport" id="viewport">
+          <div class="window">
+            <ul class="track" id="track">
+              <li class="card" id="card-prev" data-href="">
                 <div class="media">
-                  <a class="card-link" id="link-prev" href="#" aria-label="Open project"></a>
-                  <img class="img-main" id="img-prev" alt="Previous project" decoding="sync" />
-                  <img class="img-cover" id="cover-prev" alt="" decoding="sync" aria-hidden="true" />
+                  <img class="img-main" id="img-prev" />
+                  <img class="img-cover" id="cover-prev" />
                 </div>
               </li>
 
-              <li class="card is-active" id="card-cur">
+              <li class="card is-active" id="card-cur" data-href="">
                 <div class="media">
-                  <a class="card-link" id="link-cur" href="#" aria-label="Open project"></a>
-                  <img class="img-main" id="img-cur" alt="Current project" decoding="sync" fetchpriority="high" />
-                  <img class="img-cover" id="cover-cur" alt="" decoding="sync" fetchpriority="high" aria-hidden="true" />
+                  <img class="img-main" id="img-cur" />
+                  <img class="img-cover" id="cover-cur" />
                 </div>
               </li>
 
-              <li class="card">
+              <li class="card" id="card-next" data-href="">
                 <div class="media">
-                  <a class="card-link" id="link-next" href="#" aria-label="Open project"></a>
-                  <img class="img-main" id="img-next" alt="Next project" decoding="sync" />
-                  <img class="img-cover" id="cover-next" alt="" decoding="sync" aria-hidden="true" />
+                  <img class="img-main" id="img-next" />
+                  <img class="img-cover" id="cover-next" />
                 </div>
               </li>
             </ul>
           </div>
         </div>
-        <!-- dots removed -->
       </div>
     </div>
   </section>
@@ -58,41 +54,35 @@ const covers = [
   <script define:vars={{ slides, covers }}>
     const viewport = document.getElementById("viewport");
     const track = document.getElementById("track");
-    const cardCur = document.getElementById("card-cur");
 
-    const imgPrev = document.getElementById("img-prev");
-    const imgCur  = document.getElementById("img-cur");
-    const imgNext = document.getElementById("img-next");
+    const cards = {
+      prev: document.getElementById("card-prev"),
+      cur: document.getElementById("card-cur"),
+      next: document.getElementById("card-next"),
+    };
 
-    const coverPrev = document.getElementById("cover-prev");
-    const coverCur  = document.getElementById("cover-cur");
-    const coverNext = document.getElementById("cover-next");
+    const imgs = {
+      prev: document.getElementById("img-prev"),
+      cur: document.getElementById("img-cur"),
+      next: document.getElementById("img-next"),
+    };
 
-    const linkPrev = document.getElementById("link-prev");
-    const linkCur  = document.getElementById("link-cur");
-    const linkNext = document.getElementById("link-next");
+    const coversEl = {
+      prev: document.getElementById("cover-prev"),
+      cur: document.getElementById("cover-cur"),
+      next: document.getElementById("cover-next"),
+    };
 
     const n = slides.length;
     const mod = (x) => (x % n + n) % n;
 
     let index = 0;
-    let animating = false;
     let baseX = 0;
+    let animating = false;
 
-    // ---------- Preload everything (main + cover) ----------
-    const preloaded = new Set();
-    const preload = (src) => {
-      if (!src || preloaded.has(src)) return;
-      preloaded.add(src);
-      const im = new Image();
-      im.decoding = "async";
-      im.src = src;
-    };
+    let startX = 0;
+    let dragged = false;
 
-    slides.forEach(preload);
-    covers.forEach(preload);
-
-    // "/projects/amplitude.png" -> "/projects/amplitude"
     const pageFromSlide = (src) => src.replace(/\.png$/i, "");
 
     const setImages = () => {
@@ -100,54 +90,33 @@ const covers = [
       const cur  = slides[index];
       const next = slides[mod(index + 1)];
 
-      imgPrev.src = prev;
-      imgCur.src  = cur;
-      imgNext.src = next;
+      imgs.prev.src = prev;
+      imgs.cur.src  = cur;
+      imgs.next.src = next;
 
-      coverPrev.src = covers[mod(index - 1)];
-      coverCur.src  = covers[index];
-      coverNext.src = covers[mod(index + 1)];
+      coversEl.prev.src = covers[mod(index - 1)];
+      coversEl.cur.src  = covers[index];
+      coversEl.next.src = covers[mod(index + 1)];
 
-      // clickable links
-      linkPrev.href = pageFromSlide(prev);
-      linkCur.href  = pageFromSlide(cur);
-      linkNext.href = pageFromSlide(next);
-
-      // keep these eager so browser prioritizes decode/paint
-      imgPrev.loading = "eager";
-      imgCur.loading  = "eager";
-      imgNext.loading = "eager";
-      coverPrev.loading = "eager";
-      coverCur.loading  = "eager";
-      coverNext.loading = "eager";
+      cards.prev.dataset.href = pageFromSlide(prev);
+      cards.cur.dataset.href  = pageFromSlide(cur);
+      cards.next.dataset.href = pageFromSlide(next);
     };
 
-    const gapPx = () => {
-      const cs = getComputedStyle(track);
-      return parseFloat(cs.columnGap || cs.gap || "0") || 0;
-    };
+    const cardWidth = () =>
+      track.querySelector(".card").getBoundingClientRect().width;
 
-    const cardWidth = () => {
-      const card = track.querySelector(".card");
-      return card ? card.getBoundingClientRect().width : 0;
-    };
+    const gapPx = () =>
+      parseFloat(getComputedStyle(track).gap || 0);
 
-    const stepDistance = () => Math.round(cardWidth() + gapPx());
+    const stepDistance = () => cardWidth() + gapPx();
 
-    // ✅ compute baseX so current card center == viewport center (works at any size)
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
-      const c = cardCur.getBoundingClientRect();
-
-      const viewportCenter = v.left + v.width / 2;
-      const cardCenter = c.left + c.width / 2;
-
-      baseX += (viewportCenter - cardCenter);
-      baseX = Math.round(baseX);
-
+      const c = cards.cur.getBoundingClientRect();
+      baseX += v.left + v.width / 2 - (c.left + c.width / 2);
       track.style.transition = "none";
-      track.style.transform = `translate3d(${baseX}px, 0, 0)`;
-      track.offsetHeight;
+      track.style.transform = `translate3d(${Math.round(baseX)}px,0,0)`;
     };
 
     const step = (dir) => {
@@ -155,242 +124,122 @@ const covers = [
       animating = true;
 
       const dist = stepDistance();
-
       track.style.transition = "transform 320ms ease";
-      track.style.transform = `translate3d(${baseX + (dir === 1 ? -dist : dist)}px, 0, 0)`;
+      track.style.transform = `translate3d(${baseX + (dir === 1 ? -dist : dist)}px,0,0)`;
 
-      const onDone = () => {
-        track.removeEventListener("transitionend", onDone);
-
-        index = mod(index + dir);
-        setImages();
-
-        track.style.transition = "none";
-        track.style.transform = `translate3d(${baseX}px, 0, 0)`;
-        track.offsetHeight;
-        computeBaseX();
-
-        animating = false;
-      };
-
-      track.addEventListener("transitionend", onDone);
+      track.addEventListener(
+        "transitionend",
+        () => {
+          index = mod(index + dir);
+          setImages();
+          track.style.transition = "none";
+          track.style.transform = `translate3d(${baseX}px,0,0)`;
+          computeBaseX();
+          animating = false;
+        },
+        { once: true }
+      );
     };
 
-    // wheel anywhere: down/right = next, up/left = prev
-    let wheelLock = false;
-    window.addEventListener(
-      "wheel",
-      (e) => {
-        e.preventDefault();
-        if (wheelLock || animating) return;
-        wheelLock = true;
-
-        const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-        step(dominant > 0 ? 1 : -1);
-
-        setTimeout(() => (wheelLock = false), 360);
-      },
-      { passive: false }
-    );
-
-    // drag/swipe
-    let startX = 0;
-    let dragging = false;
-
+    // ---------- pointer handling ----------
     viewport.addEventListener("pointerdown", (e) => {
-      if (animating) return;
-      dragging = true;
       startX = e.clientX;
-      viewport.setPointerCapture?.(e.pointerId);
+      dragged = false;
+    });
+
+    viewport.addEventListener("pointermove", (e) => {
+      if (Math.abs(e.clientX - startX) > 8) dragged = true;
     });
 
     viewport.addEventListener("pointerup", (e) => {
-      if (!dragging || animating) return;
-      dragging = false;
+      if (!dragged) {
+        const card = e.target.closest(".card");
+        if (card?.dataset.href) {
+          window.location.href = card.dataset.href;
+          return;
+        }
+      }
+
+      if (animating) return;
 
       const dx = e.clientX - startX;
-      const threshold = Math.min(90, viewport.clientWidth * 0.14);
+      const threshold = viewport.clientWidth * 0.12;
 
       if (dx < -threshold) step(1);
       else if (dx > threshold) step(-1);
     });
 
-    viewport.addEventListener("pointercancel", () => {
-      dragging = false;
-    });
-
-    // If the click started as a drag, don't navigate.
-    viewport.addEventListener(
-      "click",
-      (e) => {
-        const a = e.target.closest("a.card-link");
-        if (!a) return;
-        if (dragging) e.preventDefault();
-      },
-      true
-    );
-
-    // keyboard
     window.addEventListener("keydown", (e) => {
-      if (animating) return;
       if (e.key === "ArrowRight") step(1);
       if (e.key === "ArrowLeft") step(-1);
     });
 
-    // resize: recenter after layout settles
-    let resizeT;
-    window.addEventListener("resize", () => {
-      clearTimeout(resizeT);
-      resizeT = setTimeout(() => computeBaseX(), 60);
-    });
-
-    // init
     setImages();
-    requestAnimationFrame(() => {
-      baseX = 0;
-      track.style.transform = "translate3d(0,0,0)";
-      computeBaseX();
-    });
+    requestAnimationFrame(computeBaseX);
   </script>
 
   <style>
-    :global(html),
-    :global(body){
-      height: 100%;
-      margin: 0;
-      overflow: hidden; /* no page scrollbars; wheel becomes slide nav */
+    :global(html, body){
+      height:100%;
+      margin:0;
+      overflow:hidden;
     }
-
-    .home{
-      display: grid;
-      gap: 16px;
-      width: 100%;
-      padding-top: clamp(12px, 3vh, 28px);
-      padding-bottom: clamp(18px, 4vh, 44px);
-    }
-
-    .carousel{ width: 100%; }
 
     .viewport{
-      width: 100%;
-      overflow: hidden;
-      outline: none;
-      touch-action: pan-y;
-      box-sizing: border-box;
-
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      width:100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      touch-action:pan-y;
     }
 
     .window{
-      width: min(100vw, clamp(320px, 78vw, 980px));
-      overflow: visible; /* allow next peek (desktop) */
+      width:min(100vw, 980px);
+      overflow:visible;
     }
 
     .track{
-      display: flex;
-      align-items: center;
-      gap: clamp(10px, 2vw, 18px);
-      padding: 6px 0;
-      will-change: transform;
-      transform: translate3d(0,0,0);
+      display:flex;
+      gap:16px;
+      will-change:transform;
     }
 
     .card{
-      flex: 0 0 auto;
-      width: clamp(320px, 78vw, 980px);
-      border-radius: 16px;
-      overflow: hidden;
-
-      aspect-ratio: 16 / 9;
-
-      background: var(--card);
-      border: 1px solid var(--border);
-
-      opacity: 0.92;
-      transition: opacity 200ms ease;
+      width:clamp(320px,78vw,980px);
+      aspect-ratio:16/9;
+      border-radius:16px;
+      overflow:hidden;
+      cursor:pointer;
+      background:#111;
     }
-
-    .card.is-active{ opacity: 1; }
 
     .media{
-      position: relative;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* ✅ make the <a> the top click layer */
-    .card-link{
-      position: absolute;
-      inset: 0;
-      z-index: 5;
-      display: block;
-      text-decoration: none;
-      color: inherit;
-      cursor: pointer;
+      position:relative;
+      width:100%;
+      height:100%;
     }
 
     .img-main,
     .img-cover{
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
-      object-position: center;
-      user-select: none;
-      -webkit-user-drag: none;
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
     }
 
     .img-main{
-      z-index: 1;
-      filter: grayscale(100%) saturate(0.9);
-      transition: filter 220ms ease;
+      filter:grayscale(100%);
+      transition:filter 200ms ease;
     }
 
     .img-cover{
-      z-index: 2;
-      opacity: 0.28;
-      transition: opacity 220ms ease;
-      pointer-events: none;
+      opacity:0.28;
+      transition:opacity 200ms ease;
+      pointer-events:none;
     }
 
-    .card:hover .img-cover,
-    .card:focus-within .img-cover{ opacity: 0; }
-
-    .card:hover .img-main,
-    .card:focus-within .img-main{ filter: none; }
-
-    /* ✅ Mobile: no prev/next visible + fit viewport */
-    @media (max-width: 640px){
-      .window{
-        width: 100vw;
-        overflow: hidden; /* hides prev/next */
-      }
-
-      .track{
-        gap: 0;
-        padding: 0;
-      }
-
-      .card{
-        width: min(92vw, 520px);
-        aspect-ratio: 9 / 16;
-        border-radius: 14px;
-
-        /* fit within visible viewport height */
-        max-height: calc(100svh - 24px);
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce){
-      .card,
-      .img-main,
-      .img-cover{
-        transition: none !important;
-      }
-    }
+    .card:hover .img-main{ filter:none; }
+    .card:hover .img-cover{ opacity:0; }
   </style>
 </Layout>
