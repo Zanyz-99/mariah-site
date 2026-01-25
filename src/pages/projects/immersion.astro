@@ -46,15 +46,10 @@ const finalUrls = finalFiles.map((name) => `${BASE}/${encodeURIComponent(name)}`
 const galleryImages = finalUrls;
 
 /* Cover logic */
-const coverIndex = finalFiles.findIndex(
-  (f) => f.toLowerCase() === "cover-image.png"
-);
+const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.png");
+const coverSrc = coverIndex >= 0 ? finalUrls[coverIndex] : (finalUrls[0] ?? `${BASE}/cover-image.png`);
 
-const coverSrc =
-  coverIndex >= 0
-    ? finalUrls[coverIndex]
-    : finalUrls[0] ?? `${BASE}/cover-image.png`;
-
+/* For grid rendering: top row uses cover + desc, then render the rest excluding cover */
 const nonCover = finalFiles
   .map((file, i) => ({ file, src: finalUrls[i], i }))
   .filter((x) => x.file.toLowerCase() !== "cover-image.png");
@@ -63,7 +58,7 @@ const nonCover = finalFiles
 <Layout title="Immersion" description="Immersion project">
   <main class="imm">
     <section class="imm__grid" aria-label="Immersion project grid">
-      <!-- Top row LEFT -->
+      <!-- Top row LEFT: Cover image -->
       <figure class="imm__photo imm__card imm__photoCard">
         <button
           class="imm__imgBtn"
@@ -75,7 +70,7 @@ const nonCover = finalFiles
         </button>
       </figure>
 
-      <!-- Top row RIGHT -->
+      <!-- Top row RIGHT: Title + subtitle + description -->
       <article class="imm__desc imm__card" id="descBlock">
         <h1 class="imm__title">Immersion</h1>
         <div class="imm__subtitle">{subtitle}</div>
@@ -90,15 +85,10 @@ const nonCover = finalFiles
         )}
       </article>
 
-      <!-- Remaining images -->
+      <!-- Follow-on rows: images in your exact requested order (excluding cover if present) -->
       {nonCover.map(({ src, i }) => (
         <figure class="imm__photo imm__card imm__photoCard">
-          <button
-            class="imm__imgBtn"
-            type="button"
-            data-lb-index={String(i)}
-            aria-label="Open image"
-          >
+          <button class="imm__imgBtn" type="button" data-lb-index={String(i)} aria-label="Open image">
             <img src={src} alt="" loading="lazy" decoding="async" />
           </button>
         </figure>
@@ -109,9 +99,9 @@ const nonCover = finalFiles
     <div class="lb" id="lightbox" aria-hidden="true">
       <div class="lb__backdrop" data-lb-close></div>
 
-      <div class="lb__panel" role="dialog" aria-modal="true">
-        <button class="lb__close" data-lb-close aria-label="Close">×</button>
-        <button class="lb__nav lb__nav--prev" data-lb-prev aria-label="Previous">‹</button>
+      <div class="lb__panel" role="dialog" aria-modal="true" aria-label="Image viewer">
+        <button class="lb__close" type="button" data-lb-close aria-label="Close">×</button>
+        <button class="lb__nav lb__nav--prev" type="button" data-lb-prev aria-label="Previous">‹</button>
 
         <figure class="lb__figure">
           <div class="lb__stage">
@@ -119,7 +109,7 @@ const nonCover = finalFiles
           </div>
         </figure>
 
-        <button class="lb__nav lb__nav--next" data-lb-next aria-label="Next">›</button>
+        <button class="lb__nav lb__nav--next" type="button" data-lb-next aria-label="Next">›</button>
       </div>
     </div>
 
@@ -132,35 +122,53 @@ const nonCover = finalFiles
         let index = 0;
         let lastFocus = null;
 
-        const open = (i) => {
+        const isOpen = () => lb.getAttribute("aria-hidden") === "false";
+
+        const setOpen = (open) => {
+          lb.setAttribute("aria-hidden", open ? "false" : "true");
+          document.documentElement.classList.toggle("lb-open", open);
+          document.body.classList.toggle("lb-open", open);
+        };
+
+        const show = (i) => {
           index = (i + images.length) % images.length;
           lbImg.src = images[index];
-          lb.setAttribute("aria-hidden", "false");
-          document.documentElement.classList.add("lb-open");
+        };
+
+        const open = (i) => {
           lastFocus = document.activeElement;
+          show(i);
+          setOpen(true);
+          const closeBtn = lb.querySelector(".lb__close");
+          closeBtn && closeBtn.focus();
         };
 
         const close = () => {
-          lb.setAttribute("aria-hidden", "true");
+          setOpen(false);
           lbImg.removeAttribute("src");
-          document.documentElement.classList.remove("lb-open");
-          lastFocus?.focus?.();
+          if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
         };
 
-        const next = () => open(index + 1);
-        const prev = () => open(index - 1);
+        const next = () => show(index + 1);
+        const prev = () => show(index - 1);
 
         document.addEventListener("click", (e) => {
           const t = e.target;
+
           const btn = t.closest?.("[data-lb-index]");
-          if (btn) return open(Number(btn.dataset.lbIndex));
+          if (btn) {
+            const i = Number(btn.getAttribute("data-lb-index") || 0);
+            if (!Number.isNaN(i)) open(i);
+            return;
+          }
+
           if (t.closest?.("[data-lb-close]")) return close();
           if (t.closest?.("[data-lb-next]")) return next();
           if (t.closest?.("[data-lb-prev]")) return prev();
         });
 
         document.addEventListener("keydown", (e) => {
-          if (lb.getAttribute("aria-hidden") !== "false") return;
+          if (!isOpen()) return;
           if (e.key === "Escape") close();
           if (e.key === "ArrowRight") next();
           if (e.key === "ArrowLeft") prev();
@@ -168,22 +176,25 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Match image height to description -->
+    <!-- Height matching: set all photos to description block height -->
     <script is:inline>
       (function () {
         const desc = document.getElementById("descBlock");
         if (!desc) return;
 
         const setH = () => {
-          document.documentElement.style.setProperty(
-            "--imm-row-h",
-            Math.round(desc.getBoundingClientRect().height) + "px"
-          );
+          const h = Math.round(desc.getBoundingClientRect().height);
+          document.documentElement.style.setProperty("--imm-row-h", h + "px");
         };
 
         setH();
+        window.addEventListener("load", setH);
         window.addEventListener("resize", setH);
-        new ResizeObserver(setH).observe(desc);
+
+        if ("ResizeObserver" in window) {
+          const ro = new ResizeObserver(setH);
+          ro.observe(desc);
+        }
       })();
     </script>
   </main>
@@ -199,35 +210,152 @@ const nonCover = finalFiles
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1.1rem;
+      align-items: start;
     }
 
     .imm__card {
       border-radius: 0;
       overflow: hidden;
-      background: rgba(0,0,0,0.03);
-      border: 1px solid rgba(0,0,0,0.08);
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.08);
     }
 
-    .imm__desc { padding: 1.1rem; }
-    .imm__photoCard { height: var(--imm-row-h, auto); }
+    .imm__desc {
+      padding: 1.1rem 1.1rem 0.95rem;
+      text-align: left;
+    }
+
+    .imm__title {
+      margin: 0 0 0.45rem;
+      font-size: clamp(1.6rem, 2.2vw, 2.15rem);
+      letter-spacing: -0.02em;
+    }
+
+    .imm__subtitle {
+      font-size: 0.95rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      opacity: 0.75;
+      margin-bottom: 0.9rem;
+    }
+
+    .imm__body {
+      font: inherit;
+      white-space: pre-line;
+      line-height: 1.65;
+      font-size: 1rem;
+      opacity: 0.95;
+    }
+
+    /* Photos: height matches description block */
+    .imm__photoCard {
+      height: var(--imm-row-h, auto);
+    }
 
     .imm__imgBtn {
+      display: block;
       width: 100%;
       height: 100%;
+      padding: 0;
       border: 0;
-      background: none;
+      background: transparent;
       cursor: zoom-in;
     }
 
+    /* ✅ Match Amplitude behavior to avoid weird “zoom” feel */
     .imm__photo img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
+
+    /* Lightbox background matches page to prevent "see-through" PNGs */
+    .lb {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 9999;
+    }
+    .lb[aria-hidden="false"] { display: block; }
+
+    .lb__backdrop {
+      position: absolute;
+      inset: 0;
+      background: var(--bg, #fff);
+    }
+
+    .lb__panel {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      grid-template-columns: 56px 1fr 56px;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    .lb__figure {
+      margin: 0;
+      height: 100%;
+      display: grid;
+      place-items: center;
+    }
+
+    .lb__stage {
+      background: var(--bg, #fff);
+      width: min(1100px, 92vw);
+      height: 86vh;
+      display: grid;
+      place-items: center;
+    }
+
+    .lb__img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 0;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .lb__close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      width: 44px;
+      height: 44px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 0.9);
+      color: #111;
+      font-size: 28px;
+      line-height: 40px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+
+    .lb__nav {
+      width: 44px;
+      height: 64px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 0.9);
+      color: #111;
+      font-size: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    :global(html.lb-open),
+    :global(body.lb-open) { overflow: hidden; }
 
     @media (max-width: 800px) {
       .imm__grid { grid-template-columns: 1fr; }
       .imm__photoCard { height: auto; }
+      .imm__photo img { height: auto; } /* ✅ same as Amplitude */
+      .lb__panel {
+        grid-template-columns: 44px 1fr 44px;
+        padding: 1.25rem 0.75rem;
+      }
+      .lb__stage { height: 84vh; }
     }
   </style>
 </Layout>
