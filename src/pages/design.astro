@@ -88,7 +88,7 @@ const projects = [
     let animating = false;
     let baseX = 0;
 
-    // Preload main images
+    // ---------- Preload main images ----------
     const preloaded = new Set();
     const preload = (src) => {
       if (!src || preloaded.has(src)) return;
@@ -131,7 +131,7 @@ const projects = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
-    // center current card in viewport
+    // ✅ compute baseX so current card center == viewport center (works at any size)
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
       const c = cardCur.getBoundingClientRect();
@@ -165,6 +165,8 @@ const projects = [
         track.style.transition = "none";
         track.style.transform = `translate3d(${baseX}px, 0, 0)`;
         track.offsetHeight;
+
+        // recenter after content swap
         computeBaseX();
 
         animating = false;
@@ -232,10 +234,13 @@ const projects = [
 
     // init
     setImages();
+    // double-rAF so layout is fully resolved before centering
     requestAnimationFrame(() => {
-      baseX = 0;
-      track.style.transform = "translate3d(0,0,0)";
-      computeBaseX();
+      requestAnimationFrame(() => {
+        baseX = 0;
+        track.style.transform = "translate3d(0,0,0)";
+        computeBaseX();
+      });
     });
   </script>
 
@@ -248,27 +253,31 @@ const projects = [
     }
 
     .home{
-      /* tweak this if your navbar/topbar is taller/shorter */
-      --header-h: 72px;
+      /* If your Layout/topbar consumes height, set this to match it.
+         Start with 0. If the card still overflows, try 64px or 72px. */
+      --chrome: 0px;
 
       --pt: clamp(12px, 3vh, 28px);
       --pb: clamp(18px, 4vh, 44px);
-      --meta-h: 150px;
 
-      height: calc(100svh - var(--header-h));
+      /* fixed text footprint so ALL cards/images are identical size */
+      --meta-h: 160px;
+
+      display: grid;
       width: 100%;
-      box-sizing: border-box;
       padding-top: var(--pt);
       padding-bottom: var(--pb);
 
-      display: grid;
+      /* ✅ guarantees the carousel area never exceeds the visible page */
+      height: calc(100svh - var(--chrome));
+      box-sizing: border-box;
     }
 
     .carousel{ width: 100%; }
 
     .viewport{
       width: 100%;
-      height: calc(100% - 0px); /* within .home */
+      height: 100%;
       overflow: hidden;
       outline: none;
       touch-action: pan-y;
@@ -279,30 +288,29 @@ const projects = [
       align-items: center;
     }
 
+    /* Keep this like your original so the "centered" feel matches */
     .window{
-      width: 100vw;
-      overflow: visible; /* desktop peek */
+      width: min(100vw, 980px);
+      overflow: visible; /* allow next peek (desktop) */
     }
 
     .track{
       display: flex;
       align-items: center;
       gap: clamp(10px, 2vw, 18px);
-      padding: 0; /* IMPORTANT: removes extra vertical overflow */
+      padding: 6px 0;
       will-change: transform;
       transform: translate3d(0,0,0);
     }
 
     .card{
-      /* ✅ Always fit inside available viewport space (minus header + padding) */
+      /* ✅ card ALWAYS fits viewport height (minus padding + chrome) */
       height: calc(100% - var(--pt) - var(--pb));
       max-height: calc(100% - var(--pt) - var(--pb));
       min-height: 0;
 
-      /* ✅ width flexes from image aspect BUT never exceeds viewport width */
+      /* ✅ width is derived from media (9:16) based on remaining height */
       width: auto;
-      max-width: 92vw;
-
       flex: 0 0 auto;
 
       border-radius: 16px;
@@ -316,6 +324,9 @@ const projects = [
 
       display: flex;
       flex-direction: column;
+
+      /* ✅ critical: prevents children stretching width incorrectly */
+      align-items: flex-start;
     }
 
     .card.is-active{ opacity: 1; }
@@ -324,6 +335,7 @@ const projects = [
       flex: 0 0 auto;
       height: var(--meta-h);
       box-sizing: border-box;
+      width: 100%;
 
       padding: 14px 16px 16px;
       display: grid;
@@ -341,6 +353,7 @@ const projects = [
       line-height: 1.45;
       opacity: 0.85;
 
+      /* ✅ fixed-height feel even if text differs */
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 3;
@@ -348,11 +361,12 @@ const projects = [
     }
 
     .media{
+      /* Remaining height after meta */
       flex: 1 1 auto;
       min-height: 0;
 
-      aspect-ratio: 16 / 9; /* unchanged */
-      width: auto;
+      /* ✅ 9x16 image area */
+      aspect-ratio: 9 / 16;
 
       position: relative;
       overflow: hidden;
@@ -369,6 +383,7 @@ const projects = [
       user-select: none;
       -webkit-user-drag: none;
 
+      /* grayscale -> color on hover (same behavior as your Home page) */
       filter: grayscale(100%) saturate(0.9);
       transition: filter 220ms ease;
     }
@@ -376,12 +391,8 @@ const projects = [
     .card:hover .img-main,
     .card:focus-within .img-main{ filter: none; }
 
+    /* ✅ Mobile: hide prev/next + ensure card never exceeds viewport width */
     @media (max-width: 640px){
-      .home{
-        --header-h: 64px;
-        --meta-h: 170px;
-      }
-
       .window{
         width: 100vw;
         overflow: hidden;
@@ -389,10 +400,16 @@ const projects = [
 
       .track{
         gap: 0;
+        padding: 0;
+      }
+
+      .home{
+        --meta-h: 180px;
       }
 
       .card{
-        max-width: 92vw;
+        /* Keep the computed width from 9:16, but cap it so it doesn't spill */
+        max-width: min(92vw, 520px);
         border-radius: 14px;
       }
 
