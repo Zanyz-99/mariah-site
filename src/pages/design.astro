@@ -132,18 +132,37 @@ const projects = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
-    // ✅ Fixed card height, but auto-capped so it never overflows the viewport.
-    // ✅ Then compute media height and card width from 16:9.
+    // ✅ Convert any CSS length (px, vh, svh, rem, clamp(), etc.) to pixels
+    const toPx = (cssLen) => {
+      const v = (cssLen ?? "").toString().trim();
+      if (!v) return 0;
+      if (v.endsWith("px")) return parseFloat(v) || 0;
+
+      const el = document.createElement("div");
+      el.style.position = "absolute";
+      el.style.visibility = "hidden";
+      el.style.pointerEvents = "none";
+      el.style.height = v;
+      el.style.left = "-9999px";
+      el.style.top = "-9999px";
+      document.body.appendChild(el);
+      const px = el.getBoundingClientRect().height || 0;
+      document.body.removeChild(el);
+      return px;
+    };
+
+    // ✅ Fixed card height, auto-capped so it never overflows the viewport.
+    // ✅ Computes media height and card width from 16:9.
     const updateSizingVars = () => {
       if (!home) return;
       const cs = getComputedStyle(home);
 
       const pt = parseFloat(cs.paddingTop || "0") || 0;
       const pb = parseFloat(cs.paddingBottom || "0") || 0;
-      const chrome = parseFloat(cs.getPropertyValue("--chrome") || "0") || 0;
 
-      const metaH = parseFloat(cs.getPropertyValue("--meta-h") || "180") || 180;
-      const fixedCardH = parseFloat(cs.getPropertyValue("--card-h-fixed") || "640") || 640;
+      const chrome = toPx(cs.getPropertyValue("--chrome") || "0px");
+      const metaH = toPx(cs.getPropertyValue("--meta-h") || "180px");
+      const fixedCardH = toPx(cs.getPropertyValue("--card-h-fixed") || "640px");
 
       const viewportH = window.visualViewport?.height || window.innerHeight;
 
@@ -151,10 +170,13 @@ const projects = [
       const availableCardH = Math.max(260, Math.floor(viewportH - chrome - pt - pb));
 
       // card height is FIXED unless the viewport can't fit it
-      const cardH = Math.min(fixedCardH, availableCardH);
+      const cardH = Math.min(Math.floor(fixedCardH), availableCardH);
+
+      // ensure meta doesn't exceed the card height (leave at least 120px for the image)
+      const safeMetaH = Math.min(Math.floor(metaH), Math.max(120, cardH - 120));
 
       // remaining height for the 16:9 image area
-      const mediaH = Math.max(120, Math.floor(cardH - metaH));
+      const mediaH = Math.max(120, Math.floor(cardH - safeMetaH));
 
       // 16:9 landscape => width = height * 16/9
       const cardW = Math.floor((mediaH * 16) / 9);
@@ -194,6 +216,9 @@ const projects = [
 
         index = mod(index + dir);
         setImages();
+
+        // after swapping images/meta, recompute sizing and recenter
+        updateSizingVars();
 
         track.style.transition = "none";
         track.style.transform = `translate3d(${baseX}px, 0, 0)`;
@@ -283,16 +308,15 @@ const projects = [
     :global(body){
       height: 100%;
       margin: 0;
-      overflow: hidden; /* wheel becomes slide nav */
+      overflow: hidden;
     }
 
     .home{
-      /* Set to your header height if your Layout has a topbar (0 by default) */
       --chrome: 72px;
 
-      /* ✅ YOU control these */
-      --card-h-fixed: 80svh; /* <-- FIXED card height target */
-      --meta-h: 20svh;       /* <-- fixed title+desc area height */
+      /* ✅ you can now use vh/svh/clamp/etc */
+      --card-h-fixed: 72svh;
+      --meta-h: clamp(150px, 18svh, 220px);
 
       /* JS sets these */
       --card-h: 640px;
@@ -306,7 +330,6 @@ const projects = [
       padding-bottom: clamp(18px, 4vh, 44px);
       box-sizing: border-box;
 
-      /* Lock section to viewport (minus optional chrome) */
       height: calc(100svh - var(--chrome));
     }
 
@@ -325,10 +348,9 @@ const projects = [
       align-items: center;
     }
 
-    /* Match your Home page’s “centered feel” */
     .window{
       width: min(100vw, clamp(320px, 78vw, 980px));
-      overflow: visible; /* allow next peek (desktop) */
+      overflow: visible;
     }
 
     .track{
@@ -343,10 +365,7 @@ const projects = [
     .card{
       flex: 0 0 auto;
 
-      /* ✅ fixed height (capped in JS to never overflow viewport) */
       height: var(--card-h);
-
-      /* ✅ width derived from 16:9 media height (also capped) */
       width: min(92vw, var(--card-w));
 
       border-radius: 16px;
@@ -392,7 +411,7 @@ const projects = [
     .card:focus-within .img-main{ filter: none; }
 
     .meta{
-      height: var(--meta-h);
+      height: calc(var(--card-h) - var(--media-h));
       width: 100%;
       box-sizing: border-box;
 
@@ -412,7 +431,6 @@ const projects = [
       line-height: 1.45;
       opacity: 0.85;
 
-      /* keep layout identical across cards */
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 3;
@@ -428,14 +446,6 @@ const projects = [
       .track{
         gap: 0;
         padding: 0;
-      }
-
-      .home{
-        --meta-h: 200px;
-      }
-
-      .card{
-        border-radius: 14px;
       }
 
       .desc{
