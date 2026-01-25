@@ -1,1 +1,169 @@
+---
+import Layout from "../../layouts/Layout.astro"; // adjust if needed
 
+const BASE = "/projects/amplitude";
+const coverSrc = `${BASE}/cover-image.png`;
+const txtSrc = `${BASE}/amplitude.txt`;
+
+const modules = import.meta.glob(
+  "../../../public/projects/amplitude/*.{png,jpg,jpeg,webp,avif,gif,svg}",
+  { eager: true, as: "url" }
+);
+
+const allImageUrls = Object.values(modules)
+  .map((u) => String(u))
+  .filter(Boolean)
+  .sort((a, b) => a.localeCompare(b));
+
+const subsequentImages = allImageUrls.filter(
+  (u) => !u.endsWith("/cover-image.png") && !u.endsWith("\\cover-image.png")
+);
+---
+
+<Layout title="Amplitude" description="Amplitude project">
+  <main class="amp">
+    <!-- Project title (top-right, before grid) -->
+    <div class="amp__titleRow">
+      <h1 class="amp__title">Amplitude</h1>
+    </div>
+
+    <section class="amp__grid" aria-label="Amplitude project grid">
+      <!-- Row 1: Cover image -->
+      <figure class="amp__card amp__card--cover">
+        <img
+          src={coverSrc}
+          alt="Amplitude cover"
+          loading="eager"
+          decoding="async"
+        />
+      </figure>
+
+      <!-- Row 1: Text -->
+      <article class="amp__card amp__card--text">
+        <div class="amp__subtitle">
+          Re-Imagining Ostiense Station | Rome, Italy
+        </div>
+
+        <pre class="amp__pre" id="ampText" aria-busy="true">Loading…</pre>
+
+        <script is:inline>
+          (async () => {
+            const el = document.getElementById("ampText");
+            try {
+              const res = await fetch("{txtSrc}");
+              if (!res.ok) throw new Error(`HTTP ${res.status}`);
+              const text = await res.text();
+              el.textContent = text.trim() ? text : "(empty file)";
+            } catch (e) {
+              el.textContent = "Couldn’t load amplitude.txt";
+              console.error(e);
+            } finally {
+              el.setAttribute("aria-busy", "false");
+            }
+          })();
+        </script>
+      </article>
+
+      <!-- Follow-on rows: images -->
+      {subsequentImages.map((src) => (
+        <figure class="amp__card amp__card--img">
+          <img src={src} alt="" loading="lazy" decoding="async" />
+        </figure>
+      ))}
+    </section>
+  </main>
+
+  <style>
+    .amp {
+      padding: 2rem 1.25rem 3rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    /* Title row */
+    .amp__titleRow {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 0.75rem;
+    }
+
+    .amp__title {
+      margin: 0;
+      font-size: clamp(1.4rem, 2vw, 1.9rem);
+      letter-spacing: -0.02em;
+    }
+
+    /* Grid */
+    .amp__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.1rem;
+      align-items: start;
+    }
+
+    .amp__card {
+      border-radius: 16px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .amp__card img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .amp__card--cover img {
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+
+    /* Text column */
+    .amp__card--text {
+      padding: 1.1rem 1.1rem 0.9rem;
+    }
+
+    .amp__subtitle {
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      opacity: 0.75;
+      margin-bottom: 0.6rem;
+      text-transform: none;
+    }
+
+    .amp__pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.55;
+      font-size: 0.95rem;
+      opacity: 0.95;
+      max-height: 70vh;
+      overflow: auto;
+      padding-right: 0.25rem;
+    }
+
+    /* Image cards */
+    .amp__card--img img {
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+
+    /* Mobile */
+    @media (max-width: 800px) {
+      .amp__titleRow {
+        justify-content: flex-start;
+      }
+
+      .amp__grid {
+        grid-template-columns: 1fr;
+      }
+
+      .amp__pre {
+        max-height: none;
+      }
+    }
+  </style>
+</Layout>
