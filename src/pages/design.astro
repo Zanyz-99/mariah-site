@@ -307,9 +307,11 @@ const projects = [
     .media{
       position: relative;
       width: 100%;
-      aspect-ratio: 16 / 9;
+      aspect-ratio: 16 / 9; /* unchanged */
+      max-height: 75vh; 
       overflow: hidden;
     }
+
 
     .img-main{
       position: absolute;
@@ -369,6 +371,7 @@ const projects = [
 
       .media{
         aspect-ratio: 9 / 16;
+        max-height: 75svh;
       }
 
       .meta{
