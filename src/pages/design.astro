@@ -9,10 +9,19 @@ const slides = [
 ];
 
 const projects = [
-  { name: "Project One", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
+  { name: "Circle Within a Square", desc: `"Circle Within a Square" is Design project 1` },
   { name: "Project Two", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris." },
   { name: "Project Three", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse." },
   { name: "Project Four", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Excepteur sint occaecat cupidatat non proident, sunt in culpa." },
+];
+
+// ✅ Each project gets a route
+// (matches: mariah-site/src/pages/design/circle_square.astro => /design/circle_square)
+const links = [
+  "/design/circle_square",
+  "/design/project-two",
+  "/design/project-three",
+  "/design/project-four",
 ];
 ---
 
@@ -24,33 +33,39 @@ const projects = [
           <div class="window" id="window">
             <ul class="track" id="track" aria-live="polite">
               <li class="card">
-                <div class="media">
-                  <img class="img-main" id="img-prev" alt="Previous design project" decoding="async" />
-                </div>
-                <div class="meta" aria-hidden="true">
-                  <div class="title" id="title-prev"></div>
-                  <div class="desc" id="desc-prev"></div>
-                </div>
+                <a class="card-link" id="link-prev" href="#">
+                  <div class="media">
+                    <img class="img-main" id="img-prev" alt="Previous design project" decoding="async" />
+                  </div>
+                  <div class="meta" aria-hidden="true">
+                    <div class="title" id="title-prev"></div>
+                    <div class="desc" id="desc-prev"></div>
+                  </div>
+                </a>
               </li>
 
               <li class="card is-active" id="card-cur">
-                <div class="media">
-                  <img class="img-main" id="img-cur" alt="Current design project" decoding="async" fetchpriority="high" />
-                </div>
-                <div class="meta">
-                  <div class="title" id="title-cur"></div>
-                  <div class="desc" id="desc-cur"></div>
-                </div>
+                <a class="card-link" id="link-cur" href="#">
+                  <div class="media">
+                    <img class="img-main" id="img-cur" alt="Current design project" decoding="async" fetchpriority="high" />
+                  </div>
+                  <div class="meta">
+                    <div class="title" id="title-cur"></div>
+                    <div class="desc" id="desc-cur"></div>
+                  </div>
+                </a>
               </li>
 
               <li class="card">
-                <div class="media">
-                  <img class="img-main" id="img-next" alt="Next design project" decoding="async" />
-                </div>
-                <div class="meta" aria-hidden="true">
-                  <div class="title" id="title-next"></div>
-                  <div class="desc" id="desc-next"></div>
-                </div>
+                <a class="card-link" id="link-next" href="#">
+                  <div class="media">
+                    <img class="img-main" id="img-next" alt="Next design project" decoding="async" />
+                  </div>
+                  <div class="meta" aria-hidden="true">
+                    <div class="title" id="title-next"></div>
+                    <div class="desc" id="desc-next"></div>
+                  </div>
+                </a>
               </li>
             </ul>
           </div>
@@ -60,7 +75,7 @@ const projects = [
     </div>
   </section>
 
-  <script define:vars={{ slides, projects }}>
+  <script define:vars={{ slides, projects, links }}>
     const home = document.getElementById("design-home");
     const viewport = document.getElementById("viewport");
     const track = document.getElementById("track");
@@ -78,12 +93,23 @@ const projects = [
     const descCur  = document.getElementById("desc-cur");
     const descNext = document.getElementById("desc-next");
 
+    // ✅ NEW: link elements
+    const linkPrev = document.getElementById("link-prev");
+    const linkCur  = document.getElementById("link-cur");
+    const linkNext = document.getElementById("link-next");
+
     const n = slides.length;
     const mod = (x) => (x % n + n) % n;
 
     let index = 0;
     let animating = false;
     let baseX = 0;
+
+    // Drag state (so links still click)
+    let startX = 0;
+    let pointerId = null;
+    let didMove = false;
+    let handlingLinkClick = false;
 
     // Preload main images
     const preloaded = new Set();
@@ -102,6 +128,17 @@ const projects = [
       descEl.textContent = p.desc;
     };
 
+    const setLinks = () => {
+      const prevI = mod(index - 1);
+      const curI  = index;
+      const nextI = mod(index + 1);
+
+      // fallback to "#" if missing
+      linkPrev.href = links?.[prevI] ?? "#";
+      linkCur.href  = links?.[curI]  ?? "#";
+      linkNext.href = links?.[nextI] ?? "#";
+    };
+
     const setImages = () => {
       imgPrev.src = slides[mod(index - 1)];
       imgCur.src  = slides[index];
@@ -114,6 +151,8 @@ const projects = [
       setMeta(mod(index - 1), titlePrev, descPrev);
       setMeta(index,          titleCur,  descCur);
       setMeta(mod(index + 1), titleNext, descNext);
+
+      setLinks();
     };
 
     const gapPx = () => {
@@ -128,7 +167,7 @@ const projects = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
-    // ✅ Convert any CSS length (px, vh, svh, rem, clamp(), etc.) to pixels
+    // ✅ Convert any CSS length to pixels
     const toPx = (cssLen) => {
       const v = (cssLen ?? "").toString().trim();
       if (!v) return 0;
@@ -147,8 +186,6 @@ const projects = [
       return px;
     };
 
-    // ✅ Fixed card height, auto-capped so it never overflows the viewport.
-    // ✅ Computes media height and card width from 16:9.
     const updateSizingVars = () => {
       if (!home) return;
       const cs = getComputedStyle(home);
@@ -162,19 +199,12 @@ const projects = [
 
       const viewportH = window.visualViewport?.height || window.innerHeight;
 
-      // available height inside the section padding + minus optional header chrome
       const availableCardH = Math.max(260, Math.floor(viewportH - chrome - pt - pb));
-
-      // card height is FIXED unless the viewport can't fit it
       const cardH = Math.min(Math.floor(fixedCardH), availableCardH);
 
-      // ensure meta doesn't exceed the card height (leave at least 120px for the image)
       const safeMetaH = Math.min(Math.floor(metaH), Math.max(120, cardH - 120));
-
-      // remaining height for the 16:9 image area
       const mediaH = Math.max(120, Math.floor(cardH - safeMetaH));
 
-      // 16:9 landscape => width = height * 16/9
       const cardW = Math.floor((mediaH * 16) / 9);
 
       home.style.setProperty("--card-h", `${cardH}px`);
@@ -182,7 +212,6 @@ const projects = [
       home.style.setProperty("--card-w", `${cardW}px`);
     };
 
-    // Center current card in viewport
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
       const c = cardCur.getBoundingClientRect();
@@ -213,7 +242,6 @@ const projects = [
         index = mod(index + dir);
         setImages();
 
-        // after swapping images/meta, recompute sizing and recenter
         updateSizingVars();
 
         track.style.transition = "none";
@@ -227,7 +255,7 @@ const projects = [
       track.addEventListener("transitionend", onDone);
     };
 
-    // wheel anywhere: down/right = next, up/left = prev
+    // wheel anywhere
     let wheelLock = false;
     window.addEventListener(
       "wheel",
@@ -244,20 +272,38 @@ const projects = [
       { passive: false }
     );
 
-    // drag/swipe
-    let startX = 0;
-    let dragging = false;
-
+    // ✅ pointer handling that doesn't break <a> clicks
     viewport.addEventListener("pointerdown", (e) => {
       if (animating) return;
-      dragging = true;
+
+      const onLink = !!e.target.closest("a.card-link");
+      handlingLinkClick = onLink;
+
       startX = e.clientX;
-      viewport.setPointerCapture?.(e.pointerId);
+      didMove = false;
+      pointerId = e.pointerId;
+
+      if (!onLink) viewport.setPointerCapture?.(e.pointerId);
+    });
+
+    viewport.addEventListener("pointermove", (e) => {
+      if (pointerId == null || e.pointerId !== pointerId) return;
+      if (handlingLinkClick) return;
+
+      if (Math.abs(e.clientX - startX) > 8) didMove = true;
     });
 
     viewport.addEventListener("pointerup", (e) => {
-      if (!dragging || animating) return;
-      dragging = false;
+      if (pointerId == null || e.pointerId !== pointerId) return;
+
+      const wasLink = handlingLinkClick;
+      pointerId = null;
+      handlingLinkClick = false;
+
+      // Let the browser navigate if the interaction started on a link
+      if (wasLink) return;
+
+      if (animating) return;
 
       const dx = e.clientX - startX;
       const threshold = Math.min(90, viewport.clientWidth * 0.14);
@@ -267,7 +313,9 @@ const projects = [
     });
 
     viewport.addEventListener("pointercancel", () => {
-      dragging = false;
+      pointerId = null;
+      handlingLinkClick = false;
+      didMove = false;
     });
 
     // keyboard
@@ -277,7 +325,7 @@ const projects = [
       if (e.key === "ArrowLeft") step(-1);
     });
 
-    // resize: recompute sizing + recenter
+    // resize
     let resizeT;
     window.addEventListener("resize", () => {
       clearTimeout(resizeT);
@@ -309,12 +357,9 @@ const projects = [
 
     .home{
       --chrome: 72px;
-
-      /* ✅ you can now use vh/svh/clamp/etc */
       --card-h-fixed: 72svh;
       --meta-h: clamp(150px, 18svh, 220px);
 
-      /* JS sets these */
       --card-h: 640px;
       --media-h: 460px;
       --card-w: 820px;
@@ -360,7 +405,6 @@ const projects = [
 
     .card{
       flex: 0 0 auto;
-
       height: var(--card-h);
       width: min(92vw, var(--card-w));
 
@@ -379,6 +423,16 @@ const projects = [
     }
 
     .card.is-active{ opacity: 1; }
+
+    /* ✅ Make the whole card clickable */
+    .card-link{
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      text-decoration: none;
+      color: inherit;
+    }
 
     .media{
       height: var(--media-h);
