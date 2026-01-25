@@ -1,1 +1,233 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
+const FOLDER = "Immersion";
+const BASE = `/projects/${FOLDER}`;
+const PUBLIC_DIR = path.join(process.cwd(), "public", "projects", FOLDER);
+
+const txtFile = "immersion.txt";
+const subtitle = "Immersion | Project subtitle here";
+
+const isImage = (name: string) => /\.(png|jpe?g|webp|avif|gif|svg)$/i.test(name);
+
+let descriptionText = "";
+let imagesInFolder: string[] = [];
+
+try {
+  descriptionText = await fs.readFile(path.join(PUBLIC_DIR, txtFile), "utf-8");
+
+  const entries = await fs.readdir(PUBLIC_DIR, { withFileTypes: true });
+  imagesInFolder = entries
+    .filter((e) => e.isFile() && isImage(e.name))
+    .map((e) => e.name);
+} catch (err) {
+  console.error("[Immersion page] asset read error:", err);
+}
+
+/* ✅ EXACT order requested: 1,2,3,6,4,5 */
+const orderedFiles = [
+  "images-01.png",
+  "images-02.png",
+  "images-03.png",
+  "images-06.png",
+  "images-04.png",
+  "images-05.png",
+];
+
+/* Case-insensitive match to filesystem */
+const byLower = new Map(imagesInFolder.map((n) => [n.toLowerCase(), n]));
+const finalFiles = orderedFiles
+  .map((n) => byLower.get(n.toLowerCase()))
+  .filter(Boolean) as string[];
+
+const finalUrls = finalFiles.map((name) => `${BASE}/${encodeURIComponent(name)}`);
+const galleryImages = finalUrls;
+
+/* Cover logic */
+const coverIndex = finalFiles.findIndex(
+  (f) => f.toLowerCase() === "cover-image.png"
+);
+
+const coverSrc =
+  coverIndex >= 0
+    ? finalUrls[coverIndex]
+    : finalUrls[0] ?? `${BASE}/cover-image.png`;
+
+const nonCover = finalFiles
+  .map((file, i) => ({ file, src: finalUrls[i], i }))
+  .filter((x) => x.file.toLowerCase() !== "cover-image.png");
+---
+
+<Layout title="Immersion" description="Immersion project">
+  <main class="imm">
+    <section class="imm__grid" aria-label="Immersion project grid">
+      <!-- Top row LEFT -->
+      <figure class="imm__photo imm__card imm__photoCard">
+        <button
+          class="imm__imgBtn"
+          type="button"
+          data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
+          aria-label="Open cover image"
+        >
+          <img src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
+        </button>
+      </figure>
+
+      <!-- Top row RIGHT -->
+      <article class="imm__desc imm__card" id="descBlock">
+        <h1 class="imm__title">Immersion</h1>
+        <div class="imm__subtitle">{subtitle}</div>
+
+        {descriptionText ? (
+          <div class="imm__body">{descriptionText}</div>
+        ) : (
+          <div class="imm__body imm__body--error">
+            Couldn’t load <code>immersion.txt</code><br />
+            Expected: <code>public/projects/{FOLDER}/immersion.txt</code>
+          </div>
+        )}
+      </article>
+
+      <!-- Remaining images -->
+      {nonCover.map(({ src, i }) => (
+        <figure class="imm__photo imm__card imm__photoCard">
+          <button
+            class="imm__imgBtn"
+            type="button"
+            data-lb-index={String(i)}
+            aria-label="Open image"
+          >
+            <img src={src} alt="" loading="lazy" decoding="async" />
+          </button>
+        </figure>
+      ))}
+    </section>
+
+    <!-- Lightbox -->
+    <div class="lb" id="lightbox" aria-hidden="true">
+      <div class="lb__backdrop" data-lb-close></div>
+
+      <div class="lb__panel" role="dialog" aria-modal="true">
+        <button class="lb__close" data-lb-close aria-label="Close">×</button>
+        <button class="lb__nav lb__nav--prev" data-lb-prev aria-label="Previous">‹</button>
+
+        <figure class="lb__figure">
+          <div class="lb__stage">
+            <img class="lb__img" id="lbImg" alt="" />
+          </div>
+        </figure>
+
+        <button class="lb__nav lb__nav--next" data-lb-next aria-label="Next">›</button>
+      </div>
+    </div>
+
+    <script define:vars={{ galleryImages }} is:inline>
+      (function () {
+        const images = galleryImages;
+        const lb = document.getElementById("lightbox");
+        const lbImg = document.getElementById("lbImg");
+
+        let index = 0;
+        let lastFocus = null;
+
+        const open = (i) => {
+          index = (i + images.length) % images.length;
+          lbImg.src = images[index];
+          lb.setAttribute("aria-hidden", "false");
+          document.documentElement.classList.add("lb-open");
+          lastFocus = document.activeElement;
+        };
+
+        const close = () => {
+          lb.setAttribute("aria-hidden", "true");
+          lbImg.removeAttribute("src");
+          document.documentElement.classList.remove("lb-open");
+          lastFocus?.focus?.();
+        };
+
+        const next = () => open(index + 1);
+        const prev = () => open(index - 1);
+
+        document.addEventListener("click", (e) => {
+          const t = e.target;
+          const btn = t.closest?.("[data-lb-index]");
+          if (btn) return open(Number(btn.dataset.lbIndex));
+          if (t.closest?.("[data-lb-close]")) return close();
+          if (t.closest?.("[data-lb-next]")) return next();
+          if (t.closest?.("[data-lb-prev]")) return prev();
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (lb.getAttribute("aria-hidden") !== "false") return;
+          if (e.key === "Escape") close();
+          if (e.key === "ArrowRight") next();
+          if (e.key === "ArrowLeft") prev();
+        });
+      })();
+    </script>
+
+    <!-- Match image height to description -->
+    <script is:inline>
+      (function () {
+        const desc = document.getElementById("descBlock");
+        if (!desc) return;
+
+        const setH = () => {
+          document.documentElement.style.setProperty(
+            "--imm-row-h",
+            Math.round(desc.getBoundingClientRect().height) + "px"
+          );
+        };
+
+        setH();
+        window.addEventListener("resize", setH);
+        new ResizeObserver(setH).observe(desc);
+      })();
+    </script>
+  </main>
+
+  <style>
+    .imm {
+      width: 80vw;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .imm__grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.1rem;
+    }
+
+    .imm__card {
+      border-radius: 0;
+      overflow: hidden;
+      background: rgba(0,0,0,0.03);
+      border: 1px solid rgba(0,0,0,0.08);
+    }
+
+    .imm__desc { padding: 1.1rem; }
+    .imm__photoCard { height: var(--imm-row-h, auto); }
+
+    .imm__imgBtn {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: none;
+      cursor: zoom-in;
+    }
+
+    .imm__photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    @media (max-width: 800px) {
+      .imm__grid { grid-template-columns: 1fr; }
+      .imm__photoCard { height: auto; }
+    }
+  </style>
+</Layout>
