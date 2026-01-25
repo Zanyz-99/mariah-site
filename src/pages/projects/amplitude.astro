@@ -3,7 +3,7 @@ import Layout from "../../layouts/Layout.astro"; // adjust if needed
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-const FOLDER = "Amplitude"; // matches your repo folder
+const FOLDER = "Amplitude";
 const BASE = `/projects/${FOLDER}`;
 const PUBLIC_DIR = path.join(process.cwd(), "public", "projects", FOLDER);
 
@@ -43,7 +43,8 @@ const galleryImages = [coverSrc, ...subsequentImages];
     </div>
 
     <section class="amp__grid" aria-label="Amplitude project grid">
-      <figure class="amp__card amp__card--cover">
+      <!-- Row 1: Cover image -->
+      <figure class="amp__card amp__card--cover amp__card--firstRow">
         <button
           class="amp__imgBtn"
           type="button"
@@ -54,7 +55,8 @@ const galleryImages = [coverSrc, ...subsequentImages];
         </button>
       </figure>
 
-      <article class="amp__card amp__card--text">
+      <!-- Row 1: Subtitle + description -->
+      <article class="amp__card amp__card--text amp__card--firstRow">
         <div class="amp__subtitle">{subtitle}</div>
 
         {descriptionText ? (
@@ -67,12 +69,13 @@ const galleryImages = [coverSrc, ...subsequentImages];
         )}
       </article>
 
+      <!-- Follow-on rows: images -->
       {subsequentImages.map((src, i) => (
         <figure class="amp__card amp__card--img">
           <button
             class="amp__imgBtn"
             type="button"
-            data-lb-index={i + 1}  /* cover is index 0 */
+            data-lb-index={i + 1}
             aria-label="Open image"
           >
             <img src={src} alt="" loading="lazy" decoding="async" />
@@ -91,17 +94,19 @@ const galleryImages = [coverSrc, ...subsequentImages];
         <button class="lb__nav lb__nav--prev" type="button" data-lb-prev aria-label="Previous">‹</button>
 
         <figure class="lb__figure">
-          <img class="lb__img" id="lbImg" alt="" />
+          <!-- This background is the key: it matches the page and blocks "see-through" PNGs -->
+          <div class="lb__stage">
+            <img class="lb__img" id="lbImg" alt="" />
+          </div>
         </figure>
 
         <button class="lb__nav lb__nav--next" type="button" data-lb-next aria-label="Next">›</button>
       </div>
     </div>
 
-    <!-- ✅ SAFE variable injection -->
     <script define:vars={{ galleryImages }} is:inline>
       (function () {
-        const images = galleryImages; // injected by Astro safely
+        const images = galleryImages;
         const lb = document.getElementById("lightbox");
         const lbImg = document.getElementById("lbImg");
 
@@ -199,7 +204,12 @@ const galleryImages = [coverSrc, ...subsequentImages];
       align-items: start;
     }
 
-    /* no rounded edges on images/cards */
+    /* Make FIRST ROW center vertically with each other */
+    .amp__card--firstRow {
+      align-self: center;
+    }
+
+    /* no rounded edges */
     .amp__card {
       border-radius: 0;
       overflow: hidden;
@@ -240,7 +250,6 @@ const galleryImages = [coverSrc, ...subsequentImages];
       margin-bottom: 0.6rem;
     }
 
-    /* normal site font, not monospace */
     .amp__body {
       font: inherit;
       white-space: pre-line;
@@ -266,11 +275,14 @@ const galleryImages = [coverSrc, ...subsequentImages];
     .lb[aria-hidden="false"] {
       display: block;
     }
+
+    /* Background same as page: use your site's theme variable if present; fallback to white */
     .lb__backdrop {
       position: absolute;
       inset: 0;
-      background: rgba(0, 0, 0, 0.75);
+      background: var(--bg, #fff);
     }
+
     .lb__panel {
       position: absolute;
       inset: 0;
@@ -279,46 +291,63 @@ const galleryImages = [coverSrc, ...subsequentImages];
       align-items: center;
       padding: 2rem 1rem;
     }
+
     .lb__figure {
       margin: 0;
       height: 100%;
       display: grid;
       place-items: center;
     }
-    .lb__img {
+
+    /* Stage blocks transparent PNGs from showing through */
+    .lb__stage {
+      background: var(--bg, #fff);
+      padding: 0;
+      display: grid;
+      place-items: center;
       max-width: min(1100px, 92vw);
       max-height: 86vh;
+      width: 100%;
+      height: 100%;
+    }
+
+    .lb__img {
+      max-width: 100%;
+      max-height: 100%;
       width: auto;
       height: auto;
       object-fit: contain;
       border-radius: 0;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
     }
+
     .lb__close {
       position: absolute;
       top: 18px;
       right: 18px;
       width: 44px;
       height: 44px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      background: rgba(0, 0, 0, 0.35);
-      color: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 0.85);
+      color: #111;
       font-size: 28px;
       line-height: 40px;
       border-radius: 999px;
       cursor: pointer;
     }
+
     .lb__nav {
       width: 44px;
       height: 64px;
-      border: 1px solid rgba(255, 255, 255, 0.25);
-      background: rgba(0, 0, 0, 0.35);
-      color: #fff;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      background: rgba(255, 255, 255, 0.85);
+      color: #111;
       font-size: 40px;
       border-radius: 10px;
       cursor: pointer;
       user-select: none;
     }
+
     .lb__nav--prev {
       justify-self: start;
     }
