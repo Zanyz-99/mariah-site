@@ -3,22 +3,27 @@ import Layout from "../../layouts/Layout.astro"; // adjust if needed
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-const BASE = "/projects/Amplitude"; // public URL base
-const PUBLIC_DIR = path.join(process.cwd(), "public", "projects", "amplitude");
+// IMPORTANT: folder is capital-A per your repo: public/projects/Amplitude
+const FOLDER = "Amplitude";
+
+const BASE = `/projects/${FOLDER}`; // public URL base
+const PUBLIC_DIR = path.join(process.cwd(), "public", "projects", FOLDER);
 
 const coverFile = "cover-image.png";
 const txtFile = "amplitude.txt";
 
-const isImage = (name) => /\.(png|jpe?g|webp|avif|gif|svg)$/i.test(name);
+const subtitle = "Re-Imagining Ostiense Station | Rome, Italy";
+
+const isImage = (name: string) => /\.(png|jpe?g|webp|avif|gif|svg)$/i.test(name);
 
 let descriptionText = "";
-let subsequentImages = [];
+let subsequentImages: string[] = [];
 
 try {
-  // Read text
+  // Read text directly from /public (no fetch needed)
   descriptionText = await fs.readFile(path.join(PUBLIC_DIR, txtFile), "utf-8");
 
-  // List images
+  // List images in the folder
   const entries = await fs.readdir(PUBLIC_DIR, { withFileTypes: true });
 
   const imgs = entries
@@ -27,15 +32,13 @@ try {
     .sort((a, b) => a.localeCompare(b));
 
   subsequentImages = imgs
-    .filter((name) => name !== coverFile)
+    .filter((name) => name !== coverFile) // exclude cover
     .map((name) => `${BASE}/${encodeURIComponent(name)}`);
 } catch (err) {
-  // If something is wrong with the path or files, we fail gracefully
   console.error("[Amplitude page] asset read error:", err);
 }
 
 const coverSrc = `${BASE}/${coverFile}`;
-const subtitle = "Re-Imagining Ostiense Station | Rome, Italy";
 ---
 
 <Layout title="Amplitude" description="Amplitude project">
@@ -51,7 +54,7 @@ const subtitle = "Re-Imagining Ostiense Station | Rome, Italy";
         <img src={coverSrc} alt="Amplitude cover" loading="eager" decoding="async" />
       </figure>
 
-      <!-- Row 1: Text -->
+      <!-- Row 1: Subtitle + description -->
       <article class="amp__card amp__card--text">
         <div class="amp__subtitle">{subtitle}</div>
 
@@ -61,8 +64,8 @@ const subtitle = "Re-Imagining Ostiense Station | Rome, Italy";
           <pre class="amp__pre amp__pre--error">
 Couldn’t load amplitude.txt
 
-Check that this file exists:
-public/projects/Amplitude/amplitude.txt
+Expected:
+public/projects/{FOLDER}/amplitude.txt
           </pre>
         )}
       </article>
@@ -115,7 +118,8 @@ public/projects/Amplitude/amplitude.txt
       height: auto;
     }
 
-    .amp__card--cover img {
+    .amp__card--cover img,
+    .amp__card--img img {
       aspect-ratio: 4 / 3;
       object-fit: cover;
     }
@@ -146,11 +150,6 @@ public/projects/Amplitude/amplitude.txt
 
     .amp__pre--error {
       opacity: 0.85;
-    }
-
-    .amp__card--img img {
-      aspect-ratio: 4 / 3;
-      object-fit: cover;
     }
 
     @media (max-width: 800px) {
