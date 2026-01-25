@@ -1,1 +1,386 @@
+---
+import Layout from "../layouts/Layout.astro";
 
+const slides = [
+  "/projects/01 Project One.png",
+  "/projects/02 Project Two.png",
+  "/projects/03 Project Three.png",
+  "/projects/04 Project Four.png",
+  "/projects/05 Project Five.png",
+  "/projects/06 Project Six.png",
+];
+
+// Project names + placeholder descriptions (same order as slides)
+const projects = [
+  { name: "Project One", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." },
+  { name: "Project Two", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris." },
+  { name: "Project Three", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse." },
+  { name: "Project Four", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Excepteur sint occaecat cupidatat non proident, sunt in culpa." },
+  { name: "Project Five", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer nec odio. Praesent libero. Sed cursus ante dapibus diam." },
+  { name: "Project Six", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed nisi. Nulla quis sem at nibh elementum imperdiet. Duis sagittis." },
+];
+---
+
+<Layout title="Design" description="">
+  <section class="home">
+    <div class="full-bleed">
+      <div class="carousel" id="projects">
+        <div class="viewport" id="viewport" tabindex="0" aria-label="Design carousel">
+          <div class="window" id="window">
+            <ul class="track" id="track" aria-live="polite">
+              <li class="card">
+                <div class="media">
+                  <img class="img-main" id="img-prev" alt="Previous design project" decoding="sync" />
+                </div>
+                <div class="meta" aria-hidden="true">
+                  <div class="title" id="title-prev"></div>
+                  <div class="desc" id="desc-prev"></div>
+                </div>
+              </li>
+
+              <li class="card is-active" id="card-cur">
+                <div class="media">
+                  <img class="img-main" id="img-cur" alt="Current design project" decoding="sync" fetchpriority="high" />
+                </div>
+                <div class="meta">
+                  <div class="title" id="title-cur"></div>
+                  <div class="desc" id="desc-cur"></div>
+                </div>
+              </li>
+
+              <li class="card">
+                <div class="media">
+                  <img class="img-main" id="img-next" alt="Next design project" decoding="sync" />
+                </div>
+                <div class="meta" aria-hidden="true">
+                  <div class="title" id="title-next"></div>
+                  <div class="desc" id="desc-next"></div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <!-- dots removed -->
+      </div>
+    </div>
+  </section>
+
+  <script define:vars={{ slides, projects }}>
+    const viewport = document.getElementById("viewport");
+    const track = document.getElementById("track");
+    const cardCur = document.getElementById("card-cur");
+
+    const imgPrev = document.getElementById("img-prev");
+    const imgCur  = document.getElementById("img-cur");
+    const imgNext = document.getElementById("img-next");
+
+    const titlePrev = document.getElementById("title-prev");
+    const titleCur  = document.getElementById("title-cur");
+    const titleNext = document.getElementById("title-next");
+
+    const descPrev = document.getElementById("desc-prev");
+    const descCur  = document.getElementById("desc-cur");
+    const descNext = document.getElementById("desc-next");
+
+    const n = slides.length;
+    const mod = (x) => (x % n + n) % n;
+
+    let index = 0;
+    let animating = false;
+    let baseX = 0;
+
+    // ---------- Preload everything (main images only) ----------
+    const preloaded = new Set();
+    const preload = (src) => {
+      if (!src || preloaded.has(src)) return;
+      preloaded.add(src);
+      const im = new Image();
+      im.decoding = "async";
+      im.src = src;
+    };
+
+    slides.forEach(preload);
+
+    const setMeta = (i, titleEl, descEl) => {
+      const p = projects[i] || { name: "Project", desc: "" };
+      titleEl.textContent = p.name;
+      descEl.textContent = p.desc;
+    };
+
+    const setImages = () => {
+      imgPrev.src = slides[mod(index - 1)];
+      imgCur.src  = slides[index];
+      imgNext.src = slides[mod(index + 1)];
+
+      // keep these eager so browser prioritizes decode/paint
+      imgPrev.loading = "eager";
+      imgCur.loading  = "eager";
+      imgNext.loading = "eager";
+
+      setMeta(mod(index - 1), titlePrev, descPrev);
+      setMeta(index,          titleCur,  descCur);
+      setMeta(mod(index + 1), titleNext, descNext);
+    };
+
+    const gapPx = () => {
+      const cs = getComputedStyle(track);
+      return parseFloat(cs.columnGap || cs.gap || "0") || 0;
+    };
+
+    const cardWidth = () => {
+      const card = track.querySelector(".card");
+      return card ? card.getBoundingClientRect().width : 0;
+    };
+
+    const stepDistance = () => Math.round(cardWidth() + gapPx());
+
+    // compute baseX so current card center == viewport center (works at any size)
+    const computeBaseX = () => {
+      const v = viewport.getBoundingClientRect();
+      const c = cardCur.getBoundingClientRect();
+
+      const viewportCenter = v.left + v.width / 2;
+      const cardCenter = c.left + c.width / 2;
+
+      baseX += (viewportCenter - cardCenter);
+      baseX = Math.round(baseX);
+
+      track.style.transition = "none";
+      track.style.transform = `translate3d(${baseX}px, 0, 0)`;
+      track.offsetHeight;
+    };
+
+    const step = (dir) => {
+      if (animating) return;
+      animating = true;
+
+      const dist = stepDistance();
+
+      track.style.transition = "transform 320ms ease";
+      track.style.transform = `translate3d(${baseX + (dir === 1 ? -dist : dist)}px, 0, 0)`;
+
+      const onDone = () => {
+        track.removeEventListener("transitionend", onDone);
+
+        index = mod(index + dir);
+        setImages();
+
+        track.style.transition = "none";
+        track.style.transform = `translate3d(${baseX}px, 0, 0)`;
+        track.offsetHeight;
+        computeBaseX();
+
+        animating = false;
+      };
+
+      track.addEventListener("transitionend", onDone);
+    };
+
+    // wheel anywhere: down/right = next, up/left = prev
+    let wheelLock = false;
+    window.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        if (wheelLock || animating) return;
+        wheelLock = true;
+
+        const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        step(dominant > 0 ? 1 : -1);
+
+        setTimeout(() => (wheelLock = false), 360);
+      },
+      { passive: false }
+    );
+
+    // drag/swipe
+    let startX = 0;
+    let dragging = false;
+
+    viewport.addEventListener("pointerdown", (e) => {
+      if (animating) return;
+      dragging = true;
+      startX = e.clientX;
+      viewport.setPointerCapture?.(e.pointerId);
+    });
+
+    viewport.addEventListener("pointerup", (e) => {
+      if (!dragging || animating) return;
+      dragging = false;
+
+      const dx = e.clientX - startX;
+      const threshold = Math.min(90, viewport.clientWidth * 0.14);
+
+      if (dx < -threshold) step(1);
+      else if (dx > threshold) step(-1);
+    });
+
+    viewport.addEventListener("pointercancel", () => {
+      dragging = false;
+    });
+
+    // keyboard
+    window.addEventListener("keydown", (e) => {
+      if (animating) return;
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
+    });
+
+    // resize: recenter after layout settles
+    let resizeT;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(() => computeBaseX(), 60);
+    });
+
+    // init
+    setImages();
+    requestAnimationFrame(() => {
+      baseX = 0;
+      track.style.transform = "translate3d(0,0,0)";
+      computeBaseX();
+    });
+  </script>
+
+  <style>
+    :global(html),
+    :global(body){
+      height: 100%;
+      margin: 0;
+      overflow: hidden; /* no page scrollbars; wheel becomes slide nav */
+    }
+
+    .home{
+      display: grid;
+      gap: 16px;
+      width: 100%;
+      padding-top: clamp(12px, 3vh, 28px);
+      padding-bottom: clamp(18px, 4vh, 44px);
+    }
+
+    .carousel{ width: 100%; }
+
+    .viewport{
+      width: 100%;
+      overflow: hidden;
+      outline: none;
+      touch-action: pan-y;
+      box-sizing: border-box;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .window{
+      width: min(100vw, clamp(320px, 78vw, 980px));
+      overflow: visible; /* allow next peek (desktop) */
+    }
+
+    .track{
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 2vw, 18px);
+      padding: 6px 0;
+      will-change: transform;
+      transform: translate3d(0,0,0);
+    }
+
+    .card{
+      flex: 0 0 auto;
+      width: clamp(320px, 78vw, 980px);
+      border-radius: 16px;
+      overflow: hidden;
+
+      background: var(--card);
+      border: 1px solid var(--border);
+
+      opacity: 0.92;
+      transition: opacity 200ms ease;
+
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card.is-active{ opacity: 1; }
+
+    .media{
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+    }
+
+    .img-main{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+      user-select: none;
+      -webkit-user-drag: none;
+
+      filter: grayscale(100%) saturate(0.9);
+      transition: filter 220ms ease;
+    }
+
+    .card:hover .img-main,
+    .card:focus-within .img-main{ filter: none; }
+
+    .meta{
+      padding: 14px 16px 16px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .title{
+      font-weight: 700;
+      font-size: clamp(16px, 1.6vw, 20px);
+      line-height: 1.2;
+    }
+
+    .desc{
+      font-size: clamp(13px, 1.25vw, 15px);
+      line-height: 1.45;
+      opacity: 0.85;
+    }
+
+    /* Mobile: no prev/next visible + fit viewport */
+    @media (max-width: 640px){
+      .window{
+        width: 100vw;
+        overflow: hidden; /* hides prev/next */
+      }
+
+      .track{
+        gap: 0;
+        padding: 0;
+      }
+
+      .card{
+        width: min(92vw, 520px);
+        border-radius: 14px;
+
+        /* fit within visible viewport height */
+        max-height: calc(100svh - 24px);
+      }
+
+      .media{
+        aspect-ratio: 9 / 16;
+      }
+
+      .meta{
+        padding: 12px 14px 14px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .card,
+      .img-main{
+        transition: none !important;
+      }
+    }
+  </style>
+</Layout>
