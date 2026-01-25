@@ -25,30 +25,27 @@ const covers = [
           <div class="window" id="window">
             <ul class="track" id="track" aria-live="polite">
               <li class="card">
-                <a class="card-link" id="link-prev" href="#">
-                  <div class="media">
-                    <img class="img-main" id="img-prev" alt="Previous project" decoding="sync" />
-                    <img class="img-cover" id="cover-prev" alt="" decoding="sync" aria-hidden="true" />
-                  </div>
-                </a>
+                <div class="media">
+                  <a class="card-link" id="link-prev" href="#" aria-label="Open project"></a>
+                  <img class="img-main" id="img-prev" alt="Previous project" decoding="sync" />
+                  <img class="img-cover" id="cover-prev" alt="" decoding="sync" aria-hidden="true" />
+                </div>
               </li>
 
               <li class="card is-active" id="card-cur">
-                <a class="card-link" id="link-cur" href="#">
-                  <div class="media">
-                    <img class="img-main" id="img-cur" alt="Current project" decoding="sync" fetchpriority="high" />
-                    <img class="img-cover" id="cover-cur" alt="" decoding="sync" fetchpriority="high" aria-hidden="true" />
-                  </div>
-                </a>
+                <div class="media">
+                  <a class="card-link" id="link-cur" href="#" aria-label="Open project"></a>
+                  <img class="img-main" id="img-cur" alt="Current project" decoding="sync" fetchpriority="high" />
+                  <img class="img-cover" id="cover-cur" alt="" decoding="sync" fetchpriority="high" aria-hidden="true" />
+                </div>
               </li>
 
               <li class="card">
-                <a class="card-link" id="link-next" href="#">
-                  <div class="media">
-                    <img class="img-main" id="img-next" alt="Next project" decoding="sync" />
-                    <img class="img-cover" id="cover-next" alt="" decoding="sync" aria-hidden="true" />
-                  </div>
-                </a>
+                <div class="media">
+                  <a class="card-link" id="link-next" href="#" aria-label="Open project"></a>
+                  <img class="img-main" id="img-next" alt="Next project" decoding="sync" />
+                  <img class="img-cover" id="cover-next" alt="" decoding="sync" aria-hidden="true" />
+                </div>
               </li>
             </ul>
           </div>
@@ -95,7 +92,7 @@ const covers = [
     slides.forEach(preload);
     covers.forEach(preload);
 
-    // "/projects/amplitude.png" -> "/projects/amplitude" (route to src/pages/projects/amplitude.astro)
+    // "/projects/amplitude.png" -> "/projects/amplitude"
     const pageFromSlide = (src) => src.replace(/\.png$/i, "");
 
     const setImages = () => {
@@ -111,7 +108,7 @@ const covers = [
       coverCur.src  = covers[index];
       coverNext.src = covers[mod(index + 1)];
 
-      // update clickable links
+      // clickable links
       linkPrev.href = pageFromSlide(prev);
       linkCur.href  = pageFromSlide(cur);
       linkNext.href = pageFromSlide(next);
@@ -222,6 +219,17 @@ const covers = [
       dragging = false;
     });
 
+    // If the click started as a drag, don't navigate.
+    viewport.addEventListener(
+      "click",
+      (e) => {
+        const a = e.target.closest("a.card-link");
+        if (!a) return;
+        if (dragging) e.preventDefault();
+      },
+      true
+    );
+
     // keyboard
     window.addEventListener("keydown", (e) => {
       if (animating) return;
@@ -306,18 +314,21 @@ const covers = [
 
     .card.is-active{ opacity: 1; }
 
-    .card-link{
-      display: block;
-      width: 100%;
-      height: 100%;
-      text-decoration: none;
-      color: inherit;
-    }
-
     .media{
       position: relative;
       width: 100%;
       height: 100%;
+    }
+
+    /* ✅ make the <a> the top click layer */
+    .card-link{
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
     }
 
     .img-main,
@@ -334,11 +345,13 @@ const covers = [
     }
 
     .img-main{
+      z-index: 1;
       filter: grayscale(100%) saturate(0.9);
       transition: filter 220ms ease;
     }
 
     .img-cover{
+      z-index: 2;
       opacity: 0.28;
       transition: opacity 220ms ease;
       pointer-events: none;
