@@ -6,58 +6,39 @@ const normalize = (p: string) => {
 };
 const pathname = normalize(raw);
 const active = (p: string) => (pathname === normalize(p) ? 'active' : '');
-
-const titleMap: Record<string, string> = {
-  '/': 'Home',
-  '/about': 'About',
-  '/resume': 'Resume',
-  '/design': 'Design',
-  '/contact': 'Contact',
-};
-const pageTitle = titleMap[pathname] ?? '';
 ---
 
 <nav class="topbar" aria-label="Primary">
-  <div class="container">
-    <div class="row">
-      <!-- Left: Logo -->
-      <a href="/" class="logo-link" aria-label="Home">
-        <img class="logo" src="/icons/logo dark.png" alt="Logo" />
-      </a>
+  <div class="content">
+    <!-- Left: Logo -->
+    <a href="/" class="logo-link" aria-label="Home">
+      <img class="logo" src="/icons/logo dark.png" alt="Logo" />
+    </a>
 
-      <!-- Center spacer -->
-      <div class="spacer" aria-hidden="true"></div>
+    <!-- Center spacer -->
+    <div class="spacer" aria-hidden="true"></div>
 
-      <!-- Right: Desktop menu -->
-      <ul class="menu" role="menubar" aria-label="Main">
-        <li role="none">
-          <a role="menuitem" class={`link ${active('/about')}`} href="/about">About</a>
-        </li>
-        <li role="none">
-          <a role="menuitem" class={`link link-outline ${active('/resume')}`} href="/resume">Resume</a>
-        </li>
-        <li role="none">
-          <a role="menuitem" class={`link ${active('/design')}`} href="/design">Design</a>
-        </li>
-        <li role="none">
-          <a role="menuitem" class={`link ${active('/contact')}`} href="/contact">Contact</a>
-        </li>
-      </ul>
+    <!-- Right: Desktop menu -->
+    <ul class="menu" role="menubar" aria-label="Main">
+      <li role="none"><a role="menuitem" class={`link ${active('/about')}`} href="/about">About</a></li>
+      <li role="none"><a role="menuitem" class={`link link-outline ${active('/resume')}`} href="/resume">Resume</a></li>
+      <li role="none"><a role="menuitem" class={`link ${active('/design')}`} href="/design">Design</a></li>
+      <li role="none"><a role="menuitem" class={`link ${active('/contact')}`} href="/contact">Contact</a></li>
+    </ul>
 
-      <!-- Right: Hamburger (mobile only) -->
-      <button
-        class="hamburger"
-        id="mobileMenuBtn"
-        aria-label="Open navigation menu"
-        aria-haspopup="menu"
-        aria-expanded="false"
-        aria-controls="mobileMenu"
-      >
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
-          <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
-        </svg>
-      </button>
-    </div>
+    <!-- Right: Hamburger (mobile only) -->
+    <button
+      class="hamburger"
+      id="mobileMenuBtn"
+      aria-label="Open navigation menu"
+      aria-haspopup="menu"
+      aria-expanded="false"
+      aria-controls="mobileMenu"
+    >
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+        <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/>
+      </svg>
+    </button>
 
     <!-- Mobile dropdown -->
     <div class="mobile-menu" id="mobileMenu" hidden>
@@ -98,32 +79,23 @@ const pageTitle = titleMap[pathname] ?? '';
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeMenu();
     });
-    menu.querySelectorAll('a').forEach(a =>
-      a.addEventListener('click', closeMenu)
-    );
+    menu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
   })();
 </script>
 
 <style>
-  :root{ --pill-text:#e7e7e7; }
-
   .topbar{
     position: sticky;
     top: 0;
     z-index: 1000;
     background: var(--bg);
-    margin: 2rem auto 0;
+    margin: 2rem 0 0;
+    width: 100%;
   }
 
-  /* ✅ One shared 80% container (same for nav + pages) */
-  .container{
-    width: 80%;
-    margin: 0 auto;
-  }
-
-  /* ✅ Inner row defines the true content edges (logo aligns to this) */
-  .row{
-    max-width: 1200px;
+  /* ✅ Single source of truth for “center 80%” */
+  .content{
+    width: min(80vw, 1200px);
     margin: 0 auto;
     padding: .6rem 1rem;
     display: grid;
@@ -157,7 +129,6 @@ const pageTitle = titleMap[pathname] ?? '';
     display:inline-flex;
     align-items:center;
   }
-
   .link:hover{ color:var(--text); }
   .link.active{ font-weight:700; color:var(--text); }
 
@@ -172,7 +143,6 @@ const pageTitle = titleMap[pathname] ?? '';
     .link-outline:hover,
     .link-outline.active{ border-color: rgba(255,255,255,1); }
   }
-
   @media (max-width: 768px){
     .link-outline{ padding:0; border:none; border-radius:0; }
   }
@@ -188,7 +158,6 @@ const pageTitle = titleMap[pathname] ?? '';
   }
 
   .mobile-menu{ position: relative; }
-
   .mobile-list{
     position:absolute;
     top:100%;
@@ -203,16 +172,14 @@ const pageTitle = titleMap[pathname] ?? '';
     display:flex;
     flex-direction:column;
     gap:.75rem;
-    width: max-content;
-    min-width: 0;
+    width:max-content;
     align-items:flex-start;
   }
 
   @media (max-width:768px){
     .menu{ display:none; }
-    .row{ column-gap:.5rem; }
+    .content{ column-gap:.5rem; grid-template-columns: auto 1fr auto; }
   }
-
   @media (min-width:769px){
     .mobile-menu,
     .hamburger{ display:none; }
