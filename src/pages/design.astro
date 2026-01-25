@@ -82,12 +82,6 @@ const projects = [
     const descCur  = document.getElementById("desc-cur");
     const descNext = document.getElementById("desc-next");
 
-    // Hard fail early if something is missing (prevents silent "no images")
-    const required = [home, viewport, track, cardCur, imgPrev, imgCur, imgNext, titlePrev, titleCur, titleNext, descPrev, descCur, descNext];
-    if (required.some((x) => !x)) {
-      console.error("Design carousel: missing required DOM nodes.");
-    }
-
     const n = slides.length;
     const mod = (x) => (x % n + n) % n;
 
@@ -95,7 +89,7 @@ const projects = [
     let animating = false;
     let baseX = 0;
 
-    // ---------- Preload main images ----------
+    // Preload main images
     const preloaded = new Set();
     const preload = (src) => {
       if (!src || preloaded.has(src)) return;
@@ -138,39 +132,39 @@ const projects = [
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
 
-    // ✅ Compute card/media sizing from viewport height (reliable, no CSS division)
+    // ✅ Fixed card height, but auto-capped so it never overflows the viewport.
+    // ✅ Then compute media height and card width from 16:9.
     const updateSizingVars = () => {
       if (!home) return;
-
       const cs = getComputedStyle(home);
 
       const pt = parseFloat(cs.paddingTop || "0") || 0;
       const pb = parseFloat(cs.paddingBottom || "0") || 0;
-
-      // optional "chrome" (header) space; stays 0 unless you set it in CSS
       const chrome = parseFloat(cs.getPropertyValue("--chrome") || "0") || 0;
 
+      const metaH = parseFloat(cs.getPropertyValue("--meta-h") || "180") || 180;
+      const fixedCardH = parseFloat(cs.getPropertyValue("--card-h-fixed") || "640") || 640;
+
       const viewportH = window.visualViewport?.height || window.innerHeight;
-      const homeH = Math.max(0, viewportH - chrome);
 
-      // card height is the visible area inside the section padding
-      const cardH = Math.max(220, Math.floor(homeH - pt - pb));
+      // available height inside the section padding + minus optional header chrome
+      const availableCardH = Math.max(260, Math.floor(viewportH - chrome - pt - pb));
 
-      // meta height from CSS var (fixed => same image pixel size across cards)
-      const metaH = parseFloat(cs.getPropertyValue("--meta-h") || "160") || 160;
+      // card height is FIXED unless the viewport can't fit it
+      const cardH = Math.min(fixedCardH, availableCardH);
 
-      // media height is whatever remains
+      // remaining height for the 16:9 image area
       const mediaH = Math.max(120, Math.floor(cardH - metaH));
 
-      // 9:16 => width = height * 9/16
-      const cardW = Math.floor((mediaH * 9) / 16);
+      // 16:9 landscape => width = height * 16/9
+      const cardW = Math.floor((mediaH * 16) / 9);
 
       home.style.setProperty("--card-h", `${cardH}px`);
       home.style.setProperty("--media-h", `${mediaH}px`);
       home.style.setProperty("--card-w", `${cardW}px`);
     };
 
-    // ✅ compute baseX so current card center == viewport center (works at any size)
+    // Center current card in viewport
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
       const c = cardCur.getBoundingClientRect();
@@ -289,36 +283,38 @@ const projects = [
     :global(body){
       height: 100%;
       margin: 0;
-      overflow: hidden; /* no page scrollbars; wheel becomes slide nav */
+      overflow: hidden; /* wheel becomes slide nav */
     }
 
     .home{
-      /* set to your header height if needed (0 by default) */
+      /* Set to your header height if your Layout has a topbar (0 by default) */
       --chrome: 0px;
 
-      /* fixed meta height => consistent image pixel size across cards */
-      --meta-h: 160px;
+      /* ✅ YOU control these */
+      --card-h-fixed: 640px; /* <-- FIXED card height target */
+      --meta-h: 180px;       /* <-- fixed title+desc area height */
 
-      /* JS will set these */
-      --card-h: 600px;
-      --media-h: 440px;
-      --card-w: 260px;
+      /* JS sets these */
+      --card-h: 640px;
+      --media-h: 460px;
+      --card-w: 820px;
 
       display: grid;
       gap: 16px;
       width: 100%;
       padding-top: clamp(12px, 3vh, 28px);
       padding-bottom: clamp(18px, 4vh, 44px);
-
-      /* lock the section to the viewport */
-      height: calc(100svh - var(--chrome));
       box-sizing: border-box;
+
+      /* Lock section to viewport (minus optional chrome) */
+      height: calc(100svh - var(--chrome));
     }
 
     .carousel{ width: 100%; }
 
     .viewport{
       width: 100%;
+      height: 100%;
       overflow: hidden;
       outline: none;
       touch-action: pan-y;
@@ -329,7 +325,7 @@ const projects = [
       align-items: center;
     }
 
-    /* Match your Home page centering behavior */
+    /* Match your Home page’s “centered feel” */
     .window{
       width: min(100vw, clamp(320px, 78vw, 980px));
       overflow: visible; /* allow next peek (desktop) */
@@ -347,10 +343,10 @@ const projects = [
     .card{
       flex: 0 0 auto;
 
-      /* ✅ always fits screen */
+      /* ✅ fixed height (capped in JS to never overflow viewport) */
       height: var(--card-h);
 
-      /* ✅ width derived from 9:16 media height */
+      /* ✅ width derived from 16:9 media height (also capped) */
       width: min(92vw, var(--card-w));
 
       border-radius: 16px;
@@ -416,18 +412,17 @@ const projects = [
       line-height: 1.45;
       opacity: 0.85;
 
-      /* clamp so different text lengths don't change layout */
+      /* keep layout identical across cards */
       display: -webkit-box;
       -webkit-box-orient: vertical;
       -webkit-line-clamp: 3;
       overflow: hidden;
     }
 
-    /* ✅ Mobile: hide prev/next visible + fit viewport */
     @media (max-width: 640px){
       .window{
         width: 100vw;
-        overflow: hidden; /* hides prev/next */
+        overflow: hidden;
       }
 
       .track{
@@ -436,7 +431,7 @@ const projects = [
       }
 
       .home{
-        --meta-h: 180px;
+        --meta-h: 200px;
       }
 
       .card{
