@@ -63,7 +63,7 @@ const nonCover = finalFiles
     <section class="amp__hero" aria-label="Amplitude hero">
       <div class="amp__heroInner">
         <div class="amp__grid amp__grid--hero">
-          <!-- Cover (maintains aspect ratio: contain, no crop) -->
+          <!-- Cover (aspect ratio preserved: contain, no crop) -->
           <figure class="amp__heroMedia">
             <button
               class="amp__imgBtn"
@@ -114,6 +114,9 @@ const nonCover = finalFiles
         </div>
       </div>
     </section>
+
+    <!-- footer-trigger sentinel (near bottom) -->
+    <div id="footerTrigger" aria-hidden="true"></div>
 
     <!-- Lightbox -->
     <div class="lb" id="lightbox" aria-hidden="true">
@@ -197,7 +200,7 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Background flip + navbar styling flip when crossing into white section -->
+    <!-- Flip FULL PAGE background + navbar style when crossing into white section -->
     <script is:inline>
       (function () {
         const sentinel = document.getElementById("whiteStart");
@@ -229,8 +232,29 @@ const nonCover = finalFiles
       })();
     </script>
 
+    <!-- Footer turns white ONLY when you're at the bottom -->
+    <script is:inline>
+      (function () {
+        const footer = document.querySelector("footer");
+        const trigger = document.getElementById("footerTrigger");
+        if (!footer || !trigger) return;
+
+        const setFooterWhite = (on) => footer.classList.toggle("amp-footer-white", on);
+
+        const io = new IntersectionObserver(
+          ([entry]) => {
+            // When the trigger is in view, you're near the end
+            setFooterWhite(entry.isIntersecting);
+          },
+          { threshold: 0.01 }
+        );
+
+        io.observe(trigger);
+      })();
+    </script>
+
     <style>
-      /* IMPORTANT: override Layout's fixed footer and any fixed navbar behavior */
+      /* Make Layout footer NOT fixed on this page; only show when you scroll to bottom naturally */
       :global(footer) {
         position: static !important;
         left: auto !important;
@@ -238,6 +262,13 @@ const nonCover = finalFiles
         bottom: auto !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
+        background: transparent !important; /* default: blend with dark */
+        border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+      }
+
+      /* Layout main adds padding for fixed footer; remove it on this page */
+      :global(main) {
+        padding-bottom: 0 !important;
       }
 
       /* If your Navbar CSS makes it fixed/sticky, force it to scroll normally */
@@ -248,11 +279,6 @@ const nonCover = finalFiles
         left: auto !important;
         right: auto !important;
         z-index: auto !important;
-      }
-
-      /* Layout main adds padding for fixed footer; remove it on this page */
-      :global(main) {
-        padding-bottom: 0 !important;
       }
 
       .amp {
@@ -273,26 +299,30 @@ const nonCover = finalFiles
 
       /* ---------------------------
          HERO (dark)
+         - no borders (per your request)
+         - not forced 50/50 columns
          --------------------------- */
       .amp__hero {
         min-height: 100svh;
         display: grid;
         align-items: stretch;
         color: #fff;
+        padding: 0;
       }
 
       .amp__grid--hero {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1.25fr 0.75fr; /* ✅ not 50/50 */
         min-height: 100svh;
         align-items: stretch;
+        gap: 1.4rem;
       }
 
+      /* ✅ remove borders in first row */
       .amp__heroMedia,
       .amp__heroText {
-        border: 1px solid rgba(255, 255, 255, 0.16);
-        background: rgba(255, 255, 255, 0.03);
+        border: none;
+        background: transparent;
         overflow: hidden;
-        border-radius: 0;
       }
 
       .amp__imgBtn {
@@ -315,7 +345,7 @@ const nonCover = finalFiles
       }
 
       .amp__heroText {
-        padding: 1.1rem 1.1rem 0.95rem;
+        padding: 0.25rem 0 0;
         text-align: left;
       }
 
@@ -380,6 +410,12 @@ const nonCover = finalFiles
         object-fit: contain;
       }
 
+      /* footer trigger spacer so it's reachable */
+      #footerTrigger {
+        height: 1px;
+        width: 100%;
+      }
+
       /* ---------------------------
          FULL PAGE background flip
          --------------------------- */
@@ -420,6 +456,22 @@ const nonCover = finalFiles
       :global(nav.amp-white a),
       :global(nav.topbar.amp-white a) {
         color: #0b0b0b !important;
+      }
+
+      /* Footer only turns white when you reach the bottom */
+      :global(footer.amp-footer-white) {
+        background: #ffffff !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.12) !important;
+        color: #0b0b0b !important;
+      }
+
+      :global(footer.amp-footer-white a) {
+        color: #0b0b0b !important;
+      }
+
+      /* Make footer text readable on dark while not at bottom */
+      :global(footer:not(.amp-footer-white)) {
+        color: rgba(255, 255, 255, 0.75) !important;
       }
 
       /* ---------------------------
@@ -514,6 +566,7 @@ const nonCover = finalFiles
         .amp__grid--hero {
           grid-template-columns: 1fr;
           min-height: auto;
+          gap: 1.1rem;
         }
 
         .amp__heroMedia {
