@@ -26,7 +26,7 @@ try {
   console.error("[Amplitude page] asset read error:", err);
 }
 
-// ✅ EXACT order requested
+/* ✅ EXACT order requested */
 const orderedFiles = [
   "Images-08.png",
   "Images-06.png",
@@ -59,41 +59,41 @@ const nonCover = finalFiles
 
 <Layout title="Amplitude" description="Amplitude project">
   <main class="amp">
-    <!-- HERO (dark) -->
+    <!-- HERO: cover in same “card” position/size feel as index carousel -->
     <section class="amp__hero" aria-label="Amplitude hero">
       <div class="amp__heroInner">
-        <div class="amp__grid amp__grid--hero">
-          <!-- Cover: crop to 4x3 -->
-          <figure class="amp__heroMedia" id="heroMedia">
-            <button
-              class="amp__imgBtn"
-              type="button"
-              data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
-              aria-label="Open cover image"
-            >
-              <img class="amp__img--hero" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
-            </button>
-          </figure>
+        <figure class="amp__cover" id="coverFigure">
+          <button
+            class="amp__imgBtn"
+            type="button"
+            data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
+            aria-label="Open cover image"
+          >
+            <img class="amp__img--cover" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
+          </button>
+        </figure>
 
-          <!-- Description: same height as cover, aligned to top -->
-          <article class="amp__heroText" id="heroText">
-            <h1 class="amp__title">Amplitude</h1>
-            <div class="amp__subtitle">{subtitle}</div>
+        <!-- Title/subtitle BELOW image, left aligned to image -->
+        <header class="amp__meta">
+          <h1 class="amp__title">Amplitude</h1>
+          <div class="amp__subtitle">{subtitle}</div>
+        </header>
 
-            {descriptionText ? (
-              <div class="amp__body">{descriptionText}</div>
-            ) : (
-              <div class="amp__body amp__body--error">
-                Couldn’t load <code>amplitude.txt</code><br />
-                Expected: <code>public/projects/{FOLDER}/amplitude.txt</code>
-              </div>
-            )}
-          </article>
-        </div>
+        <!-- Description appears as you scroll (still in dark section) -->
+        <section class="amp__desc" aria-label="Project description">
+          {descriptionText ? (
+            <div class="amp__body">{descriptionText}</div>
+          ) : (
+            <div class="amp__body amp__body--error">
+              Couldn’t load <code>amplitude.txt</code><br />
+              Expected: <code>public/projects/{FOLDER}/amplitude.txt</code>
+            </div>
+          )}
+        </section>
       </div>
     </section>
 
-    <!-- GALLERY (white begins here) -->
+    <!-- White section begins here; background + text colors flip -->
     <section class="amp__gallery" aria-label="Amplitude gallery">
       <div id="whiteStart" aria-hidden="true"></div>
 
@@ -101,7 +101,12 @@ const nonCover = finalFiles
         <div class="amp__grid amp__grid--gallery">
           {nonCover.map(({ src, i }) => (
             <figure class="amp__galleryItem">
-              <button class="amp__imgBtn amp__imgBtn--full" type="button" data-lb-index={String(i)} aria-label="Open image">
+              <button
+                class="amp__imgBtn amp__imgBtn--full"
+                type="button"
+                data-lb-index={String(i)}
+                aria-label="Open image"
+              >
                 <img class="amp__img--full" src={src} alt="" loading="lazy" decoding="async" />
               </button>
             </figure>
@@ -195,7 +200,7 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Background flip + navbar style flip when crossing into white section -->
+    <!-- Background + nav style flip when crossing into white section -->
     <script is:inline>
       (function () {
         const sentinel = document.getElementById("whiteStart");
@@ -241,31 +246,6 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Match description height to cover height -->
-    <script is:inline>
-      (function () {
-        const media = document.getElementById("heroText");
-        if (!media) return;
-
-        const set = () => {
-          const h = Math.round(media.getBoundingClientRect().height);
-          document.documentElement.style.setProperty("--hero-h", h + "px");
-        };
-
-        set();
-        window.addEventListener("load", set);
-        window.addEventListener("resize", set);
-
-        if ("ResizeObserver" in window) {
-          const ro = new ResizeObserver(set);
-          ro.observe(media);
-        }
-
-        const img = media.querySelector("img");
-        if (img) img.addEventListener("load", set, { once: true });
-      })();
-    </script>
-
     <style>
       /* --- Page-specific overrides: make Layout footer NOT fixed here --- */
       :global(footer) {
@@ -301,62 +281,83 @@ const nonCover = finalFiles
         border-bottom: none !important;
       }
 
-      .amp{
-        width: 80%;
-        max-width: 1400px;
-        margin-inline: auto;
+      /* ---------------------------
+         COLOR SYSTEM (flips w/ background)
+         --------------------------- */
+      :global(html),
+      :global(body) {
+        background: #121212 !important;
+        transition: background 200ms ease;
+      }
+
+      :global(html) {
+        --amp-fg: #ffffff;
+        --amp-muted: rgba(255, 255, 255, 0.74);
+        --amp-body: rgba(255, 255, 255, 0.78);
+        --amp-border: rgba(255, 255, 255, 0.16);
+      }
+
+      :global(html.amp-white),
+      :global(body.amp-white) {
+        background: #ffffff !important;
+      }
+
+      :global(html.amp-white) {
+        --amp-fg: #0b0b0b;
+        --amp-muted: rgba(0, 0, 0, 0.62);
+        --amp-body: rgba(0, 0, 0, 0.72);
+        --amp-border: rgba(0, 0, 0, 0.12);
+      }
+
+      /* Keep navbar borderless in both states */
+      :global(nav.amp-white),
+      :global(nav.topbar.amp-white) {
+        border-bottom: none !important;
+        box-shadow: none !important;
+      }
+
+      /* Footer only becomes white when you're at bottom */
+      :global(footer.amp-footer-white) {
+        background: #ffffff !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.12) !important;
+        color: #0b0b0b !important;
+      }
+      :global(footer.amp-footer-white a) {
+        color: #0b0b0b !important;
+      }
+
+      /* ---------------------------
+         PAGE LAYOUT
+         --------------------------- */
+      .amp {
+        width: 100%;
+        margin: 0;
         padding-top: 2rem;
       }
-      
+
+      /* Match index “card” sizing feel */
       .amp__heroInner,
-      .amp__galleryInner{
-        width: 100%;
-        margin: 0 auto;
+      .amp__galleryInner {
+        width: min(100vw, clamp(320px, 78vw, 980px));
+        margin-inline: auto;
       }
-      
-      .amp__grid{
-        display: grid;
-      }
-      
+
       /* HERO */
-      .amp__hero{
-        color: #fff;
-        min-height: calc(100svh - 2rem);
-        max-height: calc(100svh - 2rem);
-        display: flex;
-        align-items: start;
+      .amp__hero {
+        color: var(--amp-fg);
+        padding-bottom: 2rem;
       }
-      
-      /* ✅ even columns */
-      .amp__grid--hero{
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2.5rem;
-        align-items: start;
-        width: 100%;
-      }
-      
-      /* ✅ description determines height; no internal scroll */
-      .amp__heroText{
-        min-width: 0;
-        overflow: visible;
-        background: #121212;
+
+      .amp__cover {
         margin: 0;
-        padding-right: 0;
-        height: calc(100svh - 2rem);
-      }
-      
-      /* ✅ image height matches description height */
-      .amp__heroMedia{
-        width: 100%;
+        border-radius: 0px;
         overflow: hidden;
-        position: relative;
-        isolation: isolate;
-        background: #121212;
-        margin: 0;
+        aspect-ratio: 16 / 9;
+        border: 1px solid var(--amp-border);
+        background: transparent;
       }
-      
-      .amp__imgBtn{
+
+      .amp__imgBtn {
         display: block;
         width: 100%;
         height: 100%;
@@ -365,39 +366,52 @@ const nonCover = finalFiles
         background: transparent;
         cursor: zoom-in;
       }
-      
-      .amp__img--hero{
+
+      .amp__img--cover {
         width: 100%;
         height: 100%;
         display: block;
-        object-fit: cover;          /* ✅ crop */
-        object-position: center;    /* ✅ crop from center */
+        object-fit: cover;
+        object-position: center;
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+
+      .amp__meta {
+        margin-top: 1.05rem;
       }
 
       .amp__title {
         margin: 0 0 0.45rem;
         font-size: clamp(1.6rem, 2.2vw, 2.15rem);
         letter-spacing: -0.02em;
-        color: #fff;
+        color: var(--amp-fg);
       }
 
       .amp__subtitle {
         font-size: 0.95rem;
         font-weight: 500;
         letter-spacing: 0.02em;
-        margin-bottom: 0.9rem;
-        color: rgba(255, 255, 255, 0.74);
+        color: var(--amp-muted);
+      }
+
+      .amp__desc {
+        margin-top: 1.35rem;
       }
 
       .amp__body {
         white-space: pre-line;
         line-height: 1.65;
         font-size: 1rem;
-        color: rgba(255, 255, 255, 0.78);
+        color: var(--amp-body);
+      }
+
+      .amp__body--error {
+        opacity: 0.95;
       }
 
       /* ---------------------------
-         GALLERY (white)
+         GALLERY (white section)
          --------------------------- */
       .amp__gallery {
         padding: 1.5rem 0 3rem;
@@ -406,6 +420,10 @@ const nonCover = finalFiles
       #whiteStart {
         height: 1px;
         width: 100%;
+      }
+
+      .amp__grid {
+        display: grid;
       }
 
       .amp__grid--gallery {
@@ -438,38 +456,6 @@ const nonCover = finalFiles
       #footerTrigger {
         height: 1px;
         width: 100%;
-      }
-
-      /* ---------------------------
-         FULL PAGE background flip
-         --------------------------- */
-      :global(html),
-      :global(body) {
-        background: #121212 !important;
-        transition: background 200ms ease;
-      }
-
-      :global(html.amp-white),
-      :global(body.amp-white) {
-        background: #ffffff !important;
-      }
-
-      /* Keep navbar borderless in both states */
-      :global(nav.amp-white),
-      :global(nav.topbar.amp-white) {
-        border-bottom: none !important;
-        box-shadow: none !important;
-      }
-
-      /* Footer only becomes white when you're at bottom */
-      :global(footer.amp-footer-white) {
-        background: #ffffff !important;
-        border-top: 1px solid rgba(0, 0, 0, 0.12) !important;
-        color: #0b0b0b !important;
-      }
-
-      :global(footer.amp-footer-white a) {
-        color: #0b0b0b !important;
       }
 
       /* ---------------------------
@@ -555,29 +541,25 @@ const nonCover = finalFiles
         overflow: hidden;
       }
 
-      @media (max-width: 900px) {
+      /* ---------------------------
+         Mobile
+         --------------------------- */
+      @media (max-width: 640px) {
         .amp__heroInner,
         .amp__galleryInner {
-          width: 100%;
+          width: 100vw;
+          padding-inline: 4vw;
         }
 
-        .amp__grid--hero {
-          grid-template-columns: 1fr;
-          grid-template-rows: auto;
-          min-height: auto;
-          gap: 1.1rem;
+        .amp__cover {
+          aspect-ratio: 9 / 16;
         }
+      }
 
-        .amp__heroMedia {
-          height: auto;
-          aspect-ratio: 4 / 3;
-        }
-
-        .amp__heroText {
-          height: auto;
-          background: transparent;
-          overflow: visible;
-          padding-right: 0;
+      @media (prefers-reduced-motion: reduce) {
+        :global(html),
+        :global(body) {
+          transition: none !important;
         }
       }
     </style>
