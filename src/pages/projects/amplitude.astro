@@ -61,7 +61,7 @@ const nonCover = finalFiles
   <main class="amp">
     <!-- HERO: cover + title/subtitle only (description stays below fold) -->
     <section class="amp__hero" aria-label="Amplitude hero">
-      <div class="amp__heroInner">
+      <div class="amp__inner">
         <!-- Cover (same “card” footprint feel as index carousel) -->
         <figure class="amp__cover" id="coverFigure">
           <button
@@ -72,6 +72,9 @@ const nonCover = finalFiles
           >
             <img class="amp__img--cover" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
           </button>
+
+          <!-- ✅ flip trigger: when this crosses top, cover is fully off-screen -->
+          <div id="coverEnd" aria-hidden="true"></div>
         </figure>
 
         <!-- Title/subtitle BELOW image, left aligned to image -->
@@ -85,9 +88,9 @@ const nonCover = finalFiles
       </div>
     </section>
 
-    <!-- DESCRIPTION (still in dark mode until cover scrolls fully off-screen) -->
+    <!-- DESCRIPTION (appears only after you scroll) -->
     <section class="amp__desc" aria-label="Project description">
-      <div class="amp__heroInner">
+      <div class="amp__inner">
         {descriptionText ? (
           <div class="amp__body">{descriptionText}</div>
         ) : (
@@ -99,18 +102,13 @@ const nonCover = finalFiles
       </div>
     </section>
 
-    <!-- GALLERY (white section content remains as-is; background flips when cover is off-screen) -->
+    <!-- GALLERY -->
     <section class="amp__gallery" aria-label="Amplitude gallery">
-      <div class="amp__galleryInner">
+      <div class="amp__inner">
         <div class="amp__grid amp__grid--gallery">
           {nonCover.map(({ src, i }) => (
             <figure class="amp__galleryItem">
-              <button
-                class="amp__imgBtn amp__imgBtn--full"
-                type="button"
-                data-lb-index={String(i)}
-                aria-label="Open image"
-              >
+              <button class="amp__imgBtn amp__imgBtn--full" type="button" data-lb-index={String(i)} aria-label="Open image">
                 <img class="amp__img--full" src={src} alt="" loading="lazy" decoding="async" />
               </button>
             </figure>
@@ -207,8 +205,8 @@ const nonCover = finalFiles
     <!-- ✅ Background + nav style flip when cover image is fully off-screen -->
     <script is:inline>
       (function () {
-        const cover = document.getElementById("coverFigure");
-        if (!cover) return;
+        const end = document.getElementById("coverEnd");
+        if (!end) return;
 
         const nav =
           document.querySelector("nav.topbar") ||
@@ -222,10 +220,13 @@ const nonCover = finalFiles
         };
 
         const update = () => {
-          const r = cover.getBoundingClientRect();
+          const r = end.getBoundingClientRect();
           // Flip once cover is completely off the viewport
-          setWhiteMode(r.bottom <= 0);
+          setWhiteMode(r.top <= 0);
         };
+
+        const io = new IntersectionObserver(() => update(), { threshold: [0, 1] });
+        io.observe(end);
 
         window.addEventListener("scroll", update, { passive: true });
         window.addEventListener("resize", update);
@@ -336,8 +337,7 @@ const nonCover = finalFiles
         padding-top: 2rem;
       }
 
-      .amp__heroInner,
-      .amp__galleryInner {
+      .amp__inner {
         width: min(100vw, clamp(320px, 78vw, 980px));
         margin-inline: auto;
       }
@@ -351,7 +351,7 @@ const nonCover = finalFiles
         padding-bottom: 0;
       }
 
-      .amp__heroInner {
+      .amp__inner {
         display: flex;
         flex-direction: column;
       }
@@ -385,6 +385,11 @@ const nonCover = finalFiles
         -webkit-user-drag: none;
       }
 
+      #coverEnd {
+        height: 1px;
+        width: 100%;
+      }
+
       .amp__meta {
         margin-top: 1.05rem;
       }
@@ -413,6 +418,12 @@ const nonCover = finalFiles
          --------------------------- */
       .amp__desc {
         padding: 0 0 2.25rem;
+      }
+
+      /* Re-declare inner as block for non-hero sections */
+      .amp__desc .amp__inner,
+      .amp__gallery .amp__inner {
+        display: block;
       }
 
       .amp__body {
@@ -556,8 +567,7 @@ const nonCover = finalFiles
          Mobile
          --------------------------- */
       @media (max-width: 640px) {
-        .amp__heroInner,
-        .amp__galleryInner {
+        .amp__inner {
           width: 100vw;
           padding-inline: 4vw;
         }
