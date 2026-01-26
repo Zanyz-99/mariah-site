@@ -58,45 +58,52 @@ const nonCover = finalFiles
 
 <Layout title="Immersion" description="Immersion project">
   <main class="imm">
-    <!-- HERO (dark) -->
+    <!-- HERO: cover + title/subtitle only (description stays below fold) -->
     <section class="imm__hero" aria-label="Immersion hero">
-      <div class="imm__heroInner">
-        <div class="imm__grid imm__grid--hero">
-          <!-- Cover -->
-          <figure class="imm__heroMedia" id="heroMedia">
-            <button
-              class="imm__imgBtn"
-              type="button"
-              data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
-              aria-label="Open cover image"
-            >
-              <img class="imm__img--hero" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
-            </button>
-          </figure>
+      <div class="imm__inner">
+        <!-- Cover (same “card” footprint feel as index carousel) -->
+        <figure class="imm__cover" id="coverFigure">
+          <button
+            class="imm__imgBtn"
+            type="button"
+            data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
+            aria-label="Open cover image"
+          >
+            <img class="imm__img--cover" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
+          </button>
 
-          <!-- Description -->
-          <article class="imm__heroText" id="heroText">
-            <h1 class="imm__title">Immersion</h1>
-            <div class="imm__subtitle">{subtitle}</div>
+          <!-- ✅ flip trigger: when this crosses top, cover is fully off-screen -->
+          <div id="coverEnd" aria-hidden="true"></div>
+        </figure>
 
-            {descriptionText ? (
-              <div class="imm__body">{descriptionText}</div>
-            ) : (
-              <div class="imm__body imm__body--error">
-                Couldn’t load <code>immersion.txt</code><br />
-                Expected: <code>public/projects/{FOLDER}/immersion.txt</code>
-              </div>
-            )}
-          </article>
-        </div>
+        <!-- Title/subtitle BELOW image, left aligned to image -->
+        <header class="imm__meta">
+          <h1 class="imm__title">Immersion</h1>
+          <div class="imm__subtitle">{subtitle}</div>
+        </header>
+
+        <!-- Spacer pushes description off-screen until you scroll -->
+        <div class="imm__heroSpacer" aria-hidden="true"></div>
       </div>
     </section>
 
-    <!-- GALLERY (white begins here) -->
-    <section class="imm__gallery" aria-label="Immersion gallery">
-      <div id="whiteStart" aria-hidden="true"></div>
+    <!-- DESCRIPTION (appears only after you scroll) -->
+    <section class="imm__desc" aria-label="Project description">
+      <div class="imm__inner">
+        {descriptionText ? (
+          <div class="imm__body">{descriptionText}</div>
+        ) : (
+          <div class="imm__body imm__body--error">
+            Couldn’t load <code>immersion.txt</code><br />
+            Expected: <code>public/projects/{FOLDER}/immersion.txt</code>
+          </div>
+        )}
+      </div>
+    </section>
 
-      <div class="imm__galleryInner">
+    <!-- GALLERY -->
+    <section class="imm__gallery" aria-label="Immersion gallery">
+      <div class="imm__inner">
         <div class="imm__grid imm__grid--gallery">
           {nonCover.map(({ src, i }) => (
             <figure class="imm__galleryItem">
@@ -194,11 +201,11 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Background flip + navbar flip when crossing into white section -->
+    <!-- ✅ Background + nav style flip when cover image is fully off-screen -->
     <script is:inline>
       (function () {
-        const sentinel = document.getElementById("whiteStart");
-        if (!sentinel) return;
+        const end = document.getElementById("coverEnd");
+        if (!end) return;
 
         const nav =
           document.querySelector("nav.topbar") ||
@@ -212,16 +219,16 @@ const nonCover = finalFiles
         };
 
         const update = () => {
-          const r = sentinel.getBoundingClientRect();
+          const r = end.getBoundingClientRect();
+          // Flip once cover is completely off the viewport
           setWhiteMode(r.top <= 0);
         };
 
         const io = new IntersectionObserver(() => update(), { threshold: [0, 1] });
-        io.observe(sentinel);
+        io.observe(end);
 
         window.addEventListener("scroll", update, { passive: true });
         window.addEventListener("resize", update);
-
         requestAnimationFrame(update);
       })();
     </script>
@@ -240,315 +247,341 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Hero sizing: match cover height to description height -->
-    <script is:inline>
-      (function () {
-        const text = document.getElementById("heroText");
-        if (!text) return;
-
-        const set = () => {
-          const h = Math.round(text.getBoundingClientRect().height);
-          document.documentElement.style.setProperty("--imm-hero-h", h + "px");
-        };
-
-        set();
-        window.addEventListener("load", set);
-        window.addEventListener("resize", set);
-
-        if ("ResizeObserver" in window) {
-          const ro = new ResizeObserver(set);
-          ro.observe(text);
-        }
-      })();
-    </script>
-  </main>
-
-  <style>
-    /* --- Page-specific overrides: make Layout footer NOT fixed here --- */
-    :global(footer) {
-      position: static !important;
-      left: auto !important;
-      right: auto !important;
-      bottom: auto !important;
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      background: transparent !important;
-      border-top: none !important;
-    }
-
-    :global(main) {
-      padding-bottom: 0 !important;
-    }
-
-    :global(nav),
-    :global(nav.topbar) {
-      position: static !important;
-      top: auto !important;
-      left: auto !important;
-      right: auto !important;
-      z-index: auto !important;
-      border-bottom: none !important;
-      box-shadow: none !important;
-    }
-
-    :global(nav.topbar .row),
-    :global(nav .row) {
-      border-bottom: none !important;
-    }
-
-    .imm{
-      width: 80%;
-      max-width: 1400px;
-      margin-inline: auto;
-      padding-top: 2rem;
-    }
-
-    .imm__heroInner,
-    .imm__galleryInner{
-      width: 100%;
-      margin: 0 auto;
-    }
-
-    .imm__grid{ display: grid; }
-
-    /* HERO (dark, initial view) */
-    .imm__hero{
-      color: #fff;
-      min-height: calc(100svh - 2rem);
-      max-height: calc(100svh - 2rem); /* ensures gallery isn't visible until scroll */
-      display: flex;
-      align-items: start;
-    }
-
-    .imm__grid--hero{
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2.5rem;
-      align-items: start;
-      width: 100%;
-    }
-
-    .imm__heroText{
-      min-width: 0;
-      background: #121212;
-      margin: 0;
-      height: calc(70svh - 2rem);
-      overflow: auto; /* if text is longer than viewport */
-      padding-right: 0.25rem;
-    }
-
-    .imm__heroMedia{
-      width: 100%;
-      height: var(--imm-hero-h, calc(70svh - 2rem));
-      overflow: hidden;
-      position: relative;
-      isolation: isolate;
-      background: #121212;
-      margin: 0;
-    }
-
-    .imm__imgBtn{
-      display: block;
-      width: 100%;
-      height: 100%;
-      padding: 0;
-      border: 0;
-      background: transparent;
-      cursor: zoom-in;
-    }
-
-    .imm__img--hero{
-      width: 100%;
-      height: 100%;
-      display: block;
-      object-fit: cover;
-      object-position: center;
-    }
-
-    .imm__title{
-      margin: 0 0 0.45rem;
-      font-size: clamp(1.6rem, 2.2vw, 2.15rem);
-      letter-spacing: -0.02em;
-      color: #fff;
-    }
-
-    .imm__subtitle{
-      font-size: 0.95rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      margin-bottom: 0.9rem;
-      color: rgba(255,255,255,0.74);
-    }
-
-    .imm__body{
-      white-space: pre-line;
-      line-height: 1.65;
-      font-size: 1rem;
-      color: rgba(255,255,255,0.78);
-    }
-
-    /* GALLERY (white section) */
-    .imm__gallery{
-      padding: 1.5rem 0 3rem;
-    }
-
-    #whiteStart{ height: 1px; width: 100%; }
-
-    .imm__grid--gallery{
-      grid-template-columns: 1fr;
-      gap: 1.4rem;
-    }
-
-    .imm__galleryItem{
-      margin: 0;
-      padding: 0;
-      background: transparent;
-      border: 0;
-    }
-
-    .imm__imgBtn--full{
-      width: 100%;
-      height: auto;
-      padding: 0.75rem 0;
-    }
-
-    .imm__img--full{
-      display: block;
-      width: auto;
-      height: auto;
-      max-width: 100%;
-      margin: 0 auto;
-      object-fit: contain;
-    }
-
-    #footerTrigger{ height: 1px; width: 100%; }
-
-    /* FULL PAGE background flip */
-    :global(html),
-    :global(body){
-      background: #121212 !important;
-      transition: background 200ms ease;
-    }
-
-    :global(html.imm-white),
-    :global(body.imm-white){
-      background: #ffffff !important;
-    }
-
-    :global(nav.imm-white),
-    :global(nav.topbar.imm-white){
-      border-bottom: none !important;
-      box-shadow: none !important;
-    }
-
-    :global(footer.imm-footer-white){
-      background: #ffffff !important;
-      border-top: 1px solid rgba(0,0,0,0.12) !important;
-      color: #0b0b0b !important;
-    }
-
-    /* Lightbox */
-    .lb{
-      position: fixed;
-      inset: 0;
-      display: none;
-      z-index: 9999;
-    }
-    .lb[aria-hidden="false"]{ display: block; }
-
-    .lb__backdrop{
-      position: absolute;
-      inset: 0;
-      background: #fff;
-    }
-
-    .lb__panel{
-      position: absolute;
-      inset: 0;
-      display: grid;
-      grid-template-columns: 56px 1fr 56px;
-      align-items: center;
-      padding: 2rem 1rem;
-    }
-
-    .lb__figure{
-      margin: 0;
-      height: 100%;
-      display: grid;
-      place-items: center;
-    }
-
-    .lb__stage{
-      background: #fff;
-      width: min(1100px, 92vw);
-      height: 86vh;
-      display: grid;
-      place-items: center;
-    }
-
-    .lb__img{
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      border-radius: 0;
-      box-shadow: 0 12px 40px rgba(0,0,0,0.2);
-    }
-
-    .lb__close{
-      position: absolute;
-      top: 18px;
-      right: 18px;
-      width: 44px;
-      height: 44px;
-      border: 1px solid rgba(0,0,0,0.15);
-      background: rgba(255,255,255,0.9);
-      color: #111;
-      font-size: 28px;
-      line-height: 40px;
-      border-radius: 999px;
-      cursor: pointer;
-    }
-
-    .lb__nav{
-      width: 44px;
-      height: 64px;
-      border: 1px solid rgba(0,0,0,0.15);
-      background: rgba(255,255,255,0.9);
-      color: #111;
-      font-size: 40px;
-      border-radius: 10px;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    :global(html.lb-open),
-    :global(body.lb-open){ overflow: hidden; }
-
-    @media (max-width: 900px){
-      .imm{ width: 100%; }
-
-      .imm__grid--hero{
-        grid-template-columns: 1fr;
-        gap: 1.1rem;
+    <style>
+      /* --- Page-specific overrides: make Layout footer NOT fixed here --- */
+      :global(footer) {
+        position: static !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: transparent !important;
+        border-top: none !important;
       }
 
-      .imm__hero{
-        min-height: auto;
-        max-height: none;
+      :global(main) {
+        padding-bottom: 0 !important;
+      }
+
+      /* Ensure navbar scrolls normally + no border */
+      :global(nav),
+      :global(nav.topbar) {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        z-index: auto !important;
+        border-bottom: none !important;
+        box-shadow: none !important;
+      }
+
+      :global(nav.topbar .row),
+      :global(nav .row) {
+        border-bottom: none !important;
+      }
+
+      /* ---------------------------
+         FULL PAGE background + variable text colors
+         --------------------------- */
+      :global(html),
+      :global(body) {
+        background: #121212 !important;
+        transition: background 200ms ease;
+      }
+
+      :global(html) {
+        --imm-fg: #ffffff;
+        --imm-muted: rgba(255, 255, 255, 0.74);
+        --imm-body: rgba(255, 255, 255, 0.78);
+        --imm-border: rgba(255, 255, 255, 0.16);
+      }
+
+      :global(html.imm-white),
+      :global(body.imm-white) {
+        background: #ffffff !important;
+      }
+
+      :global(html.imm-white) {
+        --imm-fg: #0b0b0b;
+        --imm-muted: rgba(0, 0, 0, 0.62);
+        --imm-body: rgba(0, 0, 0, 0.72);
+        --imm-border: rgba(0, 0, 0, 0.12);
+      }
+
+      /* Keep navbar borderless in both states */
+      :global(nav.imm-white),
+      :global(nav.topbar.imm-white) {
+        border-bottom: none !important;
+        box-shadow: none !important;
+      }
+
+      /* Footer only becomes white when you're at bottom */
+      :global(footer.imm-footer-white) {
+        background: #ffffff !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.12) !important;
+        color: #0b0b0b !important;
+      }
+
+      :global(footer.imm-footer-white a) {
+        color: #0b0b0b !important;
+      }
+
+      /* ---------------------------
+         PAGE WIDTH: match index “window/card” feel
+         --------------------------- */
+      .imm {
+        width: 100%;
+        margin: 0;
+        padding-top: 2rem;
+      }
+
+      .imm__inner {
+        width: min(100vw, clamp(320px, 78vw, 980px));
+        margin-inline: auto;
+      }
+
+      /* ---------------------------
+         HERO (no description visible until scroll)
+         --------------------------- */
+      .imm__hero {
+        min-height: calc(100svh - 2rem);
+        display: block;
+        padding-bottom: 0;
+      }
+
+      .imm__inner {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .imm__cover {
+        margin: 0;
+        border-radius: 0px;
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+        border: 1px solid var(--imm-border);
+        background: transparent;
+      }
+
+      .imm__imgBtn {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: zoom-in;
+      }
+
+      .imm__img--cover {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        object-position: center;
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+
+      #coverEnd {
+        height: 1px;
+        width: 100%;
+      }
+
+      .imm__meta {
+        margin-top: 1.05rem;
+      }
+
+      .imm__title {
+        margin: 0 0 0.45rem;
+        font-size: clamp(1.6rem, 2.2vw, 2.15rem);
+        letter-spacing: -0.02em;
+        color: var(--imm-fg);
+      }
+
+      .imm__subtitle {
+        font-size: 0.95rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: var(--imm-muted);
+      }
+
+      .imm__heroSpacer {
+        flex: 1 1 auto;
+        min-height: 24px;
+      }
+
+      /* ---------------------------
+         DESCRIPTION (appears on scroll)
+         --------------------------- */
+      .imm__desc {
+        padding: 0 0 2.25rem;
+      }
+
+      /* Re-declare inner as block for non-hero sections */
+      .imm__desc .imm__inner,
+      .imm__gallery .imm__inner {
         display: block;
       }
 
-      .imm__heroText{
-        height: auto;
-        overflow: visible;
-        background: transparent;
-        padding-right: 0;
+      .imm__body {
+        white-space: pre-line;
+        line-height: 1.65;
+        font-size: 1rem;
+        color: var(--imm-body);
       }
 
-      .imm__heroMedia{
-        height: auto;
-        aspect-ratio: 4 / 3;
+      .imm__body--error {
+        opacity: 0.95;
       }
-    }
-  </style>
+
+      /* ---------------------------
+         GALLERY
+         --------------------------- */
+      .imm__gallery {
+        padding: 1.5rem 0 3rem;
+      }
+
+      .imm__grid {
+        display: grid;
+      }
+
+      .imm__grid--gallery {
+        grid-template-columns: 1fr;
+        gap: 1.4rem;
+      }
+
+      .imm__galleryItem {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .imm__imgBtn--full {
+        width: 100%;
+        height: auto;
+        padding: 0.75rem 0;
+      }
+
+      .imm__img--full {
+        display: block;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        margin: 0 auto;
+        object-fit: contain;
+      }
+
+      #footerTrigger {
+        height: 1px;
+        width: 100%;
+      }
+
+      /* ---------------------------
+         Lightbox
+         --------------------------- */
+      .lb {
+        position: fixed;
+        inset: 0;
+        display: none;
+        z-index: 9999;
+      }
+      .lb[aria-hidden="false"] {
+        display: block;
+      }
+
+      .lb__backdrop {
+        position: absolute;
+        inset: 0;
+        background: #fff;
+      }
+
+      .lb__panel {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 56px 1fr 56px;
+        align-items: center;
+        padding: 2rem 1rem;
+      }
+
+      .lb__figure {
+        margin: 0;
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+
+      .lb__stage {
+        background: #fff;
+        width: min(1100px, 92vw);
+        height: 86vh;
+        display: grid;
+        place-items: center;
+      }
+
+      .lb__img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: 0;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .lb__close {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        width: 44px;
+        height: 44px;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.9);
+        color: #111;
+        font-size: 28px;
+        line-height: 40px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .lb__nav {
+        width: 44px;
+        height: 64px;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.9);
+        color: #111;
+        font-size: 40px;
+        border-radius: 10px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      :global(html.lb-open),
+      :global(body.lb-open) {
+        overflow: hidden;
+      }
+
+      /* ---------------------------
+         Mobile
+         --------------------------- */
+      @media (max-width: 640px) {
+        .imm__inner {
+          width: 100vw;
+          padding-inline: 4vw;
+        }
+
+        .imm__cover {
+          aspect-ratio: 9 / 16;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        :global(html),
+        :global(body) {
+          transition: none !important;
+        }
+      }
+    </style>
+  </main>
 </Layout>
