@@ -355,22 +355,22 @@ const nonCover = finalFiles
         align-items: start; /* ✅ top aligned */
         min-height: 100svh;
         padding: 0;
+        grid-auto-rows: var(--hero-h, 70svh);
+        align-items: start;
+        display: grid; 
       }
 
-      .amp__heroMedia {
-        /* ✅ crop frame to 3x4 */
+      .amp__heroMedia{
         aspect-ratio: 4 / 3;
-        height: min(82svh, 880px);           /* stable “poster” height */
-        max-height: 100%;
+        height: var(--hero-h, 70svh);  /* ✅ shared height */
         overflow: hidden;
         background: #121212;
       }
 
-      .amp__heroText {
-        align-self: start;                   /* ✅ top aligned */
-        height: var(--hero-h, auto);         /* ✅ match cover height */
-        overflow: hidden;                    /* keeps the block tidy */
-        background: transparent;
+      .amp__heroText{
+        height: var(--hero-h, 70svh);  /* ✅ shared height */
+        overflow: auto;                /* ✅ scroll inside if text is long */
+        align-self: start;
       }
 
       .amp__imgBtn {
