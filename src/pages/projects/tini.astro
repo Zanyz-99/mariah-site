@@ -41,7 +41,7 @@ const orderedFiles = [
   "Images-11.png",
 ];
 
-/* Case-insensitive match to filesystem */
+/* Case-insensitive match */
 const byLower = new Map(imagesInFolder.map((n) => [n.toLowerCase(), n]));
 const finalFiles = orderedFiles
   .map((n) => byLower.get(n.toLowerCase()))
@@ -49,12 +49,12 @@ const finalFiles = orderedFiles
 
 const galleryImages = finalFiles.map((name) => `${BASE}/${encodeURIComponent(name)}`);
 
-/* Cover logic */
+/* Cover */
 const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.png");
 const coverSrc =
   coverIndex >= 0 ? galleryImages[coverIndex] : (galleryImages[0] ?? `${BASE}/cover-image.png`);
 
-/* Non-cover images (render below in order) */
+/* Non-cover */
 const nonCover = finalFiles
   .map((file, i) => ({ file, src: galleryImages[i], i }))
   .filter((x) => x.file.toLowerCase() !== "cover-image.png");
@@ -62,45 +62,52 @@ const nonCover = finalFiles
 
 <Layout title="Tini" description="Tini project">
   <main class="tini">
-    <!-- HERO (dark) -->
+    <!-- HERO: cover + title/subtitle only (description stays below fold) -->
     <section class="tini__hero" aria-label="Tini hero">
-      <div class="tini__heroInner">
-        <div class="tini__grid tini__grid--hero">
-          <!-- Cover -->
-          <figure class="tini__heroMedia" id="heroMedia">
-            <button
-              class="tini__imgBtn"
-              type="button"
-              data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
-              aria-label="Open cover image"
-            >
-              <img class="tini__img--hero" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
-            </button>
-          </figure>
+      <div class="tini__inner">
+        <!-- Cover (same “card” footprint feel as index carousel) -->
+        <figure class="tini__cover" id="coverFigure">
+          <button
+            class="tini__imgBtn"
+            type="button"
+            data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
+            aria-label="Open cover image"
+          >
+            <img class="tini__img--cover" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
+          </button>
 
-          <!-- Description -->
-          <article class="tini__heroText" id="heroText">
-            <h1 class="tini__title">Tini</h1>
-            <div class="tini__subtitle">{subtitle}</div>
+          <!-- ✅ flip trigger: when this crosses top, cover is fully off-screen -->
+          <div id="coverEnd" aria-hidden="true"></div>
+        </figure>
 
-            {descriptionText ? (
-              <div class="tini__body">{descriptionText}</div>
-            ) : (
-              <div class="tini__body tini__body--error">
-                Couldn’t load <code>tini.txt</code><br />
-                Expected: <code>public/projects/{FOLDER}/tini.txt</code>
-              </div>
-            )}
-          </article>
-        </div>
+        <!-- Title/subtitle BELOW image, left aligned to image -->
+        <header class="tini__meta">
+          <h1 class="tini__title">Tini</h1>
+          <div class="tini__subtitle">{subtitle}</div>
+        </header>
+
+        <!-- Spacer pushes description off-screen until you scroll -->
+        <div class="tini__heroSpacer" aria-hidden="true"></div>
       </div>
     </section>
 
-    <!-- GALLERY (white begins here) -->
-    <section class="tini__gallery" aria-label="Tini gallery">
-      <div id="whiteStart" aria-hidden="true"></div>
+    <!-- DESCRIPTION (appears only after you scroll) -->
+    <section class="tini__desc" aria-label="Project description">
+      <div class="tini__inner">
+        {descriptionText ? (
+          <div class="tini__body">{descriptionText}</div>
+        ) : (
+          <div class="tini__body tini__body--error">
+            Couldn’t load <code>tini.txt</code><br />
+            Expected: <code>public/projects/{FOLDER}/tini.txt</code>
+          </div>
+        )}
+      </div>
+    </section>
 
-      <div class="tini__galleryInner">
+    <!-- GALLERY -->
+    <section class="tini__gallery" aria-label="Tini gallery">
+      <div class="tini__inner">
         <div class="tini__grid tini__grid--gallery">
           {nonCover.map(({ src, i }) => (
             <figure class="tini__galleryItem">
@@ -203,11 +210,11 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Background flip + navbar style flip when crossing into white section -->
+    <!-- ✅ Background + nav style flip when cover image is fully off-screen -->
     <script is:inline>
       (function () {
-        const sentinel = document.getElementById("whiteStart");
-        if (!sentinel) return;
+        const end = document.getElementById("coverEnd");
+        if (!end) return;
 
         const nav =
           document.querySelector("nav.topbar") ||
@@ -221,16 +228,16 @@ const nonCover = finalFiles
         };
 
         const update = () => {
-          const r = sentinel.getBoundingClientRect();
+          const r = end.getBoundingClientRect();
+          // Flip once cover is completely off the viewport
           setWhiteMode(r.top <= 0);
         };
 
         const io = new IntersectionObserver(() => update(), { threshold: [0, 1] });
-        io.observe(sentinel);
+        io.observe(end);
 
         window.addEventListener("scroll", update, { passive: true });
         window.addEventListener("resize", update);
-
         requestAnimationFrame(update);
       })();
     </script>
@@ -246,28 +253,6 @@ const nonCover = finalFiles
 
         const io = new IntersectionObserver(([entry]) => setFooterWhite(entry.isIntersecting), { threshold: 0.01 });
         io.observe(trigger);
-      })();
-    </script>
-
-    <!-- Match cover height to description height -->
-    <script is:inline>
-      (function () {
-        const text = document.getElementById("heroText");
-        if (!text) return;
-
-        const set = () => {
-          const h = Math.round(text.getBoundingClientRect().height);
-          document.documentElement.style.setProperty("--tini-hero-h", h + "px");
-        };
-
-        set();
-        window.addEventListener("load", set);
-        window.addEventListener("resize", set);
-
-        if ("ResizeObserver" in window) {
-          const ro = new ResizeObserver(set);
-          ro.observe(text);
-        }
       })();
     </script>
 
@@ -288,6 +273,7 @@ const nonCover = finalFiles
         padding-bottom: 0 !important;
       }
 
+      /* Ensure navbar scrolls normally + no border */
       :global(nav),
       :global(nav.topbar) {
         position: static !important;
@@ -304,60 +290,90 @@ const nonCover = finalFiles
         border-bottom: none !important;
       }
 
-      .tini{
-        width: 80%;
-        max-width: 1400px;
-        margin-inline: auto;
+      /* ---------------------------
+         FULL PAGE background + variable text colors
+         --------------------------- */
+      :global(html),
+      :global(body) {
+        background: #121212 !important;
+        transition: background 200ms ease;
+      }
+
+      :global(html) {
+        --tini-fg: #ffffff;
+        --tini-muted: rgba(255, 255, 255, 0.74);
+        --tini-body: rgba(255, 255, 255, 0.78);
+        --tini-border: rgba(255, 255, 255, 0.16);
+      }
+
+      :global(html.tini-white),
+      :global(body.tini-white) {
+        background: #ffffff !important;
+      }
+
+      :global(html.tini-white) {
+        --tini-fg: #0b0b0b;
+        --tini-muted: rgba(0, 0, 0, 0.62);
+        --tini-body: rgba(0, 0, 0, 0.72);
+        --tini-border: rgba(0, 0, 0, 0.12);
+      }
+
+      /* Keep navbar borderless in both states */
+      :global(nav.tini-white),
+      :global(nav.topbar.tini-white) {
+        border-bottom: none !important;
+        box-shadow: none !important;
+      }
+
+      /* Footer only becomes white when you're at bottom */
+      :global(footer.tini-footer-white) {
+        background: #ffffff !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.12) !important;
+        color: #0b0b0b !important;
+      }
+
+      :global(footer.tini-footer-white a) {
+        color: #0b0b0b !important;
+      }
+
+      /* ---------------------------
+         PAGE WIDTH: match index “window/card” feel
+         --------------------------- */
+      .tini {
+        width: 100%;
+        margin: 0;
         padding-top: 2rem;
       }
 
-      .tini__heroInner,
-      .tini__galleryInner{
-        width: 100%;
-        margin: 0 auto;
+      .tini__inner {
+        width: min(100vw, clamp(320px, 78vw, 980px));
+        margin-inline: auto;
       }
 
-      .tini__grid{ display: grid; }
-
-      /* HERO (dark, initial view only) */
-      .tini__hero{
-        color: #fff;
+      /* ---------------------------
+         HERO (no description visible until scroll)
+         --------------------------- */
+      .tini__hero {
         min-height: calc(100svh - 2rem);
-        max-height: calc(100svh - 2rem); /* keeps gallery hidden until scroll */
+        display: block;
+        padding-bottom: 0;
+      }
+
+      .tini__inner {
         display: flex;
-        align-items: start;
+        flex-direction: column;
       }
 
-      .tini__grid--hero{
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2.5rem;
-        align-items: start;
-        width: 100%;
-      }
-
-      /* natural text height */
-      .tini__heroText{
-        min-width: 0;
-        overflow: visible;
-        background: #121212;
+      .tini__cover {
         margin: 0;
-        padding-right: 0;
-        height: auto;
-      }
-
-      /* cover height matches text height */
-      .tini__heroMedia{
-        width: 100%;
-        height: var(--tini-hero-h, auto);
+        border-radius: 0px;
         overflow: hidden;
-        position: relative;
-        isolation: isolate;
-        background: #121212;
-        margin: 0;
+        aspect-ratio: 16 / 9;
+        border: 1px solid var(--tini-border);
+        background: transparent;
       }
 
-      .tini__imgBtn{
+      .tini__imgBtn {
         display: block;
         width: 100%;
         height: 100%;
@@ -367,62 +383,98 @@ const nonCover = finalFiles
         cursor: zoom-in;
       }
 
-      .tini__img--hero{
+      .tini__img--cover {
         width: 100%;
         height: 100%;
         display: block;
         object-fit: cover;
         object-position: center;
+        user-select: none;
+        -webkit-user-drag: none;
       }
 
-      .tini__title{
+      #coverEnd {
+        height: 1px;
+        width: 100%;
+      }
+
+      .tini__meta {
+        margin-top: 1.05rem;
+      }
+
+      .tini__title {
         margin: 0 0 0.45rem;
         font-size: clamp(1.6rem, 2.2vw, 2.15rem);
         letter-spacing: -0.02em;
-        color: #fff;
+        color: var(--tini-fg);
       }
 
-      .tini__subtitle{
+      .tini__subtitle {
         font-size: 0.95rem;
         font-weight: 500;
         letter-spacing: 0.02em;
-        margin-bottom: 0.9rem;
-        color: rgba(255,255,255,0.74);
+        color: var(--tini-muted);
       }
 
-      .tini__body{
+      .tini__heroSpacer {
+        flex: 1 1 auto;
+        min-height: 24px;
+      }
+
+      /* ---------------------------
+         DESCRIPTION (appears on scroll)
+         --------------------------- */
+      .tini__desc {
+        padding: 0 0 2.25rem;
+      }
+
+      /* Re-declare inner as block for non-hero sections */
+      .tini__desc .tini__inner,
+      .tini__gallery .tini__inner {
+        display: block;
+      }
+
+      .tini__body {
         white-space: pre-line;
         line-height: 1.65;
         font-size: 1rem;
-        color: rgba(255,255,255,0.78);
+        color: var(--tini-body);
       }
 
-      /* GALLERY (white) */
-      .tini__gallery{
+      .tini__body--error {
+        opacity: 0.95;
+      }
+
+      /* ---------------------------
+         GALLERY
+         --------------------------- */
+      .tini__gallery {
         padding: 1.5rem 0 3rem;
       }
 
-      #whiteStart{ height: 1px; width: 100%; }
+      .tini__grid {
+        display: grid;
+      }
 
-      .tini__grid--gallery{
+      .tini__grid--gallery {
         grid-template-columns: 1fr;
         gap: 1.4rem;
       }
 
-      .tini__galleryItem{
+      .tini__galleryItem {
         margin: 0;
         padding: 0;
         background: transparent;
         border: 0;
       }
 
-      .tini__imgBtn--full{
+      .tini__imgBtn--full {
         width: 100%;
         height: auto;
         padding: 0.75rem 0;
       }
 
-      .tini__img--full{
+      .tini__img--full {
         display: block;
         width: auto;
         height: auto;
@@ -431,48 +483,31 @@ const nonCover = finalFiles
         object-fit: contain;
       }
 
-      #footerTrigger{ height: 1px; width: 100%; }
-
-      /* FULL PAGE background flip */
-      :global(html),
-      :global(body){
-        background: #121212 !important;
-        transition: background 200ms ease;
+      #footerTrigger {
+        height: 1px;
+        width: 100%;
       }
 
-      :global(html.tini-white),
-      :global(body.tini-white){
-        background: #ffffff !important;
-      }
-
-      :global(nav.tini-white),
-      :global(nav.topbar.tini-white){
-        border-bottom: none !important;
-        box-shadow: none !important;
-      }
-
-      :global(footer.tini-footer-white){
-        background: #ffffff !important;
-        border-top: 1px solid rgba(0,0,0,0.12) !important;
-        color: #0b0b0b !important;
-      }
-
-      /* Lightbox */
-      .lb{
+      /* ---------------------------
+         Lightbox
+         --------------------------- */
+      .lb {
         position: fixed;
         inset: 0;
         display: none;
         z-index: 9999;
       }
-      .lb[aria-hidden="false"]{ display: block; }
+      .lb[aria-hidden="false"] {
+        display: block;
+      }
 
-      .lb__backdrop{
+      .lb__backdrop {
         position: absolute;
         inset: 0;
         background: #fff;
       }
 
-      .lb__panel{
+      .lb__panel {
         position: absolute;
         inset: 0;
         display: grid;
@@ -481,14 +516,14 @@ const nonCover = finalFiles
         padding: 2rem 1rem;
       }
 
-      .lb__figure{
+      .lb__figure {
         margin: 0;
         height: 100%;
         display: grid;
         place-items: center;
       }
 
-      .lb__stage{
+      .lb__stage {
         background: #fff;
         width: min(1100px, 92vw);
         height: 86vh;
@@ -496,22 +531,22 @@ const nonCover = finalFiles
         place-items: center;
       }
 
-      .lb__img{
+      .lb__img {
         max-width: 100%;
         max-height: 100%;
         object-fit: contain;
         border-radius: 0;
-        box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
       }
 
-      .lb__close{
+      .lb__close {
         position: absolute;
         top: 18px;
         right: 18px;
         width: 44px;
         height: 44px;
-        border: 1px solid rgba(0,0,0,0.15);
-        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.9);
         color: #111;
         font-size: 28px;
         line-height: 40px;
@@ -519,11 +554,11 @@ const nonCover = finalFiles
         cursor: pointer;
       }
 
-      .lb__nav{
+      .lb__nav {
         width: 44px;
         height: 64px;
-        border: 1px solid rgba(0,0,0,0.15);
-        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.9);
         color: #111;
         font-size: 40px;
         border-radius: 10px;
@@ -532,32 +567,28 @@ const nonCover = finalFiles
       }
 
       :global(html.lb-open),
-      :global(body.lb-open){ overflow: hidden; }
+      :global(body.lb-open) {
+        overflow: hidden;
+      }
 
-      @media (max-width: 900px){
-        .tini{ width: 100%; }
-
-        .tini__grid--hero{
-          grid-template-columns: 1fr;
-          gap: 1.1rem;
+      /* ---------------------------
+         Mobile
+         --------------------------- */
+      @media (max-width: 640px) {
+        .tini__inner {
+          width: 100vw;
+          padding-inline: 4vw;
         }
 
-        .tini__hero{
-          min-height: auto;
-          max-height: none;
-          display: block;
+        .tini__cover {
+          aspect-ratio: 9 / 16;
         }
+      }
 
-        .tini__heroText{
-          height: auto;
-          overflow: visible;
-          background: transparent;
-          padding-right: 0;
-        }
-
-        .tini__heroMedia{
-          height: auto;
-          aspect-ratio: 4 / 3;
+      @media (prefers-reduced-motion: reduce) {
+        :global(html),
+        :global(body) {
+          transition: none !important;
         }
       }
     </style>
