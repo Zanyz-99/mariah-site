@@ -350,24 +350,24 @@ const nonCover = finalFiles
       }
 
       .amp__grid--hero {
-        grid-template-columns: 1fr 1fr; /* ✅ not 50/50 */
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         gap: 1.4rem;
-        align-items: start; /* ✅ top aligned */
+        align-items: start;
         min-height: 100svh;
         padding: 0;
-        align-items: start;
-        display: grid; 
       }
 
       .amp__heroMedia{
         aspect-ratio: 4 / 3;
         height: var(--hero-h, 70svh);
-        overflow: hidden;          /* clip anything inside */
-        position: relative;        /* create stacking context */
-        isolation: isolate;        /* prevent weird overlap across siblings */
+        overflow: hidden;
+        position: relative;
+        isolation: isolate;
         background: #121212;
         z-index: 0;
       }
+
 
 
       .amp__heroText{
