@@ -355,23 +355,31 @@ const nonCover = finalFiles
         align-items: start; /* ✅ top aligned */
         min-height: 100svh;
         padding: 0;
-        grid-auto-rows: var(--hero-h, 70svh);
         align-items: start;
         display: grid; 
       }
 
       .amp__heroMedia{
         aspect-ratio: 4 / 3;
-        height: var(--hero-h, 70svh);  /* ✅ shared height */
-        overflow: hidden;
+        height: var(--hero-h, 70svh);
+        overflow: hidden;          /* clip anything inside */
+        position: relative;        /* create stacking context */
+        isolation: isolate;        /* prevent weird overlap across siblings */
         background: #121212;
+        z-index: 0;
       }
 
+
       .amp__heroText{
-        height: var(--hero-h, 70svh);  /* ✅ shared height */
-        overflow: auto;                /* ✅ scroll inside if text is long */
+        height: var(--hero-h, 70svh);
+        overflow: auto;
         align-self: start;
+      
+        position: relative;         /* stacking context */
+        z-index: 2;                 /* above the cover column */
+        background: transparent;    /* keep your dark background; change if you want */
       }
+
 
       .amp__imgBtn {
         display: block;
@@ -383,12 +391,15 @@ const nonCover = finalFiles
         cursor: zoom-in;
       }
 
-      .amp__img--hero {
+      .amp__img--hero{
         width: 100%;
         height: 100%;
         display: block;
-        object-fit: cover; /* ✅ cropped poster look inside 3x4 */
+        object-fit: cover;
+        position: relative;  /* keep it in the cell's stacking context */
+        z-index: 0;
       }
+
 
       .amp__title {
         margin: 0 0 0.45rem;
