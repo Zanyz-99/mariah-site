@@ -321,6 +321,9 @@ const nonCover = finalFiles
       /* HERO */
       .amp__hero{
         color: #fff;
+        min-height: calc(100svh - 2rem);
+        display: flex;
+        align-items: start;
       }
       
       /* ✅ even columns */
@@ -329,6 +332,7 @@ const nonCover = finalFiles
         grid-template-columns: 1fr 1fr;
         gap: 2.5rem;
         align-items: start;
+        width: 100%;
       }
       
       /* ✅ description determines height; no internal scroll */
@@ -338,12 +342,13 @@ const nonCover = finalFiles
         background: #121212;
         margin: 0;
         padding-right: 0;
+        height: calc(100svh - 2rem);
       }
       
       /* ✅ image height matches description height */
       .amp__heroMedia{
         width: 100%;
-        height: var(--hero-h, auto);   /* driven by JS */
+        height: calc(100svh - 2rem);
         overflow: hidden;
         position: relative;
         isolation: isolate;
