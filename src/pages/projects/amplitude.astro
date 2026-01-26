@@ -26,7 +26,7 @@ try {
   console.error("[Amplitude page] asset read error:", err);
 }
 
-/* ✅ EXACT order requested */
+// ✅ EXACT order requested
 const orderedFiles = [
   "Images-08.png",
   "Images-06.png",
@@ -59,9 +59,10 @@ const nonCover = finalFiles
 
 <Layout title="Amplitude" description="Amplitude project">
   <main class="amp">
-    <!-- HERO: cover in same “card” position/size feel as index carousel -->
+    <!-- HERO: cover + title/subtitle only (description stays below fold) -->
     <section class="amp__hero" aria-label="Amplitude hero">
       <div class="amp__heroInner">
+        <!-- Cover (same “card” footprint feel as index carousel) -->
         <figure class="amp__cover" id="coverFigure">
           <button
             class="amp__imgBtn"
@@ -79,24 +80,27 @@ const nonCover = finalFiles
           <div class="amp__subtitle">{subtitle}</div>
         </header>
 
-        <!-- Description appears as you scroll (still in dark section) -->
-        <section class="amp__desc" aria-label="Project description">
-          {descriptionText ? (
-            <div class="amp__body">{descriptionText}</div>
-          ) : (
-            <div class="amp__body amp__body--error">
-              Couldn’t load <code>amplitude.txt</code><br />
-              Expected: <code>public/projects/{FOLDER}/amplitude.txt</code>
-            </div>
-          )}
-        </section>
+        <!-- Spacer pushes description off-screen until you scroll -->
+        <div class="amp__heroSpacer" aria-hidden="true"></div>
       </div>
     </section>
 
-    <!-- White section begins here; background + text colors flip -->
-    <section class="amp__gallery" aria-label="Amplitude gallery">
-      <div id="whiteStart" aria-hidden="true"></div>
+    <!-- DESCRIPTION (still in dark mode until cover scrolls fully off-screen) -->
+    <section class="amp__desc" aria-label="Project description">
+      <div class="amp__heroInner">
+        {descriptionText ? (
+          <div class="amp__body">{descriptionText}</div>
+        ) : (
+          <div class="amp__body amp__body--error">
+            Couldn’t load <code>amplitude.txt</code><br />
+            Expected: <code>public/projects/{FOLDER}/amplitude.txt</code>
+          </div>
+        )}
+      </div>
+    </section>
 
+    <!-- GALLERY (white section content remains as-is; background flips when cover is off-screen) -->
+    <section class="amp__gallery" aria-label="Amplitude gallery">
       <div class="amp__galleryInner">
         <div class="amp__grid amp__grid--gallery">
           {nonCover.map(({ src, i }) => (
@@ -200,11 +204,11 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Background + nav style flip when crossing into white section -->
+    <!-- ✅ Background + nav style flip when cover image is fully off-screen -->
     <script is:inline>
       (function () {
-        const sentinel = document.getElementById("whiteStart");
-        if (!sentinel) return;
+        const cover = document.getElementById("coverFigure");
+        if (!cover) return;
 
         const nav =
           document.querySelector("nav.topbar") ||
@@ -218,16 +222,13 @@ const nonCover = finalFiles
         };
 
         const update = () => {
-          const r = sentinel.getBoundingClientRect();
-          setWhiteMode(r.top <= 0);
+          const r = cover.getBoundingClientRect();
+          // Flip once cover is completely off the viewport
+          setWhiteMode(r.bottom <= 0);
         };
-
-        const io = new IntersectionObserver(() => update(), { threshold: [0, 1] });
-        io.observe(sentinel);
 
         window.addEventListener("scroll", update, { passive: true });
         window.addEventListener("resize", update);
-
         requestAnimationFrame(update);
       })();
     </script>
@@ -259,7 +260,6 @@ const nonCover = finalFiles
         border-top: none !important;
       }
 
-      /* Layout main adds padding for fixed footer; remove it on this page */
       :global(main) {
         padding-bottom: 0 !important;
       }
@@ -282,7 +282,7 @@ const nonCover = finalFiles
       }
 
       /* ---------------------------
-         COLOR SYSTEM (flips w/ background)
+         FULL PAGE background + variable text colors
          --------------------------- */
       :global(html),
       :global(body) {
@@ -322,12 +322,13 @@ const nonCover = finalFiles
         border-top: 1px solid rgba(0, 0, 0, 0.12) !important;
         color: #0b0b0b !important;
       }
+
       :global(footer.amp-footer-white a) {
         color: #0b0b0b !important;
       }
 
       /* ---------------------------
-         PAGE LAYOUT
+         PAGE WIDTH: match index “window/card” feel
          --------------------------- */
       .amp {
         width: 100%;
@@ -335,17 +336,24 @@ const nonCover = finalFiles
         padding-top: 2rem;
       }
 
-      /* Match index “card” sizing feel */
       .amp__heroInner,
       .amp__galleryInner {
         width: min(100vw, clamp(320px, 78vw, 980px));
         margin-inline: auto;
       }
 
-      /* HERO */
+      /* ---------------------------
+         HERO (no description visible until scroll)
+         --------------------------- */
       .amp__hero {
-        color: var(--amp-fg);
-        padding-bottom: 2rem;
+        min-height: calc(100svh - 2rem);
+        display: block;
+        padding-bottom: 0;
+      }
+
+      .amp__heroInner {
+        display: flex;
+        flex-direction: column;
       }
 
       .amp__cover {
@@ -395,8 +403,16 @@ const nonCover = finalFiles
         color: var(--amp-muted);
       }
 
+      .amp__heroSpacer {
+        flex: 1 1 auto;
+        min-height: 24px;
+      }
+
+      /* ---------------------------
+         DESCRIPTION (appears on scroll)
+         --------------------------- */
       .amp__desc {
-        margin-top: 1.35rem;
+        padding: 0 0 2.25rem;
       }
 
       .amp__body {
@@ -411,15 +427,10 @@ const nonCover = finalFiles
       }
 
       /* ---------------------------
-         GALLERY (white section)
+         GALLERY
          --------------------------- */
       .amp__gallery {
         padding: 1.5rem 0 3rem;
-      }
-
-      #whiteStart {
-        height: 1px;
-        width: 100%;
       }
 
       .amp__grid {
