@@ -45,9 +45,7 @@ const finalFiles = orderedFiles
   .map((n) => byLower.get(n.toLowerCase()))
   .filter(Boolean) as string[];
 
-const galleryImages = finalFiles.map(
-  (name) => `${BASE}/${encodeURIComponent(name)}`
-);
+const galleryImages = finalFiles.map((name) => `${BASE}/${encodeURIComponent(name)}`);
 
 // Cover
 const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.png");
@@ -199,34 +197,9 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Fix Navbar to viewport + set padding based on its height -->
+    <!-- Background flip + navbar styling flip when crossing into white section -->
     <script is:inline>
       (function () {
-        const nav =
-          document.querySelector("nav.topbar") ||
-          document.querySelector("nav") ||
-          document.querySelector("header nav");
-
-        if (!nav) return;
-
-        const set = () => {
-          const h = Math.ceil(nav.getBoundingClientRect().height);
-          document.documentElement.style.setProperty("--amp-nav-h", h + "px");
-        };
-
-        window.addEventListener("load", set);
-        window.addEventListener("resize", set);
-        if ("ResizeObserver" in window) new ResizeObserver(set).observe(nav);
-        set();
-      })();
-    </script>
-
-    <!-- Background flip + navbar/footer flip when crossing into white section -->
-    <script is:inline>
-      (function () {
-        const html = document.documentElement;
-        const body = document.body;
-
         const sentinel = document.getElementById("whiteStart");
         if (!sentinel) return;
 
@@ -235,13 +208,10 @@ const nonCover = finalFiles
           document.querySelector("nav") ||
           document.querySelector("header nav");
 
-        const footer = document.querySelector("footer");
-
         const setWhiteMode = (on) => {
-          html.classList.toggle("amp-white", on);
-          body.classList.toggle("amp-white", on);
+          document.documentElement.classList.toggle("amp-white", on);
+          document.body.classList.toggle("amp-white", on);
           if (nav) nav.classList.toggle("amp-white", on);
-          if (footer) footer.classList.toggle("amp-white", on);
         };
 
         const update = () => {
@@ -260,7 +230,31 @@ const nonCover = finalFiles
     </script>
 
     <style>
-      /* Page wrapper inside full-width Layout main */
+      /* IMPORTANT: override Layout's fixed footer and any fixed navbar behavior */
+      :global(footer) {
+        position: static !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+
+      /* If your Navbar CSS makes it fixed/sticky, force it to scroll normally */
+      :global(nav),
+      :global(nav.topbar) {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        z-index: auto !important;
+      }
+
+      /* Layout main adds padding for fixed footer; remove it on this page */
+      :global(main) {
+        padding-bottom: 0 !important;
+      }
+
       .amp {
         width: 100%;
       }
@@ -277,27 +271,11 @@ const nonCover = finalFiles
         gap: 1.1rem;
       }
 
-      /* Fix navbar to viewport (doesn't scroll) */
-      :global(nav.topbar),
-      :global(nav) {
-        position: fixed !important;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 9998;
-      }
-
-      /* Push content below fixed navbar */
-      .amp__hero,
-      .amp__gallery {
-        padding-top: var(--amp-nav-h, 0px);
-      }
-
       /* ---------------------------
          HERO (dark)
          --------------------------- */
       .amp__hero {
-        min-height: calc(100svh - var(--amp-nav-h, 0px));
+        min-height: 100svh;
         display: grid;
         align-items: stretch;
         color: #fff;
@@ -305,7 +283,7 @@ const nonCover = finalFiles
 
       .amp__grid--hero {
         grid-template-columns: 1fr 1fr;
-        min-height: calc(100svh - var(--amp-nav-h, 0px));
+        min-height: 100svh;
         align-items: stretch;
       }
 
@@ -333,7 +311,7 @@ const nonCover = finalFiles
         height: 100%;
         display: block;
         object-fit: contain;
-        background: #121212; /* behind transparent areas */
+        background: #121212;
       }
 
       .amp__heroText {
@@ -367,7 +345,7 @@ const nonCover = finalFiles
          GALLERY (white)
          --------------------------- */
       .amp__gallery {
-        padding-bottom: 2.5rem;
+        padding: 1.5rem 0 3rem;
       }
 
       #whiteStart {
@@ -416,39 +394,31 @@ const nonCover = finalFiles
         background: #ffffff !important; /* scroll into white */
       }
 
-      /* Nav/Footer flip with section */
+      /* Navbar "look" can still flip even though it scrolls away */
       :global(nav),
-      :global(footer) {
+      :global(nav.topbar) {
         transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
       }
 
-      :global(nav:not(.amp-white)) {
+      :global(nav:not(.amp-white)),
+      :global(nav.topbar:not(.amp-white)) {
         background: #121212 !important;
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
       }
 
-      :global(footer:not(.amp-white)) {
-        background: #121212 !important;
-        border-top: 1px solid rgba(255, 255, 255, 0.12);
-      }
-
       :global(nav:not(.amp-white) a),
-      :global(footer:not(.amp-white) a) {
+      :global(nav.topbar:not(.amp-white) a) {
         color: rgba(255, 255, 255, 0.86) !important;
       }
 
-      :global(nav.amp-white) {
+      :global(nav.amp-white),
+      :global(nav.topbar.amp-white) {
         background: #ffffff !important;
         border-bottom: 1px solid rgba(0, 0, 0, 0.08);
       }
 
-      :global(footer.amp-white) {
-        background: #ffffff !important;
-        border-top: 1px solid rgba(0, 0, 0, 0.12);
-      }
-
       :global(nav.amp-white a),
-      :global(footer.amp-white a) {
+      :global(nav.topbar.amp-white a) {
         color: #0b0b0b !important;
       }
 
@@ -461,7 +431,9 @@ const nonCover = finalFiles
         display: none;
         z-index: 9999;
       }
-      .lb[aria-hidden="false"] { display: block; }
+      .lb[aria-hidden="false"] {
+        display: block;
+      }
 
       .lb__backdrop {
         position: absolute;
@@ -529,7 +501,9 @@ const nonCover = finalFiles
       }
 
       :global(html.lb-open),
-      :global(body.lb-open) { overflow: hidden; }
+      :global(body.lb-open) {
+        overflow: hidden;
+      }
 
       @media (max-width: 800px) {
         .amp__heroInner,
@@ -554,7 +528,10 @@ const nonCover = finalFiles
           grid-template-columns: 44px 1fr 44px;
           padding: 1.25rem 0.75rem;
         }
-        .lb__stage { height: 84vh; }
+
+        .lb__stage {
+          height: 84vh;
+        }
       }
     </style>
   </main>
