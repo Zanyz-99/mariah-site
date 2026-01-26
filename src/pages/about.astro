@@ -4,8 +4,6 @@ import Layout from "../layouts/Layout.astro";
 
 <Layout title="About Me" description="About Me">
   <section class="content about-wrap">
-    <div class="spacer-md" aria-hidden="true"></div>
-
     <p class="about-text">
       I find inspiration in ordinary architecture and have a deep appreciation for the cultural heritage embedded in historic places. While I hope to work to preserve our shared history, I also hope to utilize existing architectural resources and design spaces that further community opportunity and connection.
     </p>
@@ -14,13 +12,12 @@ import Layout from "../layouts/Layout.astro";
   <style>
     /* Page wrapper: centered 80% */
     .about-wrap {
-      width: min(80%, 1200px); /* optional max-width safety */
+      width: min(80%, 1200px);
       margin-inline: auto;
-    }
 
-    .spacer-md {
-      height: clamp(24px, 6vh, 64px);
-      width: 100%;
+      /* ✅ match .home padding-top */
+      padding-top: 1rem;
+      padding-bottom: 2rem; /* optional: matches home bottom rhythm */
     }
 
     /* Text block */
@@ -28,7 +25,8 @@ import Layout from "../layouts/Layout.astro";
       font-size: var(--body-size);
       line-height: var(--line);
       color: var(--text);
-      max-width: 65ch; /* ideal reading width */
+      max-width: 65ch;
+      margin: 0; /* avoid extra top spacing from default <p> margin */
     }
 
     /* Mobile */
