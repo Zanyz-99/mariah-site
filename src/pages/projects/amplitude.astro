@@ -63,7 +63,7 @@ const nonCover = finalFiles
     <section class="amp__hero" aria-label="Amplitude hero">
       <div class="amp__heroInner">
         <div class="amp__grid amp__grid--hero">
-          <!-- Cover: crop to 3x4 (portrait) -->
+          <!-- Cover: crop to 4x3 -->
           <figure class="amp__heroMedia" id="heroMedia">
             <button
               class="amp__imgBtn"
@@ -71,17 +71,11 @@ const nonCover = finalFiles
               data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
               aria-label="Open cover image"
             >
-              <img
-                class="amp__img--hero"
-                src={coverSrc}
-                alt="Cover image"
-                loading="eager"
-                decoding="async"
-              />
+              <img class="amp__img--hero" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
             </button>
           </figure>
 
-          <!-- Description: height matches cover height; aligned to top -->
+          <!-- Description: same height as cover, aligned to top -->
           <article class="amp__heroText" id="heroText">
             <h1 class="amp__title">Amplitude</h1>
             <div class="amp__subtitle">{subtitle}</div>
@@ -107,12 +101,7 @@ const nonCover = finalFiles
         <div class="amp__grid amp__grid--gallery">
           {nonCover.map(({ src, i }) => (
             <figure class="amp__galleryItem">
-              <button
-                class="amp__imgBtn amp__imgBtn--full"
-                type="button"
-                data-lb-index={String(i)}
-                aria-label="Open image"
-              >
+              <button class="amp__imgBtn amp__imgBtn--full" type="button" data-lb-index={String(i)} aria-label="Open image">
                 <img class="amp__img--full" src={src} alt="" loading="lazy" decoding="async" />
               </button>
             </figure>
@@ -247,16 +236,12 @@ const nonCover = finalFiles
 
         const setFooterWhite = (on) => footer.classList.toggle("amp-footer-white", on);
 
-        const io = new IntersectionObserver(
-          ([entry]) => setFooterWhite(entry.isIntersecting),
-          { threshold: 0.01 }
-        );
-
+        const io = new IntersectionObserver(([entry]) => setFooterWhite(entry.isIntersecting), { threshold: 0.01 });
         io.observe(trigger);
       })();
     </script>
 
-    <!-- Match description height to cover height (and keep it synced on resize) -->
+    <!-- Match description height to cover height -->
     <script is:inline>
       (function () {
         const media = document.getElementById("heroMedia");
@@ -276,7 +261,6 @@ const nonCover = finalFiles
           ro.observe(media);
         }
 
-        // also update after hero image finishes loading
         const img = media.querySelector("img");
         if (img) img.addEventListener("load", set, { once: true });
       })();
@@ -300,7 +284,7 @@ const nonCover = finalFiles
         padding-bottom: 0 !important;
       }
 
-      /* Ensure navbar scrolls normally */
+      /* Ensure navbar scrolls normally + no border */
       :global(nav),
       :global(nav.topbar) {
         position: static !important;
@@ -308,13 +292,10 @@ const nonCover = finalFiles
         left: auto !important;
         right: auto !important;
         z-index: auto !important;
-
-        /* ✅ no bottom border on this page */
         border-bottom: none !important;
         box-shadow: none !important;
       }
 
-      /* Also nuke any border a wrapper inside navbar might be adding */
       :global(nav.topbar .row),
       :global(nav .row) {
         border-bottom: none !important;
@@ -337,10 +318,9 @@ const nonCover = finalFiles
 
       /* ---------------------------
          HERO (dark)
-         - no borders
-         - not 50/50 columns
-         - description top-aligned
-         - description height = cover height
+         - 1 row, 2 columns
+         - matched heights
+         - prevent bleed/overlap
          --------------------------- */
       .amp__hero {
         min-height: 100svh;
@@ -352,34 +332,28 @@ const nonCover = finalFiles
       .amp__grid--hero {
         display: grid;
         grid-template-columns: 1fr 1fr;
+        grid-template-rows: var(--hero-h, 70svh); /* ✅ force single row height */
         gap: 1.4rem;
-        align-items: start;
+        align-items: stretch; /* both cells same height */
         min-height: 100svh;
         padding: 0;
       }
 
-      .amp__heroMedia{
+      .amp__heroMedia,
+      .amp__heroText {
+        min-width: 0; /* critical for grid overflow issues */
+        height: 100%;
+        margin: 0;
+      }
+
+      .amp__heroMedia {
         aspect-ratio: 4 / 3;
-        height: var(--hero-h, 70svh);
         overflow: hidden;
         position: relative;
         isolation: isolate;
         background: #121212;
         z-index: 0;
       }
-
-
-
-      .amp__heroText{
-        height: var(--hero-h, 70svh);
-        overflow: auto;
-        align-self: start;
-      
-        position: relative;         /* stacking context */
-        z-index: 2;                 /* above the cover column */
-        background: transparent;    /* keep your dark background; change if you want */
-      }
-
 
       .amp__imgBtn {
         display: block;
@@ -389,17 +363,26 @@ const nonCover = finalFiles
         border: 0;
         background: transparent;
         cursor: zoom-in;
+        overflow: hidden; /* extra safety */
       }
 
-      .amp__img--hero{
+      .amp__img--hero {
         width: 100%;
         height: 100%;
         display: block;
         object-fit: cover;
-        position: relative;  /* keep it in the cell's stacking context */
+        position: relative;
         z-index: 0;
       }
 
+      .amp__heroText {
+        overflow: auto;
+        align-self: start;
+        position: relative;
+        z-index: 2;
+        background: #121212; /* prevents seeing image behind text */
+        padding-right: 0.25rem; /* keeps scrollbar off text */
+      }
 
       .amp__title {
         margin: 0 0 0.45rem;
@@ -472,13 +455,13 @@ const nonCover = finalFiles
          --------------------------- */
       :global(html),
       :global(body) {
-        background: #121212 !important; /* start dark */
+        background: #121212 !important;
         transition: background 200ms ease;
       }
 
       :global(html.amp-white),
       :global(body.amp-white) {
-        background: #ffffff !important; /* scroll into white */
+        background: #ffffff !important;
       }
 
       /* Keep navbar borderless in both states */
@@ -590,17 +573,21 @@ const nonCover = finalFiles
 
         .amp__grid--hero {
           grid-template-columns: 1fr;
+          grid-template-rows: auto;
           min-height: auto;
           gap: 1.1rem;
         }
 
         .amp__heroMedia {
           height: auto;
-          aspect-ratio: 3 / 4;
+          aspect-ratio: 4 / 3;
         }
 
         .amp__heroText {
           height: auto;
+          background: transparent;
+          overflow: visible;
+          padding-right: 0;
         }
       }
     </style>
