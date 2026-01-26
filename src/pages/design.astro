@@ -8,15 +8,7 @@ const slides = [
   "/design/04 Project Four.png",
 ];
 
-const projects = [
-  { name: "Circle Within a Square", desc: `Inspired by my grandfather’s relentless obsession with circles-within-squares, I approached this studio with the intention of finding a ‘close-body’ architecture version of this form.` },
-  { name: "Project Two", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris." },
-  { name: "Project Three", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis aute irure dolor in reprehenderit in voluptate velit esse." },
-  { name: "Project Four", desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Excepteur sint occaecat cupidatat non proident, sunt in culpa." },
-];
-
 // ✅ Each project gets a route
-// (matches: mariah-site/src/pages/design/circle_square.astro => /design/circle_square)
 const links = [
   "/design/circle_square",
   "/design/project-two",
@@ -35,11 +27,7 @@ const links = [
               <li class="card">
                 <a class="card-link" id="link-prev" href="#">
                   <div class="media">
-                    <img class="img-main" id="img-prev" alt="Previous design project" decoding="async" />
-                  </div>
-                  <div class="meta" aria-hidden="true">
-                    <div class="title" id="title-prev"></div>
-                    <div class="desc" id="desc-prev"></div>
+                    <img class="img-main" id="img-prev" alt="Previous design project" decoding="sync" />
                   </div>
                 </a>
               </li>
@@ -47,11 +35,7 @@ const links = [
               <li class="card is-active" id="card-cur">
                 <a class="card-link" id="link-cur" href="#">
                   <div class="media">
-                    <img class="img-main" id="img-cur" alt="Current design project" decoding="async" fetchpriority="high" />
-                  </div>
-                  <div class="meta">
-                    <div class="title" id="title-cur"></div>
-                    <div class="desc" id="desc-cur"></div>
+                    <img class="img-main" id="img-cur" alt="Current design project" decoding="sync" fetchpriority="high" />
                   </div>
                 </a>
               </li>
@@ -59,11 +43,7 @@ const links = [
               <li class="card">
                 <a class="card-link" id="link-next" href="#">
                   <div class="media">
-                    <img class="img-main" id="img-next" alt="Next design project" decoding="async" />
-                  </div>
-                  <div class="meta" aria-hidden="true">
-                    <div class="title" id="title-next"></div>
-                    <div class="desc" id="desc-next"></div>
+                    <img class="img-main" id="img-next" alt="Next design project" decoding="sync" />
                   </div>
                 </a>
               </li>
@@ -75,8 +55,7 @@ const links = [
     </div>
   </section>
 
-  <script define:vars={{ slides, projects, links }}>
-    const home = document.getElementById("design-home");
+  <script define:vars={{ slides, links }}>
     const viewport = document.getElementById("viewport");
     const track = document.getElementById("track");
     const cardCur = document.getElementById("card-cur");
@@ -85,15 +64,6 @@ const links = [
     const imgCur  = document.getElementById("img-cur");
     const imgNext = document.getElementById("img-next");
 
-    const titlePrev = document.getElementById("title-prev");
-    const titleCur  = document.getElementById("title-cur");
-    const titleNext = document.getElementById("title-next");
-
-    const descPrev = document.getElementById("desc-prev");
-    const descCur  = document.getElementById("desc-cur");
-    const descNext = document.getElementById("desc-next");
-
-    // ✅ NEW: link elements
     const linkPrev = document.getElementById("link-prev");
     const linkCur  = document.getElementById("link-cur");
     const linkNext = document.getElementById("link-next");
@@ -105,13 +75,13 @@ const links = [
     let animating = false;
     let baseX = 0;
 
-    // Drag state (so links still click)
+    // Drag state
     let startX = 0;
     let pointerId = null;
     let didMove = false;
     let handlingLinkClick = false;
 
-    // Preload main images
+    // preload
     const preloaded = new Set();
     const preload = (src) => {
       if (!src || preloaded.has(src)) return;
@@ -122,37 +92,22 @@ const links = [
     };
     slides.forEach(preload);
 
-    const setMeta = (i, titleEl, descEl) => {
-      const p = projects[i] || { name: "Project", desc: "" };
-      titleEl.textContent = p.name;
-      descEl.textContent = p.desc;
-    };
-
-    const setLinks = () => {
-      const prevI = mod(index - 1);
-      const curI  = index;
-      const nextI = mod(index + 1);
-
-      // fallback to "#" if missing
-      linkPrev.href = links?.[prevI] ?? "#";
-      linkCur.href  = links?.[curI]  ?? "#";
-      linkNext.href = links?.[nextI] ?? "#";
-    };
-
     const setImages = () => {
-      imgPrev.src = slides[mod(index - 1)];
-      imgCur.src  = slides[index];
-      imgNext.src = slides[mod(index + 1)];
+      const prev = slides[mod(index - 1)];
+      const cur  = slides[index];
+      const next = slides[mod(index + 1)];
+
+      imgPrev.src = prev;
+      imgCur.src  = cur;
+      imgNext.src = next;
+
+      linkPrev.href = links?.[mod(index - 1)] ?? "#";
+      linkCur.href  = links?.[index] ?? "#";
+      linkNext.href = links?.[mod(index + 1)] ?? "#";
 
       imgPrev.loading = "eager";
       imgCur.loading  = "eager";
       imgNext.loading = "eager";
-
-      setMeta(mod(index - 1), titlePrev, descPrev);
-      setMeta(index,          titleCur,  descCur);
-      setMeta(mod(index + 1), titleNext, descNext);
-
-      setLinks();
     };
 
     const gapPx = () => {
@@ -166,51 +121,6 @@ const links = [
     };
 
     const stepDistance = () => Math.round(cardWidth() + gapPx());
-
-    // ✅ Convert any CSS length to pixels
-    const toPx = (cssLen) => {
-      const v = (cssLen ?? "").toString().trim();
-      if (!v) return 0;
-      if (v.endsWith("px")) return parseFloat(v) || 0;
-
-      const el = document.createElement("div");
-      el.style.position = "absolute";
-      el.style.visibility = "hidden";
-      el.style.pointerEvents = "none";
-      el.style.height = v;
-      el.style.left = "-9999px";
-      el.style.top = "-9999px";
-      document.body.appendChild(el);
-      const px = el.getBoundingClientRect().height || 0;
-      document.body.removeChild(el);
-      return px;
-    };
-
-    const updateSizingVars = () => {
-      if (!home) return;
-      const cs = getComputedStyle(home);
-
-      const pt = parseFloat(cs.paddingTop || "0") || 0;
-      const pb = parseFloat(cs.paddingBottom || "0") || 0;
-
-      const chrome = toPx(cs.getPropertyValue("--chrome") || "0px");
-      const metaH = toPx(cs.getPropertyValue("--meta-h") || "180px");
-      const fixedCardH = toPx(cs.getPropertyValue("--card-h-fixed") || "640px");
-
-      const viewportH = window.visualViewport?.height || window.innerHeight;
-
-      const availableCardH = Math.max(260, Math.floor(viewportH - chrome - pt - pb));
-      const cardH = Math.min(Math.floor(fixedCardH), availableCardH);
-
-      const safeMetaH = Math.min(Math.floor(metaH), Math.max(120, cardH - 120));
-      const mediaH = Math.max(120, Math.floor(cardH - safeMetaH));
-
-      const cardW = Math.floor((mediaH * 16) / 9);
-
-      home.style.setProperty("--card-h", `${cardH}px`);
-      home.style.setProperty("--media-h", `${mediaH}px`);
-      home.style.setProperty("--card-w", `${cardW}px`);
-    };
 
     const computeBaseX = () => {
       const v = viewport.getBoundingClientRect();
@@ -232,7 +142,6 @@ const links = [
       animating = true;
 
       const dist = stepDistance();
-
       track.style.transition = "transform 320ms ease";
       track.style.transform = `translate3d(${baseX + (dir === 1 ? -dist : dist)}px, 0, 0)`;
 
@@ -242,20 +151,18 @@ const links = [
         index = mod(index + dir);
         setImages();
 
-        updateSizingVars();
-
         track.style.transition = "none";
         track.style.transform = `translate3d(${baseX}px, 0, 0)`;
         track.offsetHeight;
-
         computeBaseX();
+
         animating = false;
       };
 
       track.addEventListener("transitionend", onDone);
     };
 
-    // wheel anywhere
+    // wheel navigation
     let wheelLock = false;
     window.addEventListener(
       "wheel",
@@ -272,7 +179,7 @@ const links = [
       { passive: false }
     );
 
-    // ✅ pointer handling that doesn't break <a> clicks
+    // pointer handling (keeps <a> click working)
     viewport.addEventListener("pointerdown", (e) => {
       if (animating) return;
 
@@ -297,12 +204,12 @@ const links = [
       if (pointerId == null || e.pointerId !== pointerId) return;
 
       const wasLink = handlingLinkClick;
+
       pointerId = null;
       handlingLinkClick = false;
+      didMove = false;
 
-      // Let the browser navigate if the interaction started on a link
       if (wasLink) return;
-
       if (animating) return;
 
       const dx = e.clientX - startX;
@@ -325,25 +232,19 @@ const links = [
       if (e.key === "ArrowLeft") step(-1);
     });
 
-    // resize
+    // resize recenter
     let resizeT;
     window.addEventListener("resize", () => {
       clearTimeout(resizeT);
-      resizeT = setTimeout(() => {
-        updateSizingVars();
-        computeBaseX();
-      }, 60);
+      resizeT = setTimeout(() => computeBaseX(), 60);
     });
 
     // init
     setImages();
     requestAnimationFrame(() => {
-      updateSizingVars();
-      requestAnimationFrame(() => {
-        baseX = 0;
-        track.style.transform = "translate3d(0,0,0)";
-        computeBaseX();
-      });
+      baseX = 0;
+      track.style.transform = "translate3d(0,0,0)";
+      computeBaseX();
     });
   </script>
 
@@ -356,29 +257,17 @@ const links = [
     }
 
     .home{
-      --chrome: 72px;
-      --card-h-fixed: 66svh;
-      --meta-h: clamp(150px, 18svh, 220px);
-
-      --card-h: 640px;
-      --media-h: 460px;
-      --card-w: 820px;
-
       display: grid;
       gap: 16px;
       width: 100%;
-      padding-top: clamp(12px, 3vh, 28px);
-      padding-bottom: clamp(18px, 4vh, 44px);
-      box-sizing: border-box;
-
-      height: calc(100svh - var(--chrome));
+      padding-top: 1rem;
+      padding-bottom: 2rem;
     }
 
     .carousel{ width: 100%; }
 
     .viewport{
       width: 100%;
-      height: 100%;
       overflow: hidden;
       outline: none;
       touch-action: pan-y;
@@ -398,36 +287,27 @@ const links = [
       display: flex;
       align-items: center;
       gap: clamp(10px, 2vw, 18px);
-      padding: 6px 0;
+      padding: 0px 0;
       will-change: transform;
       transform: translate3d(0,0,0);
     }
 
     .card{
       flex: 0 0 auto;
-      height: var(--card-h);
-      width: min(92vw, var(--card-w));
-
+      width: clamp(320px, 78vw, 980px);
       border-radius: 0px;
       overflow: hidden;
-
+      aspect-ratio: 16 / 9;
       background: var(--card);
       border: 1px solid var(--border);
-
       opacity: 0.92;
       transition: opacity 200ms ease;
-
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
     }
 
     .card.is-active{ opacity: 1; }
 
-    /* ✅ Make the whole card clickable */
     .card-link{
-      display: flex;
-      flex-direction: column;
+      display: block;
       width: 100%;
       height: 100%;
       text-decoration: none;
@@ -435,11 +315,9 @@ const links = [
     }
 
     .media{
-      height: var(--media-h);
-      width: 100%;
       position: relative;
-      overflow: hidden;
-      background: var(--card);
+      width: 100%;
+      height: 100%;
     }
 
     .img-main{
@@ -460,33 +338,6 @@ const links = [
     .card:hover .img-main,
     .card:focus-within .img-main{ filter: none; }
 
-    .meta{
-      height: calc(var(--card-h) - var(--media-h));
-      width: 100%;
-      box-sizing: border-box;
-
-      padding: 14px 16px 16px;
-      display: grid;
-      gap: 8px;
-    }
-
-    .title{
-      font-weight: 700;
-      font-size: clamp(16px, 1.6vw, 20px);
-      line-height: 1.2;
-    }
-
-    .desc{
-      font-size: clamp(13px, 1.25vw, 15px);
-      line-height: 1.45;
-      opacity: 0.85;
-
-      display: -webkit-box;
-      -webkit-box-orient: vertical;
-      -webkit-line-clamp: 3;
-      overflow: hidden;
-    }
-
     @media (max-width: 640px){
       .window{
         width: 100vw;
@@ -498,8 +349,11 @@ const links = [
         padding: 0;
       }
 
-      .desc{
-        -webkit-line-clamp: 4;
+      .card{
+        width: min(92vw, 520px);
+        aspect-ratio: 9 / 16;
+        border-radius: 0px;
+        max-height: calc(100svh - 24px);
       }
     }
 
