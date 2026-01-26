@@ -105,44 +105,53 @@ const pageTitle = titleMap[pathname] ?? '';
 <style>
   :root{
     --pill-text:#e7e7e7;
+  
+    /* ✅ Match index.astro .window width */
+    --frame-w: min(100vw, clamp(320px, 78vw, 980px));
   }
-
+  
   .topbar{
     position: sticky;
     top: 0;
     z-index: 1000;
-
-    width: 80%;
+  
+    /* ✅ Same visual frame as the carousel */
+    width: var(--frame-w);
     margin: 2rem auto 0;
     background: var(--bg);
   }
-
+  
   .row{
-    max-width:1200px;
-    margin:0 auto;
-    padding: 1.2rem 0rem 1rem 1rem;
-    display:grid;
-    align-items:center;
-    column-gap:1rem;
+    /* ✅ Let the row fill the topbar exactly (no extra max-width) */
+    width: 100%;
+    max-width: none;
+    margin: 0 auto;
+  
+    /* ✅ Remove left padding so logo aligns to the image edge */
+    padding: 1.2rem 0 1rem 0;
+  
+    display: grid;
+    align-items: center;
+    column-gap: 1rem;
     grid-template-columns: auto 1fr auto;
-    min-width:0;
+    min-width: 0;
   }
-
+  
   .logo-link{ display:inline-flex; align-items:center; }
   .logo{ height:32px; width:auto; }
-
+  
   .spacer{ min-width:0; }
-
+  
   .menu{
     list-style:none;
     margin:0;
-    padding: 0rem;
+    padding:0;
     display:flex;
     gap:1.25rem;
-    justify-self:end;
+    justify-self:end;   /* ✅ pushes links to right edge of frame */
     align-items:center;
   }
-
+  
   .link{
     font-family:'Montserrat',system-ui,sans-serif;
     font-weight:600;
@@ -152,30 +161,26 @@ const pageTitle = titleMap[pathname] ?? '';
     display:inline-flex;
     align-items:center;
   }
-
+  
   .link:hover{ color:var(--text); }
   .link.active{
     font-weight:700;
     color:var(--text);
   }
-
+  
   /* Resume outline — desktop only (rectangle) */
   @media (min-width: 769px){
     .link-outline{
       padding:.45rem .75rem;
       border:1px solid rgba(255,255,255,.9);
-      border-radius:0px; /* rectangle (not pill) */
+      border-radius:0px;
       line-height:1;
       color:var(--text);
     }
-    .link-outline:hover{
-      border-color: rgba(255,255,255,1);
-    }
-    .link-outline.active{
-      border-color: rgba(255,255,255,1);
-    }
+    .link-outline:hover{ border-color: rgba(255,255,255,1); }
+    .link-outline.active{ border-color: rgba(255,255,255,1); }
   }
-
+  
   /* Mobile: no outline */
   @media (max-width: 768px){
     .link-outline{
@@ -184,7 +189,7 @@ const pageTitle = titleMap[pathname] ?? '';
       border-radius:0;
     }
   }
-
+  
   .hamburger{
     appearance:none;
     background:none;
@@ -192,9 +197,9 @@ const pageTitle = titleMap[pathname] ?? '';
     padding:.35rem;
     cursor:pointer;
     color:var(--text);
-    justify-self:end;
+    justify-self:end; /* ✅ right edge of frame */
   }
-
+  
   .page-title{
     display:none;
     font-weight:800;
@@ -204,15 +209,13 @@ const pageTitle = titleMap[pathname] ?? '';
     text-overflow:ellipsis;
     text-align:right;
   }
-
-  .mobile-menu{
-    position: relative;
-  }
-
+  
+  .mobile-menu{ position: relative; }
+  
   .mobile-list{
     position:absolute;
     top:100%;
-    right:1rem;
+    right:0;              /* ✅ align dropdown with right edge of frame */
     margin:.25rem 0 0;
     padding:.5rem .6rem;
     list-style:none;
@@ -223,26 +226,25 @@ const pageTitle = titleMap[pathname] ?? '';
     display:flex;
     flex-direction:column;
     gap:.75rem;
-
-    /* key: only as wide as its contents */
-    width: max-content;
-    min-width: 0;
+    width:max-content;
+    min-width:0;
     align-items:flex-start;
   }
-
+  
   @media (max-width:768px){
     .menu{ display:none; }
     .page-title{ display:block; }
-
+  
     .row{
       grid-template-columns: auto 1fr auto;
       column-gap:.5rem;
     }
   }
-
+  
   @media (min-width:769px){
     .mobile-menu,
     .hamburger,
     .page-title{ display:none; }
   }
+
 </style>
