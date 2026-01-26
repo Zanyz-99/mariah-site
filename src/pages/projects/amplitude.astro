@@ -26,6 +26,7 @@ try {
   console.error("[Amplitude page] asset read error:", err);
 }
 
+// ✅ EXACT order requested (no “append remaining”)
 const orderedFiles = [
   "Images-08.png",
   "Images-06.png",
@@ -38,6 +39,7 @@ const orderedFiles = [
   "Images-01.png",
 ];
 
+// Match filenames case-insensitively to what exists in the folder
 const byLower = new Map(imagesInFolder.map((n) => [n.toLowerCase(), n]));
 const finalFiles = orderedFiles
   .map((n) => byLower.get(n.toLowerCase()))
@@ -47,12 +49,11 @@ const galleryImages = finalFiles.map(
   (name) => `${BASE}/${encodeURIComponent(name)}`
 );
 
-const coverIndex = finalFiles.findIndex(
-  (f) => f.toLowerCase() === "cover-image.png"
-);
-const coverSrc =
-  coverIndex >= 0 ? galleryImages[coverIndex] : `${BASE}/cover-image.png`;
+// Cover
+const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.png");
+const coverSrc = coverIndex >= 0 ? galleryImages[coverIndex] : `${BASE}/cover-image.png`;
 
+// Non-cover list (rendered in order, excluding cover)
 const nonCover = finalFiles
   .map((file, i) => ({ file, src: galleryImages[i], i }))
   .filter((x) => x.file.toLowerCase() !== "cover-image.png");
@@ -60,122 +61,203 @@ const nonCover = finalFiles
 
 <Layout title="Amplitude" description="Amplitude project">
   <main class="amp">
-    <!-- HERO -->
-    <section class="amp__hero">
-      <div class="amp__grid amp__grid--hero">
-        <!-- Cover -->
-        <figure class="amp__card amp__heroImg">
-          <button
-            class="amp__imgBtn"
-            type="button"
-            data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
-          >
-            <img src={coverSrc} alt="Cover image" />
-          </button>
-        </figure>
-
-        <!-- Description -->
-        <article class="amp__card amp__desc">
-          <h1 class="amp__title">Amplitude</h1>
-          <div class="amp__subtitle">{subtitle}</div>
-          <div class="amp__body">{descriptionText}</div>
-        </article>
-      </div>
-    </section>
-
-    <!-- GALLERY -->
-    <section class="amp__gallery">
-      <div class="amp__grid amp__grid--gallery">
-        {nonCover.map(({ src, i }) => (
-          <figure class="amp__card amp__galleryImg">
+    <!-- HERO: fills the viewport -->
+    <section class="amp__hero" aria-label="Amplitude hero">
+      <div class="amp__heroInner">
+        <div class="amp__grid amp__grid--hero">
+          <!-- Cover -->
+          <figure class="amp__card amp__heroImg">
             <button
-              class="amp__imgBtn amp__imgBtn--full"
+              class="amp__imgBtn"
               type="button"
-              data-lb-index={String(i)}
+              data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
+              aria-label="Open cover image"
             >
-              <img src={src} alt="" loading="lazy" />
+              <img class="amp__img--hero" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
             </button>
           </figure>
-        ))}
+
+          <!-- Description -->
+          <article class="amp__card amp__desc" id="descBlock">
+            <h1 class="amp__title">Amplitude</h1>
+            <div class="amp__subtitle">{subtitle}</div>
+
+            {descriptionText ? (
+              <div class="amp__body">{descriptionText}</div>
+            ) : (
+              <div class="amp__body amp__body--error">
+                Couldn’t load <code>amplitude.txt</code><br />
+                Expected: <code>public/projects/{FOLDER}/amplitude.txt</code>
+              </div>
+            )}
+          </article>
+        </div>
       </div>
     </section>
 
-    <!-- LIGHTBOX -->
+    <!-- GALLERY: one column, full-size images; sentinel flips page/nav/footer to white -->
+    <section class="amp__gallery" aria-label="Amplitude gallery">
+      <div id="whiteStart" aria-hidden="true"></div>
+
+      <div class="amp__galleryInner">
+        <div class="amp__grid amp__grid--gallery">
+          {nonCover.map(({ src, i }) => (
+            <figure class="amp__galleryItem">
+              <button
+                class="amp__imgBtn amp__imgBtn--full"
+                type="button"
+                data-lb-index={String(i)}
+                aria-label="Open image"
+              >
+                <img class="amp__img--full" src={src} alt="" loading="lazy" decoding="async" />
+              </button>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- Lightbox -->
     <div class="lb" id="lightbox" aria-hidden="true">
       <div class="lb__backdrop" data-lb-close></div>
 
-      <div class="lb__panel" role="dialog" aria-modal="true">
-        <button class="lb__close" data-lb-close>×</button>
-        <button class="lb__nav" data-lb-prev>‹</button>
+      <div class="lb__panel" role="dialog" aria-modal="true" aria-label="Image viewer">
+        <button class="lb__close" type="button" data-lb-close aria-label="Close">×</button>
+        <button class="lb__nav lb__nav--prev" type="button" data-lb-prev aria-label="Previous">‹</button>
 
         <figure class="lb__figure">
-          <img class="lb__img" id="lbImg" />
+          <div class="lb__stage">
+            <img class="lb__img" id="lbImg" alt="" />
+          </div>
         </figure>
 
-        <button class="lb__nav" data-lb-next>›</button>
+        <button class="lb__nav lb__nav--next" type="button" data-lb-next aria-label="Next">›</button>
       </div>
     </div>
 
+    <!-- Lightbox behavior -->
     <script define:vars={{ galleryImages }} is:inline>
-      (() => {
+      (function () {
         const images = galleryImages;
         const lb = document.getElementById("lightbox");
-        const img = document.getElementById("lbImg");
+        const lbImg = document.getElementById("lbImg");
+
         let index = 0;
+        let lastFocus = null;
+
+        const isOpen = () => lb.getAttribute("aria-hidden") === "false";
+
+        const setOpen = (open) => {
+          lb.setAttribute("aria-hidden", open ? "false" : "true");
+          document.documentElement.classList.toggle("lb-open", open);
+          document.body.classList.toggle("lb-open", open);
+        };
+
+        const show = (i) => {
+          index = (i + images.length) % images.length;
+          lbImg.src = images[index];
+        };
 
         const open = (i) => {
-          index = i;
-          img.src = images[index];
-          lb.setAttribute("aria-hidden", "false");
-          document.body.classList.add("lb-open");
+          lastFocus = document.activeElement;
+          show(i);
+          setOpen(true);
+          const closeBtn = lb.querySelector(".lb__close");
+          closeBtn && closeBtn.focus();
         };
 
         const close = () => {
-          lb.setAttribute("aria-hidden", "true");
-          img.src = "";
-          document.body.classList.remove("lb-open");
+          setOpen(false);
+          lbImg.removeAttribute("src");
+          if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
         };
 
-        const show = (d) => {
-          index = (index + d + images.length) % images.length;
-          img.src = images[index];
-        };
+        const next = () => show(index + 1);
+        const prev = () => show(index - 1);
 
         document.addEventListener("click", (e) => {
-          const btn = e.target.closest("[data-lb-index]");
-          if (btn) return open(+btn.dataset.lbIndex);
-          if (e.target.closest("[data-lb-close]")) return close();
-          if (e.target.closest("[data-lb-next]")) return show(1);
-          if (e.target.closest("[data-lb-prev]")) return show(-1);
+          const t = e.target;
+
+          const btn = t.closest?.("[data-lb-index]");
+          if (btn) {
+            const i = Number(btn.getAttribute("data-lb-index") || 0);
+            if (!Number.isNaN(i)) open(i);
+            return;
+          }
+
+          if (t.closest?.("[data-lb-close]")) return close();
+          if (t.closest?.("[data-lb-next]")) return next();
+          if (t.closest?.("[data-lb-prev]")) return prev();
         });
 
         document.addEventListener("keydown", (e) => {
-          if (lb.getAttribute("aria-hidden") === "true") return;
+          if (!isOpen()) return;
           if (e.key === "Escape") close();
-          if (e.key === "ArrowRight") show(1);
-          if (e.key === "ArrowLeft") show(-1);
+          if (e.key === "ArrowRight") next();
+          if (e.key === "ArrowLeft") prev();
         });
       })();
     </script>
 
+    <!-- Flip FULL PAGE + Navbar + Footer once we cross into the white section -->
+    <script is:inline>
+      (function () {
+        const sentinel = document.getElementById("whiteStart");
+        if (!sentinel) return;
+
+        // Navbar in your layout is a <Navbar /> component.
+        // We’ll target the actual rendered <nav> element.
+        const nav =
+          document.querySelector("nav.topbar") ||
+          document.querySelector("nav") ||
+          document.querySelector("header nav");
+
+        // Footer is fixed in Layout.astro
+        const footer = document.querySelector("footer");
+
+        const setWhiteMode = (on) => {
+          document.documentElement.classList.toggle("amp-white", on);
+          document.body.classList.toggle("amp-white", on);
+
+          if (nav) nav.classList.toggle("amp-white", on);
+          if (footer) footer.classList.toggle("amp-white", on);
+        };
+
+        const update = () => {
+          const r = sentinel.getBoundingClientRect();
+          setWhiteMode(r.top <= 0);
+        };
+
+        // IntersectionObserver gives stability; boundingClientRect enforces “at the line”
+        const io = new IntersectionObserver(() => update(), { threshold: [0, 1] });
+        io.observe(sentinel);
+
+        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("resize", update);
+
+        requestAnimationFrame(update);
+      })();
+    </script>
+
     <style>
+      /* ---- Layout-controlled main is full width; we center our content to 80vw like your other pages ---- */
       .amp {
+        width: 100%;
+      }
+
+      .amp__heroInner,
+      .amp__galleryInner {
         width: 80vw;
         max-width: 1400px;
         margin: 0 auto;
       }
 
+      /* ---- HERO (tinted page background comes from html/body, not this section) ---- */
       .amp__hero {
         min-height: 100svh;
         display: grid;
         align-items: stretch;
-        background: rgba(0, 0, 0, 0.04);
-        padding: 1rem 0;
-      }
-
-      .amp__gallery {
-        background: #fff;
-        padding: 1.5rem 0 2.5rem;
+        padding: 0;
       }
 
       .amp__grid {
@@ -185,110 +267,248 @@ const nonCover = finalFiles
 
       .amp__grid--hero {
         grid-template-columns: 1fr 1fr;
-        height: 100%;
+        min-height: 100svh; /* hero fills viewport */
+        align-items: stretch;
       }
 
-      .amp__grid--gallery {
-        grid-template-columns: 1fr;
-      }
-
+      /* hero "cards" should NOT be white boxes */
       .amp__card {
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        background: #fff;
+        border-radius: 0;
         overflow: hidden;
+        background: transparent;
+        border: 1px solid rgba(0, 0, 0, 0.08);
       }
 
-      .amp__heroImg img {
+      .amp__imgBtn {
+        display: block;
         width: 100%;
         height: 100%;
-        object-fit: cover;
-        display: block;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: zoom-in;
       }
 
+      /* HERO image: strong crop (you can switch to contain if you want) */
+      .amp__heroImg {
+        height: 100%;
+        min-height: 0;
+      }
+
+      .amp__img--hero {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      /* Description */
       .amp__desc {
-        padding: 1.2rem;
+        padding: 1.1rem 1.1rem 0.95rem;
+        text-align: left;
       }
 
       .amp__title {
-        margin: 0 0 0.4rem;
-        font-size: clamp(1.6rem, 2.2vw, 2.2rem);
+        margin: 0 0 0.45rem;
+        font-size: clamp(1.6rem, 2.2vw, 2.15rem);
+        letter-spacing: -0.02em;
       }
 
       .amp__subtitle {
         font-size: 0.95rem;
-        opacity: 0.7;
-        margin-bottom: 1rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        opacity: 0.75;
+        margin-bottom: 0.9rem;
       }
 
       .amp__body {
-        line-height: 1.65;
+        font: inherit;
         white-space: pre-line;
+        line-height: 1.65;
+        font-size: 1rem;
+        opacity: 0.95;
       }
 
-      .amp__imgBtn {
-        all: unset;
-        display: block;
-        cursor: zoom-in;
+      /* ---- GALLERY ---- */
+      .amp__gallery {
+        padding: 1.5rem 0 2.5rem;
+      }
+
+      .amp__grid--gallery {
+        grid-template-columns: 1fr;
+        gap: 1.4rem;
+      }
+
+      /* sentinel line */
+      #whiteStart {
+        height: 1px;
+        width: 100%;
+      }
+
+      /* Gallery items: no card background/border so the page “feels” like one white surface */
+      .amp__galleryItem {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
       }
 
       .amp__imgBtn--full {
-        padding: 0.75rem;
-      }
-
-      .amp__galleryImg img {
-        max-width: 100%;
+        width: 100%;
         height: auto;
-        display: block;
-        margin: 0 auto;
+        padding: 0.75rem 0;
+        cursor: zoom-in;
+        background: transparent;
       }
 
+      /* FULL SIZE image behavior (no cropping) */
+      .amp__img--full {
+        display: block;
+        width: auto;      /* do not stretch */
+        height: auto;     /* keep aspect */
+        max-width: 100%;  /* responsive */
+        margin: 0 auto;   /* centered */
+        object-fit: contain;
+      }
+
+      /* --------------------------
+         FULL PAGE + NAV + FOOTER FLIP
+         We override Layout’s css vars by toggling on html/body.
+         -------------------------- */
+
+      /* Default (hero) background: light grey tint across the ENTIRE page */
+      :global(html),
+      :global(body) {
+        background: rgba(0, 0, 0, 0.04);
+        transition: background 180ms ease, color 180ms ease;
+      }
+
+      /* When in white section */
+      :global(html.amp-white),
+      :global(body.amp-white) {
+        background: #ffffff;
+      }
+
+      /* NAV + FOOTER flip (applies once the sentinel crosses the top) */
+      :global(nav.amp-white) {
+        background: #ffffff !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      }
+
+      :global(footer.amp-white) {
+        background: #ffffff !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.12);
+      }
+
+      /* ensure nav/footer links don’t look faded on white */
+      :global(nav.amp-white a),
+      :global(nav.amp-white .menu a),
+      :global(footer.amp-white a) {
+        color: #0b0b0b;
+      }
+
+      /* ---- Lightbox (kept from your prior version) ---- */
       .lb {
         position: fixed;
         inset: 0;
         display: none;
-        background: #fff;
         z-index: 9999;
       }
+      .lb[aria-hidden="false"] { display: block; }
 
-      .lb[aria-hidden="false"] {
-        display: block;
+      .lb__backdrop {
+        position: absolute;
+        inset: 0;
+        background: var(--bg, #fff);
       }
 
       .lb__panel {
         position: absolute;
         inset: 0;
         display: grid;
-        grid-template-columns: 48px 1fr 48px;
+        grid-template-columns: 56px 1fr 56px;
         align-items: center;
+        padding: 2rem 1rem;
       }
 
       .lb__figure {
+        margin: 0;
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+
+      .lb__stage {
+        background: var(--bg, #fff);
+        width: min(1100px, 92vw);
+        height: 86vh;
         display: grid;
         place-items: center;
       }
 
       .lb__img {
-        max-width: 90vw;
-        max-height: 90vh;
+        max-width: 100%;
+        max-height: 100%;
         object-fit: contain;
+        border-radius: 0;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
       }
 
-      .lb__close,
-      .lb__nav {
-        font-size: 2rem;
-        background: #fff;
+      .lb__close {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        width: 44px;
+        height: 44px;
         border: 1px solid rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.9);
+        color: #111;
+        font-size: 28px;
+        line-height: 40px;
+        border-radius: 999px;
         cursor: pointer;
       }
 
-      :global(body.lb-open) {
-        overflow: hidden;
+      .lb__nav {
+        width: 44px;
+        height: 64px;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.9);
+        color: #111;
+        font-size: 40px;
+        border-radius: 10px;
+        cursor: pointer;
+        user-select: none;
       }
 
+      :global(html.lb-open),
+      :global(body.lb-open) { overflow: hidden; }
+
       @media (max-width: 800px) {
+        .amp__heroInner,
+        .amp__galleryInner {
+          width: 100%;
+        }
+
         .amp__grid--hero {
           grid-template-columns: 1fr;
+          min-height: auto;
         }
+
+        .amp__heroImg {
+          aspect-ratio: 4 / 3;
+        }
+
+        .amp__img--hero {
+          height: 100%;
+        }
+
+        .lb__panel {
+          grid-template-columns: 44px 1fr 44px;
+          padding: 1.25rem 0.75rem;
+        }
+        .lb__stage { height: 84vh; }
       }
     </style>
   </main>
