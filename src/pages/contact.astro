@@ -21,55 +21,63 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <style>
-    /* Page width */
-    .contact {
-      width: 80%;
-      margin-inline: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
+    :root{
+      /* shared frame used by navbar + carousel */
+      --frame-w: min(100vw, clamp(320px, 78vw, 980px));
     }
-
-    .spacer-md {
+    
+    /* Page width / alignment */
+    .contact{
+      width: var(--frame-w);
+      margin: 0 auto;
+    
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+    
+      padding-top: 1rem;
+      padding-bottom: 2rem;
+    }
+    
+    .spacer-md{
       height: clamp(32px, 8vh, 96px);
-      width: 100%;
+      width:100%;
     }
-
+    
     /* Links */
-    .links {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      width: 100%;
-      display: grid;
-      gap: 18px;
+    .links{
+      list-style:none;
+      padding:0;
+      margin:0;
+      width:100%;
+      display:grid;
+      gap:18px;
     }
-
-    .link-item a {
+    
+    .link-item a{
       font-size: var(--h1-size);
-      font-weight: 1000;
-      letter-spacing: -0.01em;
-      line-height: 1.1;
-      color: var(--text);
-      text-decoration: none;
+      font-weight:1000;
+      letter-spacing:-0.01em;
+      line-height:1.1;
+      color:var(--text);
+      text-decoration:none;
     }
-
-    /* Hover behavior (matches your site language) */
-    .gray-hover:hover .hoverable {
+    
+    /* Hover behavior */
+    .gray-hover:hover .hoverable{
       filter: grayscale(1) brightness(.8);
-      opacity: .6;
+      opacity:.6;
       transition: filter 160ms ease, opacity 160ms ease;
     }
-    .gray-hover .hoverable:hover {
-      filter: none;
-      opacity: 1;
+    .gray-hover .hoverable:hover{
+      filter:none;
+      opacity:1;
+    }
+    
+    /* Mobile */
+    @media (max-width: 768px){
+      .contact{ width: 90%; }
     }
 
-    /* Mobile */
-    @media (max-width: 768px) {
-      .contact {
-        width: 90%;
-      }
-    }
   </style>
 </Layout>
