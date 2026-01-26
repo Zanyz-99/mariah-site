@@ -61,12 +61,12 @@ const nonCover = finalFiles
 
 <Layout title="Amplitude" description="Amplitude project">
   <main class="amp">
-    <!-- HERO: fills the viewport -->
+    <!-- HERO: fills viewport; DARK background -->
     <section class="amp__hero" aria-label="Amplitude hero">
       <div class="amp__heroInner">
         <div class="amp__grid amp__grid--hero">
           <!-- Cover -->
-          <figure class="amp__card amp__heroImg">
+          <figure class="amp__heroMedia">
             <button
               class="amp__imgBtn"
               type="button"
@@ -78,7 +78,7 @@ const nonCover = finalFiles
           </figure>
 
           <!-- Description -->
-          <article class="amp__card amp__desc" id="descBlock">
+          <article class="amp__heroText" id="descBlock">
             <h1 class="amp__title">Amplitude</h1>
             <div class="amp__subtitle">{subtitle}</div>
 
@@ -95,7 +95,7 @@ const nonCover = finalFiles
       </div>
     </section>
 
-    <!-- GALLERY: one column, full-size images; sentinel flips page/nav/footer to white -->
+    <!-- GALLERY: white background begins here -->
     <section class="amp__gallery" aria-label="Amplitude gallery">
       <div id="whiteStart" aria-hidden="true"></div>
 
@@ -202,23 +202,26 @@ const nonCover = finalFiles
     <!-- Flip FULL PAGE + Navbar + Footer once we cross into the white section -->
     <script is:inline>
       (function () {
+        const html = document.documentElement;
+        const body = document.body;
+
+        // Start DARK by default
+        html.classList.remove("amp-white");
+        body.classList.remove("amp-white");
+
         const sentinel = document.getElementById("whiteStart");
         if (!sentinel) return;
 
-        // Navbar in your layout is a <Navbar /> component.
-        // We’ll target the actual rendered <nav> element.
         const nav =
           document.querySelector("nav.topbar") ||
           document.querySelector("nav") ||
           document.querySelector("header nav");
 
-        // Footer is fixed in Layout.astro
         const footer = document.querySelector("footer");
 
         const setWhiteMode = (on) => {
-          document.documentElement.classList.toggle("amp-white", on);
-          document.body.classList.toggle("amp-white", on);
-
+          html.classList.toggle("amp-white", on);
+          body.classList.toggle("amp-white", on);
           if (nav) nav.classList.toggle("amp-white", on);
           if (footer) footer.classList.toggle("amp-white", on);
         };
@@ -228,7 +231,6 @@ const nonCover = finalFiles
           setWhiteMode(r.top <= 0);
         };
 
-        // IntersectionObserver gives stability; boundingClientRect enforces “at the line”
         const io = new IntersectionObserver(() => update(), { threshold: [0, 1] });
         io.observe(sentinel);
 
@@ -240,7 +242,7 @@ const nonCover = finalFiles
     </script>
 
     <style>
-      /* ---- Layout-controlled main is full width; we center our content to 80vw like your other pages ---- */
+      /* Keep your “center 80vw” layout inside the full-width Layout main */
       .amp {
         width: 100%;
       }
@@ -252,12 +254,15 @@ const nonCover = finalFiles
         margin: 0 auto;
       }
 
-      /* ---- HERO (tinted page background comes from html/body, not this section) ---- */
+      /* ---------------------------
+         HERO: DARK SECTION
+         --------------------------- */
       .amp__hero {
         min-height: 100svh;
         display: grid;
         align-items: stretch;
         padding: 0;
+        color: #fff; /* ensure hero text is readable on dark */
       }
 
       .amp__grid {
@@ -267,16 +272,17 @@ const nonCover = finalFiles
 
       .amp__grid--hero {
         grid-template-columns: 1fr 1fr;
-        min-height: 100svh; /* hero fills viewport */
+        min-height: 100svh; /* fill viewport */
         align-items: stretch;
       }
 
-      /* hero "cards" should NOT be white boxes */
-      .amp__card {
-        border-radius: 0;
+      /* Dark “frame” cards (NOT white) */
+      .amp__heroMedia,
+      .amp__heroText {
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.03);
         overflow: hidden;
-        background: transparent;
-        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 0;
       }
 
       .amp__imgBtn {
@@ -289,12 +295,6 @@ const nonCover = finalFiles
         cursor: zoom-in;
       }
 
-      /* HERO image: strong crop (you can switch to contain if you want) */
-      .amp__heroImg {
-        height: 100%;
-        min-height: 0;
-      }
-
       .amp__img--hero {
         width: 100%;
         height: 100%;
@@ -302,8 +302,7 @@ const nonCover = finalFiles
         object-fit: cover;
       }
 
-      /* Description */
-      .amp__desc {
+      .amp__heroText {
         padding: 1.1rem 1.1rem 0.95rem;
         text-align: left;
       }
@@ -312,27 +311,35 @@ const nonCover = finalFiles
         margin: 0 0 0.45rem;
         font-size: clamp(1.6rem, 2.2vw, 2.15rem);
         letter-spacing: -0.02em;
+        color: #fff; /* override Layout headings color in dark hero */
       }
 
       .amp__subtitle {
         font-size: 0.95rem;
         font-weight: 500;
         letter-spacing: 0.02em;
-        opacity: 0.75;
         margin-bottom: 0.9rem;
+        color: rgba(255, 255, 255, 0.74);
       }
 
       .amp__body {
-        font: inherit;
         white-space: pre-line;
         line-height: 1.65;
         font-size: 1rem;
-        opacity: 0.95;
+        color: rgba(255, 255, 255, 0.78);
       }
 
-      /* ---- GALLERY ---- */
+      /* ---------------------------
+         GALLERY: WHITE SECTION
+         --------------------------- */
       .amp__gallery {
         padding: 1.5rem 0 2.5rem;
+      }
+
+      /* The “line” where white begins */
+      #whiteStart {
+        height: 1px;
+        width: 100%;
       }
 
       .amp__grid--gallery {
@@ -340,18 +347,11 @@ const nonCover = finalFiles
         gap: 1.4rem;
       }
 
-      /* sentinel line */
-      #whiteStart {
-        height: 1px;
-        width: 100%;
-      }
-
-      /* Gallery items: no card background/border so the page “feels” like one white surface */
       .amp__galleryItem {
         margin: 0;
         padding: 0;
-        border: 0;
         background: transparent;
+        border: 0;
       }
 
       .amp__imgBtn--full {
@@ -359,56 +359,76 @@ const nonCover = finalFiles
         height: auto;
         padding: 0.75rem 0;
         cursor: zoom-in;
-        background: transparent;
       }
 
-      /* FULL SIZE image behavior (no cropping) */
+      /* full image (no crop) */
       .amp__img--full {
         display: block;
-        width: auto;      /* do not stretch */
-        height: auto;     /* keep aspect */
-        max-width: 100%;  /* responsive */
-        margin: 0 auto;   /* centered */
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        margin: 0 auto;
         object-fit: contain;
       }
 
-      /* --------------------------
-         FULL PAGE + NAV + FOOTER FLIP
-         We override Layout’s css vars by toggling on html/body.
-         -------------------------- */
+      /* ---------------------------
+         FULL PAGE BACKGROUND FLIP
+         Layout.astro sets html/body background to var(--bg).
+         We override it with higher priority.
+         --------------------------- */
 
-      /* Default (hero) background: light grey tint across the ENTIRE page */
+      /* Default: DARK page background */
       :global(html),
       :global(body) {
-        background: rgba(0, 0, 0, 0.04);
-        transition: background 180ms ease, color 180ms ease;
+        background: #121212 !important;
+        transition: background 200ms ease;
       }
 
-      /* When in white section */
+      /* Once we cross into the gallery */
       :global(html.amp-white),
       :global(body.amp-white) {
-        background: #ffffff;
+        background: #ffffff !important;
       }
 
-      /* NAV + FOOTER flip (applies once the sentinel crosses the top) */
+      /* Navbar + Footer flip with the page */
+      :global(nav),
+      :global(footer) {
+        transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
+      }
+
+      /* Dark mode (top of page): nav/footer should be dark */
+      :global(nav:not(.amp-white)) {
+        background: #121212 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      }
+      :global(footer:not(.amp-white)) {
+        background: #121212 !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+      }
+
+      :global(nav:not(.amp-white) a),
+      :global(footer:not(.amp-white) a) {
+        color: rgba(255, 255, 255, 0.86) !important;
+      }
+
+      /* White section: nav/footer turn white */
       :global(nav.amp-white) {
         background: #ffffff !important;
         border-bottom: 1px solid rgba(0, 0, 0, 0.08);
       }
-
       :global(footer.amp-white) {
         background: #ffffff !important;
         border-top: 1px solid rgba(0, 0, 0, 0.12);
       }
 
-      /* ensure nav/footer links don’t look faded on white */
       :global(nav.amp-white a),
-      :global(nav.amp-white .menu a),
       :global(footer.amp-white a) {
-        color: #0b0b0b;
+        color: #0b0b0b !important;
       }
 
-      /* ---- Lightbox (kept from your prior version) ---- */
+      /* ---------------------------
+         Lightbox
+         --------------------------- */
       .lb {
         position: fixed;
         inset: 0;
@@ -420,7 +440,7 @@ const nonCover = finalFiles
       .lb__backdrop {
         position: absolute;
         inset: 0;
-        background: var(--bg, #fff);
+        background: #fff;
       }
 
       .lb__panel {
@@ -440,7 +460,7 @@ const nonCover = finalFiles
       }
 
       .lb__stage {
-        background: var(--bg, #fff);
+        background: #fff;
         width: min(1100px, 92vw);
         height: 86vh;
         display: grid;
@@ -496,7 +516,7 @@ const nonCover = finalFiles
           min-height: auto;
         }
 
-        .amp__heroImg {
+        .amp__heroMedia {
           aspect-ratio: 4 / 3;
         }
 
