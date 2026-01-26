@@ -26,7 +26,7 @@ try {
   console.error("[Amplitude page] asset read error:", err);
 }
 
-// ✅ EXACT order requested (no “append remaining”)
+// ✅ EXACT order requested
 const orderedFiles = [
   "Images-08.png",
   "Images-06.png",
@@ -39,7 +39,7 @@ const orderedFiles = [
   "Images-01.png",
 ];
 
-// Match filenames case-insensitively to what exists in the folder
+// Case-insensitive match to folder contents
 const byLower = new Map(imagesInFolder.map((n) => [n.toLowerCase(), n]));
 const finalFiles = orderedFiles
   .map((n) => byLower.get(n.toLowerCase()))
@@ -53,7 +53,7 @@ const galleryImages = finalFiles.map(
 const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.png");
 const coverSrc = coverIndex >= 0 ? galleryImages[coverIndex] : `${BASE}/cover-image.png`;
 
-// Non-cover list (rendered in order, excluding cover)
+// Non-cover images (render below in order)
 const nonCover = finalFiles
   .map((file, i) => ({ file, src: galleryImages[i], i }))
   .filter((x) => x.file.toLowerCase() !== "cover-image.png");
@@ -61,11 +61,11 @@ const nonCover = finalFiles
 
 <Layout title="Amplitude" description="Amplitude project">
   <main class="amp">
-    <!-- HERO: fills viewport; DARK background -->
+    <!-- HERO (dark) -->
     <section class="amp__hero" aria-label="Amplitude hero">
       <div class="amp__heroInner">
         <div class="amp__grid amp__grid--hero">
-          <!-- Cover -->
+          <!-- Cover (maintains aspect ratio: contain, no crop) -->
           <figure class="amp__heroMedia">
             <button
               class="amp__imgBtn"
@@ -95,7 +95,7 @@ const nonCover = finalFiles
       </div>
     </section>
 
-    <!-- GALLERY: white background begins here -->
+    <!-- GALLERY (white begins here) -->
     <section class="amp__gallery" aria-label="Amplitude gallery">
       <div id="whiteStart" aria-hidden="true"></div>
 
@@ -199,15 +199,33 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- Flip FULL PAGE + Navbar + Footer once we cross into the white section -->
+    <!-- Fix Navbar to viewport + set padding based on its height -->
+    <script is:inline>
+      (function () {
+        const nav =
+          document.querySelector("nav.topbar") ||
+          document.querySelector("nav") ||
+          document.querySelector("header nav");
+
+        if (!nav) return;
+
+        const set = () => {
+          const h = Math.ceil(nav.getBoundingClientRect().height);
+          document.documentElement.style.setProperty("--amp-nav-h", h + "px");
+        };
+
+        window.addEventListener("load", set);
+        window.addEventListener("resize", set);
+        if ("ResizeObserver" in window) new ResizeObserver(set).observe(nav);
+        set();
+      })();
+    </script>
+
+    <!-- Background flip + navbar/footer flip when crossing into white section -->
     <script is:inline>
       (function () {
         const html = document.documentElement;
         const body = document.body;
-
-        // Start DARK by default
-        html.classList.remove("amp-white");
-        body.classList.remove("amp-white");
 
         const sentinel = document.getElementById("whiteStart");
         if (!sentinel) return;
@@ -242,7 +260,7 @@ const nonCover = finalFiles
     </script>
 
     <style>
-      /* Keep your “center 80vw” layout inside the full-width Layout main */
+      /* Page wrapper inside full-width Layout main */
       .amp {
         width: 100%;
       }
@@ -254,29 +272,43 @@ const nonCover = finalFiles
         margin: 0 auto;
       }
 
-      /* ---------------------------
-         HERO: DARK SECTION
-         --------------------------- */
-      .amp__hero {
-        min-height: 100svh;
-        display: grid;
-        align-items: stretch;
-        padding: 0;
-        color: #fff; /* ensure hero text is readable on dark */
-      }
-
       .amp__grid {
         display: grid;
         gap: 1.1rem;
       }
 
+      /* Fix navbar to viewport (doesn't scroll) */
+      :global(nav.topbar),
+      :global(nav) {
+        position: fixed !important;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 9998;
+      }
+
+      /* Push content below fixed navbar */
+      .amp__hero,
+      .amp__gallery {
+        padding-top: var(--amp-nav-h, 0px);
+      }
+
+      /* ---------------------------
+         HERO (dark)
+         --------------------------- */
+      .amp__hero {
+        min-height: calc(100svh - var(--amp-nav-h, 0px));
+        display: grid;
+        align-items: stretch;
+        color: #fff;
+      }
+
       .amp__grid--hero {
         grid-template-columns: 1fr 1fr;
-        min-height: 100svh; /* fill viewport */
+        min-height: calc(100svh - var(--amp-nav-h, 0px));
         align-items: stretch;
       }
 
-      /* Dark “frame” cards (NOT white) */
       .amp__heroMedia,
       .amp__heroText {
         border: 1px solid rgba(255, 255, 255, 0.16);
@@ -295,11 +327,13 @@ const nonCover = finalFiles
         cursor: zoom-in;
       }
 
+      /* ✅ cover maintains aspect ratio (no crop) */
       .amp__img--hero {
         width: 100%;
         height: 100%;
         display: block;
-        object-fit: cover;
+        object-fit: contain;
+        background: #121212; /* behind transparent areas */
       }
 
       .amp__heroText {
@@ -311,7 +345,7 @@ const nonCover = finalFiles
         margin: 0 0 0.45rem;
         font-size: clamp(1.6rem, 2.2vw, 2.15rem);
         letter-spacing: -0.02em;
-        color: #fff; /* override Layout headings color in dark hero */
+        color: #fff;
       }
 
       .amp__subtitle {
@@ -330,13 +364,12 @@ const nonCover = finalFiles
       }
 
       /* ---------------------------
-         GALLERY: WHITE SECTION
+         GALLERY (white)
          --------------------------- */
       .amp__gallery {
-        padding: 1.5rem 0 2.5rem;
+        padding-bottom: 2.5rem;
       }
 
-      /* The “line” where white begins */
       #whiteStart {
         height: 1px;
         width: 100%;
@@ -358,10 +391,8 @@ const nonCover = finalFiles
         width: 100%;
         height: auto;
         padding: 0.75rem 0;
-        cursor: zoom-in;
       }
 
-      /* full image (no crop) */
       .amp__img--full {
         display: block;
         width: auto;
@@ -372,35 +403,30 @@ const nonCover = finalFiles
       }
 
       /* ---------------------------
-         FULL PAGE BACKGROUND FLIP
-         Layout.astro sets html/body background to var(--bg).
-         We override it with higher priority.
+         FULL PAGE background flip
          --------------------------- */
-
-      /* Default: DARK page background */
       :global(html),
       :global(body) {
-        background: #121212 !important;
+        background: #121212 !important; /* start dark */
         transition: background 200ms ease;
       }
 
-      /* Once we cross into the gallery */
       :global(html.amp-white),
       :global(body.amp-white) {
-        background: #ffffff !important;
+        background: #ffffff !important; /* scroll into white */
       }
 
-      /* Navbar + Footer flip with the page */
+      /* Nav/Footer flip with section */
       :global(nav),
       :global(footer) {
         transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
       }
 
-      /* Dark mode (top of page): nav/footer should be dark */
       :global(nav:not(.amp-white)) {
         background: #121212 !important;
         border-bottom: 1px solid rgba(255, 255, 255, 0.12);
       }
+
       :global(footer:not(.amp-white)) {
         background: #121212 !important;
         border-top: 1px solid rgba(255, 255, 255, 0.12);
@@ -411,11 +437,11 @@ const nonCover = finalFiles
         color: rgba(255, 255, 255, 0.86) !important;
       }
 
-      /* White section: nav/footer turn white */
       :global(nav.amp-white) {
         background: #ffffff !important;
         border-bottom: 1px solid rgba(0, 0, 0, 0.08);
       }
+
       :global(footer.amp-white) {
         background: #ffffff !important;
         border-top: 1px solid rgba(0, 0, 0, 0.12);
