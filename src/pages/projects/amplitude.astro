@@ -335,13 +335,12 @@ const nonCover = finalFiles
 
       .amp__grid--hero {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: var(--hero-h, 70svh); /* ✅ force single row height */
+        grid-template-columns: auto 1fr; /* ⬅️ key change */
+        grid-template-rows: var(--hero-h, 70svh);
         gap: 2.5rem;
-        align-items: stretch; /* both cells same height */
-        min-height: 100svh;
-        padding: 0;
+        align-items: stretch;
       }
+
 
       .amp__heroMedia,
       .amp__heroText {
@@ -352,7 +351,8 @@ const nonCover = finalFiles
       }
 
       .amp__heroMedia {
-        aspect-ratio: 4 / 3;
+        height: 100%;
+        aspect-ratio: auto;
         overflow: hidden;
         position: relative;
         isolation: isolate;
@@ -372,10 +372,10 @@ const nonCover = finalFiles
       }
 
       .amp__img--hero {
-        width: 100%;
+        width: auto;
         height: 100%;
         display: block;
-        object-fit: cover;
+        object-fit: contain;
         position: relative;
         z-index: 0;
       }
