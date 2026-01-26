@@ -10,30 +10,39 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <style>
-    /* Page wrapper: centered 80% */
-    .about-wrap {
-      width: min(80%, 1200px);
-      margin-inline: auto;
-
-      /* ✅ match .home padding-top */
-      padding-top: 1rem;
-      padding-bottom: 2rem; /* optional: matches home bottom rhythm */
+    :root{
+      /* same frame used by navbar + carousel */
+      --frame-w: min(100vw, clamp(320px, 78vw, 980px));
     }
-
+    
+    /* Page wrapper */
+    .about-wrap{
+      width: var(--frame-w);
+      margin: 0 auto;
+    
+      /* match vertical rhythm with navbar / home */
+      padding-top: 1rem;
+      padding-bottom: 2rem;
+    }
+    
     /* Text block */
-    .about-text {
+    .about-text{
       font-size: var(--body-size);
       line-height: var(--line);
       color: var(--text);
+    
       max-width: 65ch;
-      margin: 0; /* avoid extra top spacing from default <p> margin */
+    
+      /* 🔑 key change */
+      margin: 0;           /* no centering */
     }
-
+    
     /* Mobile */
-    @media (max-width: 768px) {
-      .about-wrap {
+    @media (max-width: 768px){
+      .about-wrap{
         width: 90%;
       }
     }
+
   </style>
 </Layout>
