@@ -28,13 +28,13 @@ try {
 
 /* ✅ EXACT order requested */
 const orderedFiles = [
-  "cover-image.png",
-  "images-01.png",
-  "images-02.png",
-  "images-03.png",
-  "images-06.png",
-  "images-04.png",
-  "images-05.png",
+  "cover-image.webp",
+  "images-01.webp",
+  "images-02.webp",
+  "images-03.webp",
+  "images-06.webp",
+  "images-04.webp",
+  "images-05.webp",
 ];
 
 /* Case-insensitive match */
@@ -46,14 +46,14 @@ const finalFiles = orderedFiles
 const galleryImages = finalFiles.map((name) => `${BASE}/${encodeURIComponent(name)}`);
 
 /* Cover */
-const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.png");
+const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.webp");
 const coverSrc =
-  coverIndex >= 0 ? galleryImages[coverIndex] : (galleryImages[0] ?? `${BASE}/cover-image.png`);
+  coverIndex >= 0 ? galleryImages[coverIndex] : (galleryImages[0] ?? `${BASE}/cover-image.webp`);
 
 /* Non-cover */
 const nonCover = finalFiles
   .map((file, i) => ({ file, src: galleryImages[i], i }))
-  .filter((x) => x.file.toLowerCase() !== "cover-image.png");
+  .filter((x) => x.file.toLowerCase() !== "cover-image.webp");
 ---
 
 <Layout title="Immersion" description="Immersion project">
