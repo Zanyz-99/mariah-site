@@ -100,8 +100,9 @@ const covers = [
     slides.forEach(preload);
     covers.forEach(preload);
 
-    // "/projects/amplitude.png" -> "/projects/amplitude"
-    const pageFromSlide = (src) => src.replace(/\.png$/i, "");
+    // "/projects/amplitude.webp" -> "/projects/amplitude"
+    const pageFromSlide = (src) => src.replace(/\.(png|jpe?g|webp|avif|gif|svg)$/i, "");
+
 
     const setImages = () => {
       const prev = slides[mod(index - 1)];
