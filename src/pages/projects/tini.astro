@@ -28,17 +28,17 @@ try {
 
 /* ✅ EXACT order requested */
 const orderedFiles = [
-  "cover-image.png",
-  "Images-03.png",
-  "Images-04.png",
-  "Images-07.png",
-  "Images-05.png",
-  "Images-06.png",
-  "Images-08.png",
-  "Images-02.png",
-  "Images-09.png",
-  "Images-01.png",
-  "Images-11.png",
+  "cover-image.webp",
+  "Images-03.webp",
+  "Images-04.webp",
+  "Images-07.webp",
+  "Images-05.webp",
+  "Images-06.webp",
+  "Images-08.webp",
+  "Images-02.webp",
+  "Images-09.webp",
+  "Images-01.webp",
+  "Images-11.webp",
 ];
 
 /* Case-insensitive match */
@@ -50,14 +50,14 @@ const finalFiles = orderedFiles
 const galleryImages = finalFiles.map((name) => `${BASE}/${encodeURIComponent(name)}`);
 
 /* Cover */
-const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.png");
+const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.webp");
 const coverSrc =
-  coverIndex >= 0 ? galleryImages[coverIndex] : (galleryImages[0] ?? `${BASE}/cover-image.png`);
+  coverIndex >= 0 ? galleryImages[coverIndex] : (galleryImages[0] ?? `${BASE}/cover-image.webp`);
 
 /* Non-cover */
 const nonCover = finalFiles
   .map((file, i) => ({ file, src: galleryImages[i], i }))
-  .filter((x) => x.file.toLowerCase() !== "cover-image.png");
+  .filter((x) => x.file.toLowerCase() !== "cover-image.webp");
 ---
 
 <Layout title="Tini" description="Tini project">
