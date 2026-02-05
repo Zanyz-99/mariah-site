@@ -2,10 +2,10 @@
 import Layout from "../layouts/Layout.astro";
 
 const slides = [
-  "/projects/amplitude.png",
-  "/projects/immersion.png",
-  "/projects/symbiosis.png",
-  "/projects/tini.png",
+  "/projects/amplitude.webp",
+  "/projects/immersion.webp",
+  "/projects/symbiosis.webp",
+  "/projects/tini.webp",
 ];
 
 const covers = [
@@ -26,8 +26,8 @@ const covers = [
               <li class="card">
                 <a class="card-link" id="link-prev" href="#">
                   <div class="media">
-                    <img class="img-main" id="img-prev" alt="Previous project" decoding="sync" />
-                    <img class="img-cover" id="cover-prev" alt="" decoding="sync" aria-hidden="true" />
+                    <img class="img-main" id="img-prev" alt="Previous project" decoding="async" loading="lazy" />
+                    <img class="img-cover" id="cover-prev" alt="" decoding="async" loading="lazy" aria-hidden="true" />
                   </div>
                 </a>
               </li>
@@ -35,8 +35,8 @@ const covers = [
               <li class="card is-active" id="card-cur">
                 <a class="card-link" id="link-cur" href="#">
                   <div class="media">
-                    <img class="img-main" id="img-cur" alt="Current project" decoding="sync" fetchpriority="high" />
-                    <img class="img-cover" id="cover-cur" alt="" decoding="sync" fetchpriority="high" aria-hidden="true" />
+                    <img class="img-main" id="img-cur" alt="Current project" decoding="async" loading="eager" fetchpriority="high" />
+                    <img class="img-cover" id="cover-cur" alt="" decoding="async" loading="eager" fetchpriority="high" aria-hidden="true" />
                   </div>
                 </a>
               </li>
@@ -44,8 +44,8 @@ const covers = [
               <li class="card">
                 <a class="card-link" id="link-next" href="#">
                   <div class="media">
-                    <img class="img-main" id="img-next" alt="Next project" decoding="sync" />
-                    <img class="img-cover" id="cover-next" alt="" decoding="sync" aria-hidden="true" />
+                    <img class="img-main" id="img-next" alt="Next project" decoding="async" loading="lazy" />
+                    <img class="img-cover" id="cover-next" alt="" decoding="async" loading="lazy" aria-hidden="true" />
                   </div>
                 </a>
               </li>
@@ -87,21 +87,29 @@ const covers = [
     let didMove = false;
     let handlingLinkClick = false;
 
-    // ---------- Preload everything (main + cover) ----------
+    // ---------- Preload ONLY what's needed ----------
     const preloaded = new Set();
     const preload = (src) => {
       if (!src || preloaded.has(src)) return;
       preloaded.add(src);
       const im = new Image();
       im.decoding = "async";
+      im.loading = "eager";
       im.src = src;
     };
 
-    slides.forEach(preload);
-    covers.forEach(preload);
+    const preloadVisible = () => {
+      preload(slides[mod(index - 1)]);
+      preload(slides[index]);
+      preload(slides[mod(index + 1)]);
 
-    // "/projects/amplitude.png" -> "/projects/amplitude"
-    const pageFromSlide = (src) => src.replace(/\.png$/i, "");
+      preload(covers[mod(index - 1)]);
+      preload(covers[index]);
+      preload(covers[mod(index + 1)]);
+    };
+
+    // "/projects/amplitude.webp" -> "/projects/amplitude"
+    const pageFromSlide = (src) => src.replace(/\.(png|webp|avif|jpe?g)$/i, "");
 
     const setImages = () => {
       const prev = slides[mod(index - 1)];
@@ -120,12 +128,23 @@ const covers = [
       linkCur.href  = pageFromSlide(cur);
       linkNext.href = pageFromSlide(next);
 
-      imgPrev.loading = "eager";
-      imgCur.loading  = "eager";
-      imgNext.loading = "eager";
-      coverPrev.loading = "eager";
-      coverCur.loading  = "eager";
-      coverNext.loading = "eager";
+      // ✅ only current eager; sides lazy
+      imgCur.loading = "eager";
+      coverCur.loading = "eager";
+
+      imgPrev.loading = "lazy";
+      imgNext.loading = "lazy";
+      coverPrev.loading = "lazy";
+      coverNext.loading = "lazy";
+
+      // warm cache for visible + one ahead
+      preloadVisible();
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          preload(slides[mod(index + 2)]);
+          preload(covers[mod(index + 2)]);
+        }, 200);
+      });
     };
 
     const gapPx = () => {
@@ -152,7 +171,6 @@ const covers = [
 
       track.style.transition = "none";
       track.style.transform = `translate3d(${baseX}px, 0, 0)`;
-      track.offsetHeight;
     };
 
     const step = (dir) => {
@@ -169,9 +187,11 @@ const covers = [
         index = mod(index + dir);
         setImages();
 
+        // snap back to base position
         track.style.transition = "none";
         track.style.transform = `translate3d(${baseX}px, 0, 0)`;
-        track.offsetHeight;
+
+        // recenter once
         computeBaseX();
 
         animating = false;
@@ -180,9 +200,9 @@ const covers = [
       track.addEventListener("transitionend", onDone);
     };
 
-    // wheel navigation
+    // wheel navigation (attach to viewport, not window)
     let wheelLock = false;
-    window.addEventListener(
+    viewport.addEventListener(
       "wheel",
       (e) => {
         e.preventDefault();
@@ -216,7 +236,6 @@ const covers = [
     viewport.addEventListener("pointermove", (e) => {
       if (pointerId == null || e.pointerId !== pointerId) return;
       if (handlingLinkClick) return;
-
       if (Math.abs(e.clientX - startX) > 8) didMove = true;
     });
 
@@ -231,8 +250,7 @@ const covers = [
       handlingLinkClick = false;
       didMove = false;
 
-      // If it was a link interaction, do NOTHING here.
-      // Browser will navigate naturally (this was being blocked before).
+      // Browser will navigate naturally for links
       if (wasLink) return;
 
       if (animating) return;
@@ -266,11 +284,19 @@ const covers = [
 
     // init
     setImages();
-    requestAnimationFrame(() => {
-      baseX = 0;
-      track.style.transform = "translate3d(0,0,0)";
-      computeBaseX();
-    });
+
+    // recenter after first image paint (helps avoid extra layout work)
+    imgCur.addEventListener(
+      "load",
+      () => {
+        requestAnimationFrame(() => {
+          baseX = 0;
+          track.style.transform = "translate3d(0,0,0)";
+          computeBaseX();
+        });
+      },
+      { once: true }
+    );
   </script>
 
   <style>
