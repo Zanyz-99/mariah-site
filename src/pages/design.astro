@@ -2,17 +2,17 @@
 import Layout from "../layouts/Layout.astro";
 
 const slides = [
-  "/design/circle_square.webp", 
+  "/design/circle_square.webp",
   "/design/zs.webp",
-  "/design/direttissima.webp", 
-  "/design/varenna.webp", 
+  "/design/direttissima.webp",
+  "/design/varenna.webp",
 ];
 
 const covers = [
-  "/design/Design Cover/circle_square.webp", 
+  "/design/Design Cover/circle_square.webp",
   "/design/Design Cover/zs.webp",
   "/design/Design Cover/direttissima.webp",
-  "/design/Design Cover/varenna.webp", 
+  "/design/Design Cover/varenna.webp",
 ];
 ---
 
@@ -21,9 +21,8 @@ const covers = [
     <div class="full-bleed">
       <div class="carousel" id="design">
         <div class="viewport" id="viewport" tabindex="0" aria-label="Design carousel">
-          <div class="window">
+          <div class="window" id="window">
             <ul class="track" id="track" aria-live="polite">
-
               <li class="card">
                 <a class="card-link" id="link-prev" href="#">
                   <div class="media">
@@ -50,7 +49,6 @@ const covers = [
                   </div>
                 </a>
               </li>
-
             </ul>
           </div>
         </div>
@@ -99,7 +97,6 @@ const covers = [
     slides.forEach(preload);
     covers.forEach(preload);
 
-    // "/design/circle_square.webp" -> "/design/circle_square"
     const pageFromSlide = (src) =>
       src.replace(/\.(png|jpe?g|webp|avif|gif|svg)$/i, "");
 
@@ -180,17 +177,79 @@ const covers = [
       track.addEventListener("transitionend", onDone);
     };
 
-    window.addEventListener("wheel", (e) => {
-      e.preventDefault();
+    let wheelLock = false;
+    window.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        if (wheelLock || animating) return;
+        wheelLock = true;
+
+        const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+        step(dominant > 0 ? 1 : -1);
+
+        setTimeout(() => (wheelLock = false), 360);
+      },
+      { passive: false }
+    );
+
+    viewport.addEventListener("pointerdown", (e) => {
       if (animating) return;
-      const dominant = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-      step(dominant > 0 ? 1 : -1);
-    }, { passive: false });
+
+      const onLink = !!e.target.closest("a.card-link");
+      handlingLinkClick = onLink;
+
+      startX = e.clientX;
+      didMove = false;
+      pointerId = e.pointerId;
+
+      if (!onLink) {
+        viewport.setPointerCapture?.(e.pointerId);
+      }
+    });
+
+    viewport.addEventListener("pointermove", (e) => {
+      if (pointerId == null || e.pointerId !== pointerId) return;
+      if (handlingLinkClick) return;
+
+      if (Math.abs(e.clientX - startX) > 8) didMove = true;
+    });
+
+    viewport.addEventListener("pointerup", (e) => {
+      if (pointerId == null || e.pointerId !== pointerId) return;
+
+      const wasLink = handlingLinkClick;
+
+      pointerId = null;
+      handlingLinkClick = false;
+      didMove = false;
+
+      if (wasLink) return;
+      if (animating) return;
+
+      const dx = e.clientX - startX;
+      const threshold = Math.min(90, viewport.clientWidth * 0.14);
+
+      if (dx < -threshold) step(1);
+      else if (dx > threshold) step(-1);
+    });
+
+    viewport.addEventListener("pointercancel", () => {
+      pointerId = null;
+      handlingLinkClick = false;
+      didMove = false;
+    });
 
     window.addEventListener("keydown", (e) => {
       if (animating) return;
       if (e.key === "ArrowRight") step(1);
       if (e.key === "ArrowLeft") step(-1);
+    });
+
+    let resizeT;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeT);
+      resizeT = setTimeout(() => computeBaseX(), 60);
     });
 
     setImages();
@@ -202,7 +261,132 @@ const covers = [
   </script>
 
   <style>
-    /* reuse identical styling from home page */
-  </style>
+    :global(html),
+    :global(body){
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
 
+    .home{
+      display: grid;
+      gap: 16px;
+      width: 100%;
+      padding-top: 1rem;
+      padding-bottom: 2rem;
+    }
+
+    .carousel{ width: 100%; }
+
+    .viewport{
+      width: 100%;
+      overflow: hidden;
+      outline: none;
+      touch-action: pan-y;
+      box-sizing: border-box;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .window{
+      width: min(100vw, clamp(320px, 78vw, 980px));
+      overflow: visible;
+    }
+
+    .track{
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 2vw, 18px);
+      padding: 0px 0;
+      will-change: transform;
+      transform: translate3d(0,0,0);
+    }
+
+    .card{
+      flex: 0 0 auto;
+      width: clamp(320px, 78vw, 980px);
+      border-radius: 0px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      background: var(--card);
+      border: 1px solid var(--border);
+      opacity: 0.92;
+      transition: opacity 200ms ease;
+    }
+
+    .card.is-active{ opacity: 1; }
+
+    .card-link{
+      display: block;
+      width: 100%;
+      height: 100%;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .media{
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .img-main,
+    .img-cover{
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .img-main{
+      filter: grayscale(100%) saturate(0.9);
+      transition: filter 220ms ease;
+    }
+
+    .img-cover{
+      opacity: 1.00;
+      transition: opacity 220ms ease;
+      pointer-events: none;
+    }
+
+    .card:hover .img-cover,
+    .card:focus-within .img-cover{ opacity: 0; }
+
+    .card:hover .img-main,
+    .card:focus-within .img-main{ filter: none; }
+
+    @media (max-width: 640px){
+      .window{
+        width: 100vw;
+        overflow: hidden;
+      }
+
+      .track{
+        gap: 0;
+        padding: 0;
+      }
+
+      .card{
+        width: min(92vw, 520px);
+        aspect-ratio: 9 / 16;
+        border-radius: 0px;
+        max-height: calc(100svh - 24px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      .card,
+      .img-main,
+      .img-cover{
+        transition: none !important;
+      }
+    }
+  </style>
 </Layout>
