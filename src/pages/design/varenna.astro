@@ -53,38 +53,38 @@ const nonCover = finalFiles
 ---
 
 <Layout title="Varenna" description="Varenna project">
-  <main class="amp">
-    <section class="amp__hero" aria-label="Varenna hero">
-      <div class="amp__inner">
+  <main class="varenna">
+    <section class="varenna__hero" aria-label="Varenna hero">
+      <div class="varenna__inner">
 
-        <figure class="amp__cover" id="coverFigure">
+        <figure class="varenna__cover" id="coverFigure">
           <button
-            class="amp__imgBtn"
+            class="varenna__imgBtn"
             type="button"
             data-lb-index={String(coverIndex >= 0 ? coverIndex : 0)}
             aria-label="Open cover image"
           >
-            <img class="amp__img--cover" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
+            <img class="varenna__img--cover" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
           </button>
 
           <div id="coverEnd" aria-hidden="true"></div>
         </figure>
 
-        <header class="amp__meta">
-          <h1 class="amp__title">Varenna</h1>
-          <div class="amp__subtitle">{subtitle}</div>
+        <header class="varenna__meta">
+          <h1 class="varenna__title">Varenna</h1>
+          <div class="varenna__subtitle">{subtitle}</div>
         </header>
 
-        <div class="amp__heroSpacer" aria-hidden="true"></div>
+        <div class="varenna__heroSpacer" aria-hidden="true"></div>
       </div>
     </section>
 
-    <section class="amp__desc" aria-label="Project description">
-      <div class="amp__inner">
+    <section class="varenna__desc" aria-label="Project description">
+      <div class="varenna__inner">
         {descriptionText ? (
-          <div class="amp__body">{descriptionText}</div>
+          <div class="varenna__body">{descriptionText}</div>
         ) : (
-          <div class="amp__body amp__body--error">
+          <div class="varenna__body varenna__body--error">
             Couldn’t load <code>varenna.txt</code><br />
             Expected: <code>public/projects/{FOLDER}/varenna.txt</code>
           </div>
@@ -92,19 +92,19 @@ const nonCover = finalFiles
       </div>
     </section>
 
-    <section class="amp__gallery" aria-label="Varenna gallery">
-      <div class="amp__inner">
-        <div class="amp__grid amp__grid--gallery">
+    <section class="varenna__gallery" aria-label="Varenna gallery">
+      <div class="varenna__inner">
+        <div class="varenna__grid varenna__grid--gallery">
           {nonCover.map(({ src, i }) => (
-            <figure class="amp__galleryItem">
+            <figure class="varenna__galleryItem">
               <button
-                class="amp__imgBtn amp__imgBtn--full"
+                class="varenna__imgBtn varenna__imgBtn--full"
                 type="button"
                 data-lb-index={String(i)}
                 aria-label="Open image"
               >
                 <img
-                  class="amp__img--full"
+                  class="varenna__img--full"
                   src={src}
                   alt=""
                   loading="lazy"
@@ -119,8 +119,470 @@ const nonCover = finalFiles
 
     <div id="footerTrigger" aria-hidden="true"></div>
 
-    <!-- Use the SAME lightbox scripts + scroll scripts + style block from Amplitude -->
-    <!-- No changes required below this point -->
+    <!-- Lightbox -->
+    <div class="lb" id="lightbox" aria-hidden="true">
+      <div class="lb__backdrop" data-lb-close></div>
+
+      <div class="lb__panel" role="dialog" aria-modal="true" aria-label="Image viewer">
+        <button class="lb__close" type="button" data-lb-close aria-label="Close">×</button>
+        <button class="lb__nav lb__nav--prev" type="button" data-lb-prev aria-label="Previous">‹</button>
+
+        <figure class="lb__figure">
+          <div class="lb__stage">
+            <img class="lb__img" id="lbImg" alt="" />
+          </div>
+        </figure>
+
+        <button class="lb__nav lb__nav--next" type="button" data-lb-next aria-label="Next">›</button>
+      </div>
+    </div>
+
+    <!-- Lightbox behavior -->
+    <script define:vars={{ galleryImages }} is:inline>
+      (function () {
+        const images = galleryImages;
+        const lb = document.getElementById("lightbox");
+        const lbImg = document.getElementById("lbImg");
+
+        let index = 0;
+        let lastFocus = null;
+
+        const isOpen = () => lb.getAttribute("aria-hidden") === "false";
+
+        const setOpen = (open) => {
+          lb.setAttribute("aria-hidden", open ? "false" : "true");
+          document.documentElement.classList.toggle("lb-open", open);
+          document.body.classList.toggle("lb-open", open);
+        };
+
+        const show = (i) => {
+          index = (i + images.length) % images.length;
+          lbImg.src = images[index];
+        };
+
+        const open = (i) => {
+          lastFocus = document.activeElement;
+          show(i);
+          setOpen(true);
+          const closeBtn = lb.querySelector(".lb__close");
+          closeBtn && closeBtn.focus();
+        };
+
+        const close = () => {
+          setOpen(false);
+          lbImg.removeAttribute("src");
+          if (lastFocus && typeof lastFocus.focus === "function") lastFocus.focus();
+        };
+
+        const next = () => show(index + 1);
+        const prev = () => show(index - 1);
+
+        document.addEventListener("click", (e) => {
+          const t = e.target;
+
+          const btn = t.closest?.("[data-lb-index]");
+          if (btn) {
+            const i = Number(btn.getAttribute("data-lb-index") || 0);
+            if (!Number.isNaN(i)) open(i);
+            return;
+          }
+
+          if (t.closest?.("[data-lb-close]")) return close();
+          if (t.closest?.("[data-lb-next]")) return next();
+          if (t.closest?.("[data-lb-prev]")) return prev();
+        });
+
+        document.addEventListener("keydown", (e) => {
+          if (!isOpen()) return;
+          if (e.key === "Escape") close();
+          if (e.key === "ArrowRight") next();
+          if (e.key === "ArrowLeft") prev();
+        });
+      })();
+    </script>
+
+    <!-- ✅ Background + nav style flip when cover image is fully off-screen -->
+    <script is:inline>
+      (function () {
+        const end = document.getElementById("coverEnd");
+        if (!end) return;
+
+        const nav =
+          document.querySelector("nav.topbar") ||
+          document.querySelector("nav") ||
+          document.querySelector("header nav");
+
+        const setWhiteMode = (on) => {
+          document.documentElement.classList.toggle("varenna-white", on);
+          document.body.classList.toggle("varenna-white", on);
+          if (nav) nav.classList.toggle("varenna-white", on);
+        };
+
+        const update = () => {
+          const r = end.getBoundingClientRect();
+          // Flip once cover is completely off the viewport
+          setWhiteMode(r.top <= 0);
+        };
+
+        const io = new IntersectionObserver(() => update(), { threshold: [0, 1] });
+        io.observe(end);
+
+        window.addEventListener("scroll", update, { passive: true });
+        window.addEventListener("resize", update);
+        requestAnimationFrame(update);
+      })();
+    </script>
+
+    <!-- Footer turns white ONLY when you're at the bottom -->
+    <script is:inline>
+      (function () {
+        const footer = document.querySelector("footer");
+        const trigger = document.getElementById("footerTrigger");
+        if (!footer || !trigger) return;
+
+        const setFooterWhite = (on) => footer.classList.toggle("varenna-footer-white", on);
+
+        const io = new IntersectionObserver(([entry]) => setFooterWhite(entry.isIntersecting), { threshold: 0.01 });
+        io.observe(trigger);
+      })();
+    </script>
+
+    <style>
+      /* --- Page-specific overrides: make Layout footer NOT fixed here --- */
+      :global(footer) {
+        position: static !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: transparent !important;
+        border-top: none !important;
+      }
+
+      :global(main) {
+        padding-bottom: 0 !important;
+      }
+
+      /* Ensure navbar scrolls normally + no border */
+      :global(nav),
+      :global(nav.topbar) {
+        position: static !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        z-index: auto !important;
+        border-bottom: none !important;
+        box-shadow: none !important;
+      }
+
+      :global(nav.topbar .row),
+      :global(nav .row) {
+        border-bottom: none !important;
+      }
+
+      /* ---------------------------
+         FULL PAGE background + variable text colors
+         --------------------------- */
+      :global(html),
+      :global(body) {
+        background: #121212 !important;
+        transition: background 200ms ease;
+      }
+
+      :global(html) {
+        --varenna-fg: #ffffff;
+        --varenna-muted: rgba(255, 255, 255, 0.74);
+        --varenna-body: rgba(255, 255, 255, 0.78);
+        --varenna-border: rgba(255, 255, 255, 0.16);
+      }
+
+      :global(html.varenna-white),
+      :global(body.varenna-white) {
+        background: #ffffff !important;
+      }
+
+      :global(html.varenna-white) {
+        --varenna-fg: #0b0b0b;
+        --varenna-muted: rgba(0, 0, 0, 0.62);
+        --varenna-body: rgba(0, 0, 0, 0.72);
+        --varenna-border: rgba(0, 0, 0, 0.12);
+      }
+
+      /* Keep navbar borderless in both states */
+      :global(nav.varenna-white),
+      :global(nav.topbar.varenna-white) {
+        border-bottom: none !important;
+        box-shadow: none !important;
+      }
+
+      /* Footer only becomes white when you're at bottom */
+      :global(footer.varenna-footer-white) {
+        background: #ffffff !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.12) !important;
+        color: #0b0b0b !important;
+      }
+
+      :global(footer.varenna-footer-white a) {
+        color: #0b0b0b !important;
+      }
+
+      /* ---------------------------
+         PAGE WIDTH: match index “window/card” feel
+         --------------------------- */
+      .varenna {
+        width: 100%;
+        margin: 0;
+        padding-top: 2rem;
+      }
+
+      .varenna__inner {
+        width: min(100vw, clvarenna(320px, 78vw, 980px));
+        margin-inline: auto;
+      }
+
+      /* ---------------------------
+         HERO (no description visible until scroll)
+         --------------------------- */
+      .varenna__hero {
+        min-height: calc(100svh - 2rem);
+        display: block;
+        padding-bottom: 0;
+      }
+
+      .varenna__inner {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .varenna__cover {
+        margin: 0;
+        border-radius: 0px;
+        overflow: hidden;
+        aspect-ratio: 16 / 9;
+        border: 1px solid var(--varenna-border);
+        background: transparent;
+      }
+
+      .varenna__imgBtn {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: zoom-in;
+      }
+
+      .varenna__img--cover {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        object-position: center;
+        user-select: none;
+        -webkit-user-drag: none;
+      }
+
+      #coverEnd {
+        height: 1px;
+        width: 100%;
+      }
+
+      .varenna__meta {
+        margin-top: 1.05rem;
+      }
+
+      .varenna__title {
+        margin: 0 0 0.45rem;
+        font-size: clvarenna(1.6rem, 2.2vw, 2.15rem);
+        letter-spacing: -0.02em;
+        color: var(--varenna-fg);
+      }
+
+      .varenna__subtitle {
+        font-size: 0.95rem;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: var(--varenna-muted);
+      }
+
+      .varenna__heroSpacer {
+        flex: 1 1 auto;
+        min-height: 24px;
+      }
+
+      /* ---------------------------
+         DESCRIPTION (appears on scroll)
+         --------------------------- */
+      .varenna__desc {
+        padding: 0 0 2.25rem;
+      }
+
+      /* Re-declare inner as block for non-hero sections */
+      .varenna__desc .varenna__inner,
+      .varenna__gallery .varenna__inner {
+        display: block;
+      }
+
+      .varenna__body {
+        white-space: pre-line;
+        line-height: 1.65;
+        font-size: 1rem;
+        color: var(--varenna-body);
+      }
+
+      .varenna__body--error {
+        opacity: 0.95;
+      }
+
+      /* ---------------------------
+         GALLERY
+         --------------------------- */
+      .varenna__gallery {
+        padding: 1.5rem 0 3rem;
+      }
+
+      .varenna__grid {
+        display: grid;
+      }
+
+      .varenna__grid--gallery {
+        grid-template-columns: 1fr;
+        gap: 1.4rem;
+      }
+
+      .varenna__galleryItem {
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        border: 0;
+      }
+
+      .varenna__imgBtn--full {
+        width: 100%;
+        height: auto;
+        padding: 0.75rem 0;
+      }
+
+      .varenna__img--full {
+        display: block;
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        margin: 0 auto;
+        object-fit: contain;
+      }
+
+      #footerTrigger {
+        height: 1px;
+        width: 100%;
+      }
+
+      /* ---------------------------
+         Lightbox
+         --------------------------- */
+      .lb {
+        position: fixed;
+        inset: 0;
+        display: none;
+        z-index: 9999;
+      }
+      .lb[aria-hidden="false"] {
+        display: block;
+      }
+
+      .lb__backdrop {
+        position: absolute;
+        inset: 0;
+        background: #fff;
+      }
+
+      .lb__panel {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        grid-template-columns: 56px 1fr 56px;
+        align-items: center;
+        padding: 2rem 1rem;
+      }
+
+      .lb__figure {
+        margin: 0;
+        height: 100%;
+        display: grid;
+        place-items: center;
+      }
+
+      .lb__stage {
+        background: #fff;
+        width: min(1100px, 92vw);
+        height: 86vh;
+        display: grid;
+        place-items: center;
+      }
+
+      .lb__img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        border-radius: 0;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .lb__close {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        width: 44px;
+        height: 44px;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.9);
+        color: #111;
+        font-size: 28px;
+        line-height: 40px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+
+      .lb__nav {
+        width: 44px;
+        height: 64px;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        background: rgba(255, 255, 255, 0.9);
+        color: #111;
+        font-size: 40px;
+        border-radius: 10px;
+        cursor: pointer;
+        user-select: none;
+      }
+
+      :global(html.lb-open),
+      :global(body.lb-open) {
+        overflow: hidden;
+      }
+
+      /* ---------------------------
+         Mobile
+         --------------------------- */
+      @media (max-width: 640px) {
+        .varenna__inner {
+          width: 100vw;
+          padding-inline: 4vw;
+        }
+
+        .varenna__cover {
+          aspect-ratio: 9 / 16;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        :global(html),
+        :global(body) {
+          transition: none !important;
+        }
+      }
+    </style>
 
   </main>
 </Layout>
