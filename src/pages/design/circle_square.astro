@@ -42,12 +42,12 @@ const finalFiles = orderedFiles
 
 const galleryImages = finalFiles.map((name) => `${BASE}/${encodeURIComponent(name)}`);
 
-const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover-image.webp");
-const coverSrc = coverIndex >= 0 ? galleryImages[coverIndex] : `${BASE}/cover-image.webp`;
+const coverIndex = finalFiles.findIndex((f) => f.toLowerCase() === "cover_image.webp");
+const coverSrc = coverIndex >= 0 ? galleryImages[coverIndex] : `${BASE}/cover_image.webp`;
 
 const nonCover = finalFiles
   .map((file, i) => ({ file, src: galleryImages[i], i }))
-  .filter((x) => x.file.toLowerCase() !== "cover-image.webp");
+  .filter((x) => x.file.toLowerCase() !== "cover_image.webp");
 ---
 
 <Layout title="Circle Within a Square" description="Circle Within a Square project">
