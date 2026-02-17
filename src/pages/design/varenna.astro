@@ -337,7 +337,7 @@ const nonCover = finalFiles
       }
 
       .varenna__inner {
-        width: min(100vw, clvarenna(320px, 78vw, 980px));
+        width: min(100vw, clamp(320px, 78vw, 980px));
         margin-inline: auto;
       }
 
@@ -395,7 +395,7 @@ const nonCover = finalFiles
 
       .varenna__title {
         margin: 0 0 0.45rem;
-        font-size: clvarenna(1.6rem, 2.2vw, 2.15rem);
+        font-size: clamp(1.6rem, 2.2vw, 2.15rem);
         letter-spacing: -0.02em;
         color: var(--varenna-fg);
       }
