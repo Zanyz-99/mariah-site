@@ -54,9 +54,10 @@ const nonCover = finalFiles
 
 <Layout title="ZS" description="ZS project">
   <main class="zs">
+    <!-- HERO: cover + title/subtitle only (description stays below fold) -->
     <section class="zs__hero" aria-label="ZS hero">
       <div class="zs__inner">
-
+        <!-- Cover (same "card" footprint feel as index carousel) -->
         <figure class="zs__cover" id="coverFigure">
           <button
             class="zs__imgBtn"
@@ -67,31 +68,36 @@ const nonCover = finalFiles
             <img class="zs__img--cover" src={coverSrc} alt="Cover image" loading="eager" decoding="async" />
           </button>
 
+          <!-- flip trigger: when this crosses top, cover is fully off-screen -->
           <div id="coverEnd" aria-hidden="true"></div>
         </figure>
 
+        <!-- Title/subtitle BELOW image, left aligned to image -->
         <header class="zs__meta">
           <h1 class="zs__title">ZS</h1>
           <div class="zs__subtitle">{subtitle}</div>
         </header>
 
+        <!-- Spacer pushes description off-screen until you scroll -->
         <div class="zs__heroSpacer" aria-hidden="true"></div>
       </div>
     </section>
 
+    <!-- DESCRIPTION (appears only after you scroll) -->
     <section class="zs__desc" aria-label="Project description">
       <div class="zs__inner">
         {descriptionText ? (
           <div class="zs__body">{descriptionText}</div>
         ) : (
           <div class="zs__body zs__body--error">
-            Couldn’t load <code>zs.txt</code><br />
-            Expected: <code>public/design/{FOLDER}/zs.txt</code>
+            Couldn't load <code>{txtFile}</code><br />
+            Expected: <code>public/design/{FOLDER}/{txtFile}</code>
           </div>
         )}
       </div>
     </section>
 
+    <!-- GALLERY -->
     <section class="zs__gallery" aria-label="ZS gallery">
       <div class="zs__inner">
         <div class="zs__grid zs__grid--gallery">
@@ -106,6 +112,7 @@ const nonCover = finalFiles
       </div>
     </section>
 
+    <!-- footer-trigger sentinel (near bottom) -->
     <div id="footerTrigger" aria-hidden="true"></div>
 
     <!-- Lightbox -->
@@ -190,7 +197,7 @@ const nonCover = finalFiles
       })();
     </script>
 
-    <!-- ✅ Background + nav style flip when cover image is fully off-screen -->
+    <!-- Background + nav style flip when cover image is fully off-screen -->
     <script is:inline>
       (function () {
         const end = document.getElementById("coverEnd");
@@ -317,7 +324,7 @@ const nonCover = finalFiles
       }
 
       /* ---------------------------
-         PAGE WIDTH: match index “window/card” feel
+         PAGE WIDTH: match index "window/card" feel
          --------------------------- */
       .zs {
         width: 100%;
@@ -326,7 +333,7 @@ const nonCover = finalFiles
       }
 
       .zs__inner {
-        width: min(100vw, clzs(320px, 78vw, 980px));
+        width: min(100vw, clamp(320px, 78vw, 980px));
         margin-inline: auto;
       }
 
@@ -384,7 +391,7 @@ const nonCover = finalFiles
 
       .zs__title {
         margin: 0 0 0.45rem;
-        font-size: clzs(1.6rem, 2.2vw, 2.15rem);
+        font-size: clamp(1.6rem, 2.2vw, 2.15rem);
         letter-spacing: -0.02em;
         color: var(--zs-fg);
       }
@@ -572,6 +579,5 @@ const nonCover = finalFiles
         }
       }
     </style>
-
   </main>
 </Layout>
