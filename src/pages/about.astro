@@ -19,9 +19,7 @@ import Layout from "../layouts/Layout.astro";
     .about-wrap{
       width: var(--frame-w);
       margin: 0 auto;
-    
-      /* match vertical rhythm with navbar / home */
-      padding-top: 1rem;
+      padding-top: clamp(24px, 6vh, 64px);
       padding-bottom: 2rem;
     }
     
@@ -30,10 +28,6 @@ import Layout from "../layouts/Layout.astro";
       font-size: var(--body-size);
       line-height: var(--line);
       color: var(--text);
-    
-      max-width: 65ch;
-    
-      /* 🔑 key change */
       margin: 0;           /* no centering */
     }
     
