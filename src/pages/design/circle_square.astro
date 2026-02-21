@@ -145,7 +145,7 @@ const nonCover = finalFiles
         const show = (i) => {
           index = (i + images.length) % images.length;
           lbImg.src = images[index];
-          lb.classList.toggle("lb--dark", index === -1);
+          lb.classList.toggle("lb--dark", index === images.length - 1);
         };
 
         const open = (i) => {
