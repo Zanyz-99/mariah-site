@@ -6,7 +6,7 @@ interface Props { title?: string; description?: string; }
 const { title = "MariahIppolito.com", description = "" } = Astro.props;
 ---
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
   <head>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 
@@ -145,16 +145,7 @@ const { title = "MariahIppolito.com", description = "" } = Astro.props;
     </style>
 
     <script>
-      (function(){
-        const saved = localStorage.getItem('theme');
-        let theme = 'light';
-        if (saved === 'light' || saved === 'dark') theme = saved;
-        else {
-          const h = new Date().getHours();
-          theme = (h >= 19 || h < 6) ? 'dark' : 'light';
-        }
-        document.documentElement.setAttribute('data-theme', theme);
-      })();
+      document.documentElement.setAttribute('data-theme', 'dark');
     </script>
 
     <script>
